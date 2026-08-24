@@ -330,7 +330,10 @@ async function runReminders() {
   const now = Date.now();
   const counts: Record<string, number> = { sequences: 0, followUp: 0, onboarding: 0 };
 
-  // Interview, exam, and follow-up sequences (see the stage engine).
+  // Keep the recurring campaigns enrolled before sending anything.
+  Object.assign(counts, await runEnrollment());
+
+  // Interview, exam, follow-up, invite, and check-in sequences.
   counts.sequences = await runSequences();
 
   // Applicant follow-ups due — nudge the recruiting agent.
