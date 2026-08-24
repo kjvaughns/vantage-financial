@@ -645,6 +645,14 @@ export async function applyStage(args: {
   if (args.stage !== "state-exam") {
     await stopSequence(args.applicantId, "exam_reminders", `Moved to ${args.stage}`);
   }
+  // Weekly overview invites only apply while they're still a new applicant.
+  if (args.stage !== "new-applicant") {
+    await stopSequence(args.applicantId, "overview_invite", `Moved to ${args.stage}`);
+  }
+  // Licensing/course check-ins end once they're licensed and active (or out).
+  if (args.stage === "active-agent" || args.stage === "not-moving-forward") {
+    await stopSequence(args.applicantId, "licensing_checkins", `Moved to ${args.stage}`);
+  }
 
   return { ok: true };
 }
