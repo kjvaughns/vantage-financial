@@ -46,6 +46,7 @@ import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/em
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as ApiPublicWebhooksCalendlyRouteImport } from './routes/api/public/webhooks/calendly'
 import { Route as ApiPublicHooksEmailDispatchRouteImport } from './routes/api/public/hooks/email-dispatch'
+import { Route as ApiPublicHooksDiscordSelftestRouteImport } from './routes/api/public/hooks/discord-selftest'
 import { Route as AuthenticatedPortalResourcesPresentationsRouteImport } from './routes/_authenticated/portal/resources/presentations'
 import { Route as AuthenticatedPortalResourcesLibraryRouteImport } from './routes/_authenticated/portal/resources/library'
 import { Route as AuthenticatedPortalResourcesAdminRouteImport } from './routes/_authenticated/portal/resources/admin'
@@ -271,6 +272,12 @@ const ApiPublicHooksEmailDispatchRoute =
     path: '/api/public/hooks/email-dispatch',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksDiscordSelftestRoute =
+  ApiPublicHooksDiscordSelftestRouteImport.update({
+    id: '/api/public/hooks/discord-selftest',
+    path: '/api/public/hooks/discord-selftest',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedPortalResourcesPresentationsRoute =
   AuthenticatedPortalResourcesPresentationsRouteImport.update({
     id: '/presentations',
@@ -400,6 +407,7 @@ export interface FileRoutesByFullPath {
   '/portal/resources/admin': typeof AuthenticatedPortalResourcesAdminRoute
   '/portal/resources/library': typeof AuthenticatedPortalResourcesLibraryRoute
   '/portal/resources/presentations': typeof AuthenticatedPortalResourcesPresentationsRoute
+  '/api/public/hooks/discord-selftest': typeof ApiPublicHooksDiscordSelftestRoute
   '/api/public/hooks/email-dispatch': typeof ApiPublicHooksEmailDispatchRoute
   '/api/public/webhooks/calendly': typeof ApiPublicWebhooksCalendlyRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -446,6 +454,7 @@ export interface FileRoutesByTo {
   '/portal/resources/admin': typeof AuthenticatedPortalResourcesAdminRoute
   '/portal/resources/library': typeof AuthenticatedPortalResourcesLibraryRoute
   '/portal/resources/presentations': typeof AuthenticatedPortalResourcesPresentationsRoute
+  '/api/public/hooks/discord-selftest': typeof ApiPublicHooksDiscordSelftestRoute
   '/api/public/hooks/email-dispatch': typeof ApiPublicHooksEmailDispatchRoute
   '/api/public/webhooks/calendly': typeof ApiPublicWebhooksCalendlyRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -501,6 +510,7 @@ export interface FileRoutesById {
   '/_authenticated/portal/resources/admin': typeof AuthenticatedPortalResourcesAdminRoute
   '/_authenticated/portal/resources/library': typeof AuthenticatedPortalResourcesLibraryRoute
   '/_authenticated/portal/resources/presentations': typeof AuthenticatedPortalResourcesPresentationsRoute
+  '/api/public/hooks/discord-selftest': typeof ApiPublicHooksDiscordSelftestRoute
   '/api/public/hooks/email-dispatch': typeof ApiPublicHooksEmailDispatchRoute
   '/api/public/webhooks/calendly': typeof ApiPublicWebhooksCalendlyRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -556,6 +566,7 @@ export interface FileRouteTypes {
     | '/portal/resources/admin'
     | '/portal/resources/library'
     | '/portal/resources/presentations'
+    | '/api/public/hooks/discord-selftest'
     | '/api/public/hooks/email-dispatch'
     | '/api/public/webhooks/calendly'
     | '/lovable/email/auth/preview'
@@ -602,6 +613,7 @@ export interface FileRouteTypes {
     | '/portal/resources/admin'
     | '/portal/resources/library'
     | '/portal/resources/presentations'
+    | '/api/public/hooks/discord-selftest'
     | '/api/public/hooks/email-dispatch'
     | '/api/public/webhooks/calendly'
     | '/lovable/email/auth/preview'
@@ -656,6 +668,7 @@ export interface FileRouteTypes {
     | '/_authenticated/portal/resources/admin'
     | '/_authenticated/portal/resources/library'
     | '/_authenticated/portal/resources/presentations'
+    | '/api/public/hooks/discord-selftest'
     | '/api/public/hooks/email-dispatch'
     | '/api/public/webhooks/calendly'
     | '/lovable/email/auth/preview'
@@ -683,6 +696,7 @@ export interface RootRouteChildren {
   CoursePurchasedTokenRoute: typeof CoursePurchasedTokenRoute
   JoinSlugRoute: typeof JoinSlugRoute
   PortalInviteTokenRoute: typeof PortalInviteTokenRoute
+  ApiPublicHooksDiscordSelftestRoute: typeof ApiPublicHooksDiscordSelftestRoute
   ApiPublicHooksEmailDispatchRoute: typeof ApiPublicHooksEmailDispatchRoute
   ApiPublicWebhooksCalendlyRoute: typeof ApiPublicWebhooksCalendlyRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -949,6 +963,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/hooks/email-dispatch'
       fullPath: '/api/public/hooks/email-dispatch'
       preLoaderRoute: typeof ApiPublicHooksEmailDispatchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/discord-selftest': {
+      id: '/api/public/hooks/discord-selftest'
+      path: '/api/public/hooks/discord-selftest'
+      fullPath: '/api/public/hooks/discord-selftest'
+      preLoaderRoute: typeof ApiPublicHooksDiscordSelftestRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/portal/resources/presentations': {
@@ -1265,6 +1286,7 @@ const rootRouteChildren: RootRouteChildren = {
   CoursePurchasedTokenRoute: CoursePurchasedTokenRoute,
   JoinSlugRoute: JoinSlugRoute,
   PortalInviteTokenRoute: PortalInviteTokenRoute,
+  ApiPublicHooksDiscordSelftestRoute: ApiPublicHooksDiscordSelftestRoute,
   ApiPublicHooksEmailDispatchRoute: ApiPublicHooksEmailDispatchRoute,
   ApiPublicWebhooksCalendlyRoute: ApiPublicWebhooksCalendlyRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
