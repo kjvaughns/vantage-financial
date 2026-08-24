@@ -31,7 +31,11 @@ export type StageSlug =
 export type SequenceKind =
   | "interview_reminders"
   | "exam_reminders"
-  | "no_show_followup";
+  | "no_show_followup"
+  /** Weekly invite to the company overview for applicants who never booked. */
+  | "overview_invite"
+  /** Twice-weekly pre-licensing / course / exam check-ins. */
+  | "licensing_checkins";
 
 /** Email fired when an applicant lands on a stage. */
 export const STAGE_EMAIL: Partial<Record<StageSlug, string>> = {
