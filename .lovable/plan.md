@@ -1,44 +1,43 @@
-# Make the agency production webhooks live and working
+# Three new recruiting campaigns
 
-## What I verified
+Three automated sequences: weekly overview invites, twice-weekly licensing/course check-ins, and a smart reminder ladder for scheduled overviews.
 
-- The active production cron jobs are present in the backend:
-  - `vantage-email-reminders` runs hourly at `:15`.
-  - `vantage-email-campaigns` runs daily at `12:00 UTC`.
-- Both jobs currently POST to the stable production app URL:
-  - `/api/public/hooks/email-dispatch`
-- The latest recorded cron response is successful: HTTP `200` with `{ ok: true, job: "reminders" }`.
-- The production email outbox is actively sending messages today, so the dispatcher route is reachable and the mail send path is working.
-- The Calendly webhook route exists at `/api/public/webhooks/calendly`, but there were no production Calendly webhook logs in the last hour.
+## 1. Weekly overview invite
 
-## What needs to happen
+- Audience: applicants in the New stage, not archived, with no scheduled overview/interview and no completed overview.
+- Sends every Thursday morning (7:00 AM CT) with the applicant's own direct registration link (their recruiter's Calendly/overview link, same link logic the success pages use).
+- Runs for 4 weeks max. After the 4th send with no booking, the sequence stops and records "no response" on the applicant timeline.
+- Stops immediately the moment they schedule, are archived, or move past New.
 
-1. Find the Claude commit/webhook work and compare it against what is currently in the project.
-2. Identify every agency production webhook that commit expected to be live:
-   - scheduled email dispatcher jobs,
-   - agency campaign/announcement jobs,
-   - Calendly booking/cancellation webhook,
-   - any additional public webhook route added by that commit.
-3. For each missing or incomplete webhook, restore the route or backend job from the intended commit behavior.
-4. Make sure every external-callable webhook lives under `/api/public/...` so production callers can reach it without a login wall.
-5. Make sure each webhook has the correct production URL target, not a preview-only URL.
-6. Add/repair logging so each webhook records a clear success/failure trail in the backend tables or server logs.
-7. Publish the app so any route/server-function changes become live on the production domains.
-8. Verify production end to end:
-   - manually invoke each webhook with the expected headers/body when possible,
-   - confirm the production server returns `200`,
-   - confirm the expected side effect appears in the backend, such as an email row, applicant stage update, or activity log.
+## 2. Licensing + course check-ins (Tue + Fri)
+
+- Audience: applicants who reached hired/onboarding/pre-licensing and haven't passed the exam yet.
+- Two sends per week (Tuesday and Friday, 7:00 AM CT) rotating through the relevant check-in:
+  - pre-licensing course progress (Xcel, partner code AFE),
+  - Vantage Closer Course / training progress,
+  - whether the state exam is scheduled — with the exam-scheduling and NIPR links.
+- The email picks the right focus based on what's actually missing on their record (course confirmed, exam date, exam result), so a person who already booked their exam gets the course/training check-in instead.
+- Stops when the exam is passed or the applicant is archived.
+
+## 3. Interview / overview reminder ladder
+
+- Ladder before the scheduled start: 6 days, 4 days, 2 days, 1 day, 3 hours, 30 minutes.
+- Anchored to the applicant's *current* scheduled event. If they reschedule, the ladder re-anchors to the new time and any stale touches are dropped, so a booking from a month ago can never fire.
+- Cancellation (or a no-show mark) stops the ladder.
+- Each email states the actual date/time in the recipient's timezone plus the join link for that specific event.
+- No recruiter copies on any of the three campaigns.
 
 ## Technical notes
 
-- Existing production cron jobs already point to the stable production host, so I will not replace them with preview URLs.
-- If the Claude commit added new webhook endpoints but they are not present in `src/routes/api/public/...`, I will recreate them as TanStack server routes.
-- If the commit only added backend cron scheduling but no app route changes, I will apply a backend migration/update for those jobs instead.
-- Webhook secrets and publishable keys stay server-side or in backend job headers only; nothing secret is exposed to the browser.
+- Reuse the existing `applicant_sequences` engine and `/api/public/hooks/email-dispatch`. New sequence kinds: `overview_invite`, `licensing_checkins`; the existing `interview_reminders` ladder is extended from 144/96/48/24h to 144/96/48/24/3h/30m.
+- Re-anchoring: store the event identity alongside the anchor so a reschedule invalidates prior touches; the Calendly webhook and manual schedule edits both call `startSequence` with the new start time, and cancellation calls `stopSequence`.
+- Cron: the reminder job must move from hourly to every 15 minutes so the 30-minute touch is accurate. Campaign sweeps stay on the daily 12:00 UTC job, gated by CT weekday.
+- New rows in `email_campaigns` for the two new campaigns (enable/disable, edit copy, send test from Admin → Emails) plus new templates in the email catalog: overview invite, licensing check-in, course check-in, exam check-in, and 3h/30m reminder variants.
+- Small migration: add the event-identity/anchor columns to `applicant_sequences`, allow the new sequence kinds, and seed the two campaign rows.
+- Dedupe keys per (applicant, sequence, touch) keep repeated cron runs harmless.
 
-## Acceptance criteria
+## Acceptance
 
-- All agency production webhooks from the Claude commit exist in the current app/backend.
-- Production callers hit the published app, not only preview.
-- Each webhook returns a clean success/failure response.
-- The affected workflows visibly update: emails send, Calendly booking updates applicant status, and agency campaign/reminder jobs run on schedule.
+- A new applicant with no booking gets exactly 4 weekly invites, then stops.
+- A hired applicant in pre-licensing gets a relevant check-in Tuesday and Friday, and no exam nudge once the exam is passed.
+- Booking, then rescheduling, produces reminders only for the new time — including one 30 minutes before.
