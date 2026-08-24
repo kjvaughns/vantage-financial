@@ -153,7 +153,7 @@ export const submitApplication = createServerFn({ method: "POST" })
     // Trigger: Discord recruiting bot. No-ops when no webhook is configured.
     // Server-only module — loaded inside the handler so it never ships to the client.
     const { notifyNewRecruit } = await import("@/lib/discord.server");
-    await notifyNewRecruit({
+    const discord = await notifyNewRecruit({
       firstName: data.first_name,
       lastName: data.last_name,
       recruiterName,
@@ -162,6 +162,24 @@ export const submitApplication = createServerFn({ method: "POST" })
       wantsOneOnOne: !!ctx.wants_one_on_one,
       state: data.state,
     });
+    // Record the outcome on the applicant timeline so a silent Discord failure
+    // is visible in the CRM instead of vanishing into server logs.
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      await (supabaseAdmin as any).from("applicant_activities").insert({
+        applicant_id: res.id,
+        event_type: "discord_alert",
+        summary: discord.ok
+          ? "Discord recruiting alert posted"
+          : discord.reason === "no_webhook"
+            ? "Discord alert skipped — no webhook configured"
+            : "Discord alert rejected by Discord",
+        data: { ok: discord.ok, reason: discord.reason ?? null },
+      });
+    } catch (e) {
+      console.error("discord activity log failed", e);
+    }
+
 
     return res;
   });
