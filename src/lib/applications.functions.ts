@@ -165,7 +165,8 @@ export const submitApplication = createServerFn({ method: "POST" })
     // Record the outcome on the applicant timeline so a silent Discord failure
     // is visible in the CRM instead of vanishing into server logs.
     try {
-      await (supabase as any).from("applicant_activities").insert({
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      await (supabaseAdmin as any).from("applicant_activities").insert({
         applicant_id: res.id,
         event_type: "discord_alert",
         summary: discord.ok
