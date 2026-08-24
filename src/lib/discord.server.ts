@@ -101,17 +101,22 @@ export async function postRecruitAlert(url: string, a: RecruitAlert): Promise<bo
  * Always resolves the URL through the service-role client so it works on the
  * public (anonymous) application-submission path too.
  */
-export async function notifyNewRecruit(a: RecruitAlert): Promise<void> {
+export async function notifyNewRecruit(
+  a: RecruitAlert,
+): Promise<{ ok: boolean; reason?: "no_webhook" | "rejected" }> {
   const url = await getDiscordWebhookUrlAsAdmin();
   if (!url) {
     // eslint-disable-next-line no-console
     console.warn("[discord] no webhook configured — skipping new-recruit post");
-    return;
+    return { ok: false, reason: "no_webhook" };
   }
   const ok = await postRecruitAlert(url, a);
   if (!ok) {
     // eslint-disable-next-line no-console
     console.warn("[discord] new-recruit post was rejected by Discord");
+    return { ok: false, reason: "rejected" };
   }
+  return { ok: true };
 }
+
 
