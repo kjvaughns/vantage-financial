@@ -361,6 +361,30 @@ export async function startSequence(
   );
 }
 
+/**
+ * Start a sequence only if the applicant isn't already in it. Used by the
+ * recurring enrollment sweeps so a nightly re-scan never rewinds someone's
+ * touch count.
+ */
+export async function ensureSequence(
+  applicantId: string,
+  kind: SequenceKind,
+  anchorIso: string,
+): Promise<boolean> {
+  const supabase = await db();
+  const { data: existing } = await supabase
+    .from("applicant_sequences")
+    .select("id")
+    .eq("applicant_id", applicantId)
+    .eq("kind", kind)
+    .maybeSingle();
+  if (existing) return false;
+  await startSequence(applicantId, kind, anchorIso);
+  return true;
+}
+
+
+
 export async function stopSequence(
   applicantId: string,
   kind: SequenceKind,
