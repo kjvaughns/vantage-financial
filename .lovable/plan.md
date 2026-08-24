@@ -1,30 +1,44 @@
-# Get the Discord recruiting alerts firing on real applications
+# Make the agency production webhooks live and working
 
-## What's confirmed right now
+## What I verified
 
-- The saved webhook is present and well-formed (a valid `discord.com/api/webhooks/...` URL, 121 chars).
-- The code in this project already reads that webhook with the trusted server-side connection, so an anonymous applicant submission can see it.
-- No applicant has been submitted since that fix landed: the newest applicants are from Aug 22-23, and there are zero `discord_alert` timeline entries. So the fixed path has never actually run in production.
+- The active production cron jobs are present in the backend:
+  - `vantage-email-reminders` runs hourly at `:15`.
+  - `vantage-email-campaigns` runs daily at `12:00 UTC`.
+- Both jobs currently POST to the stable production app URL:
+  - `/api/public/hooks/email-dispatch`
+- The latest recorded cron response is successful: HTTP `200` with `{ ok: true, job: "reminders" }`.
+- The production email outbox is actively sending messages today, so the dispatcher route is reachable and the mail send path is working.
+- The Calendly webhook route exists at `/api/public/webhooks/calendly`, but there were no production Calendly webhook logs in the last hour.
 
-That means the remaining gap is deployment plus proof, not another code change to the lookup.
+## What needs to happen
 
-## Plan
-
-1. Publish the app so the live site runs the current build (the fixed webhook lookup and the timeline logging ship together).
-2. Verify end to end by submitting one throwaway application on the live site, then confirm:
-   - the card appears in the Discord channel, and
-   - a `discord_alert` entry with "posted" shows on that applicant's timeline in the CRM.
-3. Delete the throwaway applicant afterwards.
-4. If the card still doesn't appear, the timeline entry now names the cause — "no webhook configured" vs. "rejected by Discord" — and I fix that specific cause:
-   - "no webhook configured" means the server-side settings read is still blocked, and I widen that read path.
-   - "rejected by Discord" means the webhook itself was deleted/regenerated in Discord, and you paste a fresh webhook URL in Admin > Settings.
-
-## Small hardening included
-
-- Surface the Discord outcome in the CRM applicant record (a short "Discord alert posted / skipped / rejected" line on the timeline) so future failures are visible to you without asking me to read server logs.
-- Keep it strictly best-effort: a Discord problem must never fail an application submission or delay applicant emails.
+1. Find the Claude commit/webhook work and compare it against what is currently in the project.
+2. Identify every agency production webhook that commit expected to be live:
+   - scheduled email dispatcher jobs,
+   - agency campaign/announcement jobs,
+   - Calendly booking/cancellation webhook,
+   - any additional public webhook route added by that commit.
+3. For each missing or incomplete webhook, restore the route or backend job from the intended commit behavior.
+4. Make sure every external-callable webhook lives under `/api/public/...` so production callers can reach it without a login wall.
+5. Make sure each webhook has the correct production URL target, not a preview-only URL.
+6. Add/repair logging so each webhook records a clear success/failure trail in the backend tables or server logs.
+7. Publish the app so any route/server-function changes become live on the production domains.
+8. Verify production end to end:
+   - manually invoke each webhook with the expected headers/body when possible,
+   - confirm the production server returns `200`,
+   - confirm the expected side effect appears in the backend, such as an email row, applicant stage update, or activity log.
 
 ## Technical notes
 
-- No migration and no schema change.
-- Touch points: `src/lib/discord.server.ts` (already resolves the URL via the service-role client), `src/lib/applications.functions.ts` (already records the outcome to `applicant_activities`), and the CRM timeline renderer to give `discord_alert` a readable label/icon.
+- Existing production cron jobs already point to the stable production host, so I will not replace them with preview URLs.
+- If the Claude commit added new webhook endpoints but they are not present in `src/routes/api/public/...`, I will recreate them as TanStack server routes.
+- If the commit only added backend cron scheduling but no app route changes, I will apply a backend migration/update for those jobs instead.
+- Webhook secrets and publishable keys stay server-side or in backend job headers only; nothing secret is exposed to the browser.
+
+## Acceptance criteria
+
+- All agency production webhooks from the Claude commit exist in the current app/backend.
+- Production callers hit the published app, not only preview.
+- Each webhook returns a clean success/failure response.
+- The affected workflows visibly update: emails send, Calendly booking updates applicant status, and agency campaign/reminder jobs run on schedule.
