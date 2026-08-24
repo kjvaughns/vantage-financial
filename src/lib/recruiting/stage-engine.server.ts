@@ -265,14 +265,26 @@ export async function claimActionToken(token: string, action: string): Promise<C
   return { ok: true, applicantId: row.applicant_id, firstClaim: !!claimed };
 }
 
-export const INTERVIEW_TOUCH_HOURS = [144, 96, 48, 24];
+/** Minutes before the appointment for each interview/overview reminder touch. */
+export const INTERVIEW_TOUCH_MINUTES = [8640, 5760, 2880, 1440, 180, 30];
+/** Template per interview reminder touch (same order as the minutes above). */
+export const INTERVIEW_TOUCH_TEMPLATES = [
+  "interview-reminder",
+  "interview-reminder",
+  "interview-reminder",
+  "interview-reminder",
+  "interview-reminder-soon",
+  "interview-reminder-final",
+];
 export const EXAM_TOUCH_HOURS = [72, 24, 6];
 export const NO_SHOW_TOUCH_HOURS = [0, 48, 96];
+/** Weekly overview invites stop after this many sends. */
+export const OVERVIEW_INVITE_MAX_TOUCHES = 4;
 
 function nextInterviewSend(anchorIso: string, touch: number): string | null {
   const anchor = new Date(anchorIso).getTime();
-  for (let i = touch; i < INTERVIEW_TOUCH_HOURS.length; i++) {
-    const at = anchor - INTERVIEW_TOUCH_HOURS[i] * 3600_000;
+  for (let i = touch; i < INTERVIEW_TOUCH_MINUTES.length; i++) {
+    const at = anchor - INTERVIEW_TOUCH_MINUTES[i] * 60_000;
     if (at > Date.now()) return new Date(at).toISOString();
   }
   return null;
@@ -287,6 +299,23 @@ function nextExamSend(anchorIso: string, touch: number): string | null {
   return null;
 }
 
+/**
+ * The next moment (UTC) after `from` that falls on one of `weekdays`
+ * (0 = Sunday) at 12:00 UTC — 7:00 AM CT during daylight time.
+ */
+export function nextWeekdaySlot(weekdays: number[], from = Date.now()): string {
+  const d = new Date(from);
+  for (let i = 0; i <= 8; i++) {
+    const candidate = new Date(
+      Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + i, 12, 0, 0),
+    );
+    if (candidate.getTime() > from && weekdays.includes(candidate.getUTCDay())) {
+      return candidate.toISOString();
+    }
+  }
+  return new Date(from + 7 * 86_400_000).toISOString();
+}
+
 export function sequenceNextSend(
   kind: SequenceKind,
   anchorIso: string,
@@ -294,6 +323,15 @@ export function sequenceNextSend(
 ): string | null {
   if (kind === "interview_reminders") return nextInterviewSend(anchorIso, touch);
   if (kind === "exam_reminders") return nextExamSend(anchorIso, touch);
+  if (kind === "overview_invite") {
+    if (touch >= OVERVIEW_INVITE_MAX_TOUCHES) return null;
+    // Thursday mornings.
+    return nextWeekdaySlot([4]);
+  }
+  if (kind === "licensing_checkins") {
+    // Tuesday + Friday mornings, for as long as they're eligible.
+    return nextWeekdaySlot([2, 5]);
+  }
   if (touch >= NO_SHOW_TOUCH_HOURS.length) return null;
   return new Date(new Date(anchorIso).getTime() + NO_SHOW_TOUCH_HOURS[touch] * 3600_000).toISOString();
 }
