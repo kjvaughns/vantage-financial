@@ -58,49 +58,169 @@ function ctWeekday(date = new Date()): string {
 /* Automated sequences                                                 */
 /* ------------------------------------------------------------------ */
 
-/** Template per sequence touch. */
+/** Static template per sequence kind (dynamic kinds resolve per touch). */
 const SEQUENCE_TEMPLATE: Record<string, string> = {
-  interview_reminders: "interview-reminder",
   exam_reminders: "state-exam-reminder",
   no_show_followup: "no-show-followup",
 };
 
+/** Guard columns a sequence touch is validated against before sending. */
+const GUARD_COLS =
+  "id, archived_at, scheduling_status, scheduled_event_start, exam_date, exam_result, exam_passed_at, course_confirmed_at, overview_completed_at, current_stage_id";
+
+type Guard = {
+  archived_at: string | null;
+  scheduling_status: string | null;
+  scheduled_event_start: string | null;
+  exam_date: string | null;
+  exam_result: string | null;
+  exam_passed_at: string | null;
+  course_confirmed_at: string | null;
+  overview_completed_at: string | null;
+  current_stage_id: string | null;
+};
+
+/** Slug lookup for the pipeline stages, loaded once per run. */
+async function stageMaps() {
+  const supabase = await db();
+  const { data } = await supabase.from("pipeline_stages").select("id, slug");
+  const byId = new Map<string, string>();
+  const bySlug = new Map<string, string>();
+  for (const s of data ?? []) {
+    byId.set(s.id, s.slug);
+    bySlug.set(s.slug, s.id);
+  }
+  return { byId, bySlug };
+}
+
+/** Which campaigns are switched on (missing row = on). */
+async function enabledCampaigns(): Promise<Set<string>> {
+  const supabase = await db();
+  const { data } = await supabase.from("email_campaigns").select("slug, enabled");
+  const off = new Set<string>(
+    (data ?? []).filter((c: any) => c.enabled === false).map((c: any) => c.slug),
+  );
+  return new Set(
+    ["overview-invite-weekly", "licensing-checkins"].filter((slug) => !off.has(slug)),
+  );
+}
+
+/** Which check-in fits where they actually are in licensing. */
+function licensingCheckinTemplate(g: Guard, touch: number): string {
+  if (g.exam_date) return "licensing-checkin-training";
+  if (g.course_confirmed_at) {
+    return touch % 2 === 0 ? "licensing-checkin-exam" : "licensing-checkin-course";
+  }
+  return "licensing-checkin-course";
+}
+
 /**
  * Sends every sequence touch that is due, then re-arms (or retires) the row.
- * Idempotent: each touch has its own dedupe key.
+ * Idempotent: each touch has its own dedupe key. Every touch is re-validated
+ * against the applicant's live record first, so a stale booking, a cancelled
+ * event, or a passed exam can never produce an email.
  */
 async function runSequences(): Promise<number> {
   const supabase = await db();
   const engine = await import("@/lib/recruiting/stage-engine.server");
   const nowIso = new Date().toISOString();
+  const { byId: stageSlugById } = await stageMaps();
+  const enabled = await enabledCampaigns();
 
   const { data: rows } = await supabase
     .from("applicant_sequences")
     .select("id, applicant_id, kind, touch_count, anchor_at, next_send_at")
     .eq("status", "active")
     .lte("next_send_at", nowIso)
-    .limit(200);
+    .limit(300);
+
+  const stop = async (id: string, reason: string) => {
+    await supabase
+      .from("applicant_sequences")
+      .update({ status: "stopped", next_send_at: null, stop_reason: reason })
+      .eq("id", id);
+  };
 
   let sent = 0;
   for (const row of rows ?? []) {
-    const template = SEQUENCE_TEMPLATE[row.kind];
     const applicant = await engine.loadApplicant(row.applicant_id);
-    if (!template || !applicant) {
-      await supabase
-        .from("applicant_sequences")
-        .update({ status: "stopped", next_send_at: null, stop_reason: "unresolvable" })
-        .eq("id", row.id);
+    if (!applicant) {
+      await stop(row.id, "unresolvable");
+      continue;
+    }
+    const { data: guardRow } = await supabase
+      .from("applicants")
+      .select(GUARD_COLS)
+      .eq("id", row.applicant_id)
+      .maybeSingle();
+    const g = (guardRow ?? {}) as Guard;
+    if (g.archived_at) {
+      await stop(row.id, "archived");
       continue;
     }
 
-    // Skip a touch whose window has passed but keep the series alive.
     const touch = row.touch_count as number;
-    const anchor = (row.anchor_at as string) ?? nowIso;
+    let anchor = (row.anchor_at as string) ?? nowIso;
+    let template = SEQUENCE_TEMPLATE[row.kind] ?? null;
+    const stageSlug = g.current_stage_id ? stageSlugById.get(g.current_stage_id) : null;
 
-    const result = await engine.sendApplicantEmail(applicant, template, {
+    if (row.kind === "interview_reminders") {
+      if (g.scheduling_status === "canceled") {
+        await stop(row.id, "canceled");
+        continue;
+      }
+      if (!g.scheduled_event_start) {
+        await stop(row.id, "no_appointment");
+        continue;
+      }
+      // Rescheduled since this touch was armed — re-anchor and skip this run.
+      if (g.scheduled_event_start !== anchor) {
+        await engine.startSequence(row.applicant_id, "interview_reminders", g.scheduled_event_start);
+        continue;
+      }
+      if (new Date(anchor).getTime() <= Date.now()) {
+        await stop(row.id, "appointment_passed");
+        continue;
+      }
+      anchor = g.scheduled_event_start;
+      const idx = Math.min(touch, engine.INTERVIEW_TOUCH_TEMPLATES.length - 1);
+      template = engine.INTERVIEW_TOUCH_TEMPLATES[idx];
+    } else if (row.kind === "overview_invite") {
+      if (!enabled.has("overview-invite-weekly")) continue;
+      if (g.overview_completed_at) {
+        await stop(row.id, "overview_attended");
+        continue;
+      }
+      if (g.scheduled_event_start && g.scheduling_status !== "canceled") {
+        await stop(row.id, "scheduled");
+        continue;
+      }
+      if (stageSlug && stageSlug !== "new-applicant") {
+        await stop(row.id, `stage_${stageSlug}`);
+        continue;
+      }
+      template = "overview-invite";
+    } else if (row.kind === "licensing_checkins") {
+      if (!enabled.has("licensing-checkins")) continue;
+      if (g.exam_passed_at || (g.exam_result ?? "").toLowerCase() === "passed") {
+        await stop(row.id, "exam_passed");
+        continue;
+      }
+      if (stageSlug === "active-agent" || stageSlug === "not-moving-forward") {
+        await stop(row.id, `stage_${stageSlug}`);
+        continue;
+      }
+      template = licensingCheckinTemplate(g, touch);
+    }
+
+    if (!template) {
+      await stop(row.id, "no_template");
+      continue;
+    }
+
+    await engine.sendApplicantEmail(applicant, template, {
       sendKey: `seq:${row.kind}:${row.id}:${touch}`,
     });
-    void result;
     sent += 1;
 
     // The recruiter gets their own exam reminder.
@@ -133,8 +253,72 @@ async function runSequences(): Promise<number> {
         stop_reason: next ? null : "completed",
       })
       .eq("id", row.id);
+
+    if (!next && row.kind === "overview_invite") {
+      await engine.logActivity(
+        row.applicant_id,
+        "campaign_completed",
+        "Weekly overview invites finished with no response",
+        { touches: touch + 1 },
+      );
+    }
   }
   return sent;
+}
+
+/**
+ * Enrolls applicants into the recurring campaigns. Safe to run on every
+ * sweep — an applicant already in a sequence is never re-armed.
+ */
+async function runEnrollment(): Promise<Record<string, number>> {
+  const supabase = await db();
+  const engine = await import("@/lib/recruiting/stage-engine.server");
+  const { bySlug } = await stageMaps();
+  const enabled = await enabledCampaigns();
+  const nowIso = new Date().toISOString();
+  const counts: Record<string, number> = { overviewInvite: 0, licensingCheckins: 0 };
+
+  // 1) New applicants who never booked an overview.
+  const newStageId = bySlug.get("new-applicant");
+  if (enabled.has("overview-invite-weekly") && newStageId) {
+    const since = new Date(Date.now() - 90 * 86_400_000).toISOString();
+    const { data } = await supabase
+      .from("applicants")
+      .select("id")
+      .eq("current_stage_id", newStageId)
+      .is("archived_at", null)
+      .is("scheduled_event_start", null)
+      .is("overview_completed_at", null)
+      .not("email", "is", null)
+      .gte("created_at", since)
+      .limit(300);
+    for (const a of data ?? []) {
+      if (await engine.ensureSequence(a.id, "overview_invite", nowIso)) counts.overviewInvite += 1;
+    }
+  }
+
+  // 2) Hired applicants working through licensing and the course.
+  const licensingStageIds = ["interview-completed", "pre-licensing", "state-exam"]
+    .map((s) => bySlug.get(s))
+    .filter(Boolean) as string[];
+  if (enabled.has("licensing-checkins") && licensingStageIds.length) {
+    const { data } = await supabase
+      .from("applicants")
+      .select("id, exam_result")
+      .in("current_stage_id", licensingStageIds)
+      .is("archived_at", null)
+      .is("exam_passed_at", null)
+      .not("email", "is", null)
+      .limit(300);
+    for (const a of data ?? []) {
+      if ((a.exam_result ?? "").toLowerCase() === "passed") continue;
+      if (await engine.ensureSequence(a.id, "licensing_checkins", nowIso)) {
+        counts.licensingCheckins += 1;
+      }
+    }
+  }
+
+  return counts;
 }
 
 /* ------------------------------------------------------------------ */
@@ -146,7 +330,10 @@ async function runReminders() {
   const now = Date.now();
   const counts: Record<string, number> = { sequences: 0, followUp: 0, onboarding: 0 };
 
-  // Interview, exam, and follow-up sequences (see the stage engine).
+  // Keep the recurring campaigns enrolled before sending anything.
+  Object.assign(counts, await runEnrollment());
+
+  // Interview, exam, follow-up, invite, and check-in sequences.
   counts.sequences = await runSequences();
 
   // Applicant follow-ups due — nudge the recruiting agent.
