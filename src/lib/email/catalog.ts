@@ -1060,11 +1060,149 @@ const stageTemplates: EmailTemplateDef[] = [
   }),
 ];
 
+/* ------------------------------------------------------------------ */
+/* Automated applicant campaigns                                       */
+/* ------------------------------------------------------------------ */
+
+const sequenceTemplates: EmailTemplateDef[] = [
+  def({
+    name: "overview-invite",
+    label: "Weekly overview invite",
+    audience: "applicant",
+    category: "recruiting",
+    trigger: "Weekly (Thursday) to new applicants with no overview booked — 4 weeks max",
+    prefKey: "recruiting_updates",
+    subject: "Come see how {{agency_name}} works — this week's overview",
+    body: {
+      title: "You haven't been to an overview yet",
+      intro: GREET,
+      lines: [
+        "You applied to {{agency_name}} but haven't sat in on a company overview yet. That's the one call where all of this makes sense — comp, leads, licensing, and what your first 90 days look like.",
+        "Pick your time below and you're registered. No cost, no commitment.",
+      ],
+      ctaLabel: "Register for the overview",
+      ctaUrl: "{{overview_link}}",
+      secondaryCtaLabel: "Grab a 1-on-1 instead",
+      secondaryCtaUrl: "{{one_on_one_link}}",
+      note: "Questions first? Reply here and {{recruiter_name}} will get back to you.",
+    },
+  }),
+  def({
+    name: "licensing-checkin-course",
+    label: "Check-in — pre-licensing course",
+    audience: "applicant",
+    category: "recruiting",
+    trigger: "Twice weekly (Tue + Fri) while pre-licensing is in progress",
+    prefKey: "recruiting_updates",
+    subject: "Quick check-in on your pre-licensing course",
+    body: {
+      title: "How's the course going?",
+      intro: GREET,
+      lines: [
+        "Checking in on your pre-licensing course. The agents who finish fast do a chapter a day — that's it.",
+        "Use partner code AFE when you enroll, and tell {{recruiter_name}} where you're at so we can keep you on pace.",
+      ],
+      bullets: [
+        "Knock out one chapter today",
+        "Run practice exams as you go",
+        "Message your recruiter with any question you get stuck on",
+      ],
+      ctaLabel: "Open your course",
+      ctaUrl: "{{course_link}}",
+      secondaryCtaLabel: "Confirm you enrolled",
+      secondaryCtaUrl: "{{course_confirm_link}}",
+    },
+  }),
+  def({
+    name: "licensing-checkin-exam",
+    label: "Check-in — schedule your state exam",
+    audience: "applicant",
+    category: "recruiting",
+    trigger: "Twice weekly (Tue + Fri) once the course is underway and no exam is scheduled",
+    prefKey: "recruiting_updates",
+    subject: "Have you scheduled your state exam yet?",
+    body: {
+      title: "Let's get your exam on the calendar",
+      intro: GREET,
+      lines: [
+        "Once your course is close to done, book your state exam — having a date on the calendar is what gets people licensed.",
+        "Check your state's exact steps, then schedule. After you pass, you'll apply for your license on nipr.com.",
+      ],
+      ctaLabel: "State requirements",
+      ctaUrl: "{{state_requirements_link}}",
+      secondaryCtaLabel: "Apply for your license",
+      secondaryCtaUrl: "{{nipr_link}}",
+      note: "Send your exam date to {{recruiter_name}} and we'll get you prepped.",
+    },
+  }),
+  def({
+    name: "licensing-checkin-training",
+    label: "Check-in — course and training progress",
+    audience: "applicant",
+    category: "training",
+    trigger: "Twice weekly (Tue + Fri) once the exam is on the calendar",
+    prefKey: "training_reminders",
+    subject: "Check-in: training while you wait on your exam",
+    body: {
+      title: "Keep building while you wait",
+      intro: GREET,
+      lines: [
+        "Your exam is set — nice work. The waiting period is the best time to get through the Vantage Closer Course so you're producing the week you're licensed.",
+      ],
+      details: [{ label: "Your exam", value: "{{exam_when}}" }],
+      ctaLabel: "Open Vantage Academy",
+      ctaUrl: "{{academy_link}}",
+      secondaryCtaLabel: "Join the Discord",
+      secondaryCtaUrl: "{{discord_link}}",
+    },
+  }),
+  def({
+    name: "interview-reminder-soon",
+    label: "Interview reminder (3 hours)",
+    audience: "applicant",
+    category: "recruiting",
+    trigger: "3 hours before the scheduled overview or interview",
+    prefKey: "recruiting_updates",
+    subject: "Today: your Vantage overview at {{interview_time}}",
+    body: {
+      title: "Happening today",
+      intro: GREET,
+      lines: ["You're on the list for today. Find a quiet spot with a strong signal."],
+      details: [
+        { label: "Date", value: "{{interview_date}}" },
+        { label: "Time", value: "{{interview_time}}" },
+        { label: "With", value: "{{recruiter_name}}" },
+      ],
+      ctaLabel: "Your booking",
+      ctaUrl: "{{reschedule_link}}",
+      note: "Something came up? Reply and we'll move it.",
+    },
+  }),
+  def({
+    name: "interview-reminder-final",
+    label: "Interview reminder (30 minutes)",
+    audience: "applicant",
+    category: "recruiting",
+    trigger: "30 minutes before the scheduled overview or interview",
+    prefKey: "recruiting_updates",
+    subject: "Starting in 30 minutes — {{interview_time}}",
+    body: {
+      title: "We start in 30 minutes",
+      intro: GREET,
+      lines: ["Your Vantage call starts shortly. Use the link below to join."],
+      details: [{ label: "Time", value: "{{interview_time}}" }],
+      ctaLabel: "Join the call",
+      ctaUrl: "{{reschedule_link}}",
+    },
+  }),
+];
+
 export const EMAIL_TEMPLATE_LIST: EmailTemplateDef[] = [
   ...applicantTemplates,
   ...stageTemplates,
   ...agentTemplates,
   ...campaignTemplates,
+  ...sequenceTemplates,
 ];
 
 export const EMAIL_CATALOG: Record<string, EmailTemplateDef> = Object.fromEntries(
