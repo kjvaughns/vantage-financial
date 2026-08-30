@@ -393,7 +393,7 @@ function stepDefs(ctx?: OnboardingContext): StepDef[] {
             <li>Closing business consistently is a normal expectation of the sales role.</li>
             <li>Agents below standard may be assigned additional training.</li>
             <li>Consistently falling below production standards may result in loss of free lead eligibility and possible termination.</li>
-            <li>New Agent Training begins Mondays; the Monday Team Meeting is mandatory.</li>
+            <li>The Monday Team Meeting is mandatory.</li>
             <li>Missing required meetings without prior communication may result in termination — communicate beforehand, not after.</li>
           </ul>
         </>
