@@ -209,7 +209,7 @@ function CompletionPanel() {
       </div>
       <h2 className="p-card-title">Onboarding complete</h2>
       <p className="p-secondary mx-auto mt-2 max-w-[460px]">
-        You&apos;re ready for Vantage New Agent Training. Notify your trainer that you have completed
+        You&apos;re ready for Vantage New Agent Live Training. Notify your trainer that you have completed
         onboarding.
       </p>
       <div className="mt-4 flex flex-wrap justify-center gap-2">
