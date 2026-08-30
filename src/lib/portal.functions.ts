@@ -527,7 +527,7 @@ export const notifyOnboarding = createServerFn({ method: "POST" })
           : `${name} completed onboarding`;
         const line = isContracting
           ? `${name} has completed Agent Cloud onboarding.`
-          : `${name} has completed onboarding and is ready for New Agent Training.`;
+          : `${name} has completed onboarding and is ready for New Agent Live Training.`;
         await sendRawEmail(
           copy.email,
           subject,

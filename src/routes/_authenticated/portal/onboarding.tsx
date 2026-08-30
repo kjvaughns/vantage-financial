@@ -209,7 +209,7 @@ function CompletionPanel() {
       </div>
       <h2 className="p-card-title">Onboarding complete</h2>
       <p className="p-secondary mx-auto mt-2 max-w-[460px]">
-        You&apos;re ready for Vantage New Agent Training. Notify your trainer that you have completed
+        You&apos;re ready for Vantage New Agent Live Training. Notify your trainer that you have completed
         onboarding.
       </p>
       <div className="mt-4 flex flex-wrap justify-center gap-2">
@@ -393,7 +393,7 @@ function stepDefs(ctx?: OnboardingContext): StepDef[] {
             <li>Closing business consistently is a normal expectation of the sales role.</li>
             <li>Agents below standard may be assigned additional training.</li>
             <li>Consistently falling below production standards may result in loss of free lead eligibility and possible termination.</li>
-            <li>New Agent Training begins Mondays; the Monday Team Meeting is mandatory.</li>
+            <li>The Monday Team Meeting is mandatory.</li>
             <li>Missing required meetings without prior communication may result in termination — communicate beforehand, not after.</li>
           </ul>
         </>

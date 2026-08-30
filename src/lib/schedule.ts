@@ -13,11 +13,6 @@ export type ScheduleItem = {
 export const SCHEDULE: ScheduleItem[] = [
   { label: "Mandatory Team Meeting", when: "Monday 9:00 AM" },
   {
-    label: "New Agent Training",
-    when: "Monday 10:00 AM sharp",
-    note: "Agency-wide training — open to everyone",
-  },
-  {
     label: "New Agent Live Training",
     when: "Daily 10:00 AM",
     note: "Training Room Discord voice channel",
@@ -34,12 +29,11 @@ export const SCHEDULE: ScheduleItem[] = [
 
 /** One-line summary used inside email copy. */
 export const SCHEDULE_SUMMARY =
-  "Monday 9:00 AM team meeting, Monday 10:00 AM new agent training, daily 10:00 AM new agent live training, Monday 7:00 PM company overview, Wednesday 10:30 AM agency training, film review Monday through Thursday 6:00 PM in the Training Room (mandatory if you haven't closed a deal that day), live dials 10-6 daily.";
+  "Monday 9:00 AM team meeting, daily 10:00 AM new agent live training, Monday 7:00 PM company overview, Wednesday 10:30 AM agency training, film review Monday through Thursday 6:00 PM in the Training Room (mandatory if you haven't closed a deal that day), live dials 10-6 daily.";
 
 /** Short bullets for emails that list only the essentials. */
 export const SCHEDULE_BULLETS = [
   "Monday 9:00 AM team meeting",
-  "Monday 10:00 AM new agent training",
   "Film review Monday through Thursday 6:00 PM — mandatory if you haven't closed that day",
 ];
 
