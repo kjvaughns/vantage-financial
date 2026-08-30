@@ -347,6 +347,11 @@ function ApplyPage() {
               onChange={setRecruiter}
               invalid={errors.includes("who referred you")}
             />
+            <p className="mt-2 text-[12.5px] text-vantage-muted">
+              Only pick an agent if they personally referred you. If you messaged us or found
+              Vantage on your own, choose <span className="text-vantage-gold">"I found Vantage on my
+              own"</span> — our team will reach out.
+            </p>
             {invalidSlug && !recruiter && (
               <p className="mt-2 text-[12.5px] text-vantage-muted">
                 We couldn't match that referral link — search below, or type your recruiter's name
