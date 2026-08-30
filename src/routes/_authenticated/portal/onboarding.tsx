@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { formatPhone } from "@/lib/phone";
+import { SCHEDULE } from "@/lib/schedule";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -374,12 +375,12 @@ function stepDefs(ctx?: OnboardingContext): StepDef[] {
         <>
           <div className="p-label mb-1">Weekly schedule (CST)</div>
           <ul className="p-secondary space-y-1">
-            <li><strong style={{ color: "var(--p-text)" }}>Mandatory Team Meeting</strong> — Monday 9:30 AM</li>
-            <li><strong style={{ color: "var(--p-text)" }}>Company Overview</strong> — Monday 7:00 PM</li>
-            <li><strong style={{ color: "var(--p-text)" }}>New Agent Live Training</strong> — Monday ~10:30 AM (Training Room Discord voice channel)</li>
-            <li><strong style={{ color: "var(--p-text)" }}>Agency Training</strong> — Wednesday 10:30 AM</li>
-            <li><strong style={{ color: "var(--p-text)" }}>Film Review</strong> — Tuesday &amp; Thursday 6:00 PM</li>
-            <li><strong style={{ color: "var(--p-text)" }}>Live Dials</strong> — 10:00 AM to 6:00 PM daily</li>
+            {SCHEDULE.map((s) => (
+              <li key={s.label}>
+                <strong style={{ color: "var(--p-text)" }}>{s.label}</strong> — {s.when}
+                {s.note ? ` (${s.note})` : ""}
+              </li>
+            ))}
           </ul>
           <p className="p-muted mt-2">Encouraged to start earlier and continue calling later when possible.</p>
 

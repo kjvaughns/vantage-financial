@@ -16,6 +16,10 @@ export const NIPR_URL = "https://nipr.com";
 
 export const DISCORD_INVITE_URL = "https://discord.gg/sFgEEPRSmw";
 
+/** Team Instagram — shown on the public site and in every email footer. */
+export const INSTAGRAM_URL = "https://instagram.com/vantage.financial";
+export const INSTAGRAM_HANDLE = "@vantage.financial";
+
 /** Agent Cloud onboarding invite for newly licensed Vantage agents. */
 export const AGENT_CLOUD_INVITE_URL =
   "https://useagentcloud.com/invite/dcee6766-4b8f-44c0-9f4c-025ccdcbce2e";

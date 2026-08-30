@@ -153,8 +153,9 @@ function ApplyPage() {
     setErrors([]);
     setSubmitting(true);
 
-    const referral_source: "referral_link" | "manual" =
-      originalReferral && recruiter && !recruiter.custom && originalReferral.id === recruiter.id
+    const referral_source: "referral_link" | "manual" | "self" = recruiter?.self
+      ? "self"
+      : originalReferral && recruiter && !recruiter.custom && originalReferral.id === recruiter.id
         ? "referral_link"
         : "manual";
 
@@ -170,9 +171,10 @@ function ApplyPage() {
           instagram_handle: form.instagram_handle.trim(),
           why_text: form.why_text.trim(),
           consent_contact: true,
-          referred_by_profile_id: recruiter && !recruiter.custom ? recruiter.id : "",
+          referred_by_profile_id:
+            recruiter && !recruiter.custom && !recruiter.self ? recruiter.id : "",
           referred_by_name: recruiter?.custom ? (recruiter.full_name ?? "") : "",
-          original_referral_profile_id: originalReferral?.id ?? "",
+          original_referral_profile_id: recruiter?.self ? "" : (originalReferral?.id ?? ""),
           referral_slug: referralSlug,
           referral_source,
           referral_landing_url: landingUrl,
@@ -345,6 +347,11 @@ function ApplyPage() {
               onChange={setRecruiter}
               invalid={errors.includes("who referred you")}
             />
+            <p className="mt-2 text-[12.5px] text-vantage-muted">
+              Only pick an agent if they personally referred you. If you messaged us or found
+              Vantage on your own, choose <span className="text-vantage-gold">"I found Vantage on my
+              own"</span> — our team will reach out.
+            </p>
             {invalidSlug && !recruiter && (
               <p className="mt-2 text-[12.5px] text-vantage-muted">
                 We couldn't match that referral link — search below, or type your recruiter's name

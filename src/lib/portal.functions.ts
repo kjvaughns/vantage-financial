@@ -323,7 +323,10 @@ export const listApplicants = createServerFn({ method: "POST" })
       ...a,
       referring_recruiter_name:
         nameById[a.referred_by_profile_id || a.original_recruiter_id || a.assigned_recruiter_id] ||
-        null,
+        ((a as any).referred_by_name_snapshot as string | null) ||
+        (a.referred_by_profile_id || a.original_recruiter_id || a.assigned_recruiter_id
+          ? null
+          : "Company lead — unassigned"),
     }));
 
     return { applicants: withRecruiter, stages: stagesRes.data ?? [] };

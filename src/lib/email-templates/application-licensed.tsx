@@ -12,7 +12,7 @@ const TITLE = "You're in — here's what happens next"
 const Email = ({ firstName, ...rest }: Props) => {
   const L = links(rest)
   return (
-    <Shell preview={TITLE} title={TITLE} copyFor={rest.copyFor} discordUrl={L.discordInviteUrl}>
+    <Shell preview={TITLE} title={TITLE} copyFor={rest.copyFor}>
       <Text style={paragraph}>
         Hey {greet(firstName)}, we&apos;ve got your application — welcome.
       </Text>
@@ -26,6 +26,11 @@ const Email = ({ firstName, ...rest }: Props) => {
         team to fast-track things if you&apos;d rather move now:
       </Text>
       <GoldButton href={L.ownerCalendlyUrl} label="Book a 1:1 call" />
+      <Text style={paragraph}>
+        Then join the Vantage Discord — that&apos;s where training, announcements, and the team
+        live:
+      </Text>
+      <GoldButton href={L.discordInviteUrl} label="Join the Discord" />
       <Text style={paragraph}>Either way — let&apos;s move. See you soon.</Text>
     </Shell>
   )
