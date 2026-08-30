@@ -39,7 +39,7 @@ const applicationSchema = z
     referred_by_name: z.string().trim().max(160).optional().or(z.literal("")),
     original_referral_profile_id: z.string().uuid().optional().or(z.literal("")),
     referral_slug: z.string().trim().max(120).optional().or(z.literal("")),
-    referral_source: z.enum(["referral_link", "manual", "direct"]).optional(),
+    referral_source: z.enum(["referral_link", "manual", "direct", "self"]).optional(),
     referral_landing_url: z.string().trim().max(600).optional().or(z.literal("")),
     invalid_referral_slug: z.string().trim().max(120).optional().or(z.literal("")),
     // Monday overview slot the applicant picked on the form (ISO-8601 UTC).
@@ -48,6 +48,7 @@ const applicationSchema = z
   })
   .refine(
     (d) =>
+      d.referral_source === "self" ||
       (typeof d.referred_by_profile_id === "string" && d.referred_by_profile_id.length > 0) ||
       (typeof d.referred_by_name === "string" && d.referred_by_name.length > 0),
     { message: "Provide a recruiter", path: ["referred_by_profile_id"] },
@@ -111,7 +112,39 @@ export const submitApplication = createServerFn({ method: "POST" })
     }
 
     const applicantName = `${data.first_name} ${data.last_name}`.trim();
-    const recruiterName = ctx.recruiter_name?.trim() || ctx.referred_by_name?.trim() || data.referred_by_name || null;
+    const isSelfReferral = data.referral_source === "self";
+    const recruiterName = isSelfReferral
+      ? "Found us directly"
+      : ctx.recruiter_name?.trim() || ctx.referred_by_name?.trim() || data.referred_by_name || null;
+
+    // Self-referrals have no recruiter on the record — the house recruiter
+    // (configured in Admin → Settings) gets the alert so the lead isn't lost.
+    let alertEmail = ctx.recruiter_email ?? null;
+    let alertName = ctx.recruiter_name ?? null;
+    if (!alertEmail) {
+      try {
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { data: setting } = await (supabaseAdmin as any)
+          .from("system_settings")
+          .select("value")
+          .eq("key", "house_recruiter_profile_id")
+          .maybeSingle();
+        const houseId = setting?.value?.trim();
+        if (houseId) {
+          const { data: house } = await (supabaseAdmin as any)
+            .from("profiles")
+            .select("email, full_name")
+            .eq("id", houseId)
+            .maybeSingle();
+          if (house?.email) {
+            alertEmail = house.email;
+            alertName = house.full_name ?? null;
+          }
+        }
+      } catch (e) {
+        console.error("house recruiter lookup failed", e);
+      }
+    }
 
     // Trigger: application-submitted email (branches on licensing), with the
     // recruiting agent copied so they see exactly what their applicant got.
@@ -132,10 +165,10 @@ export const submitApplication = createServerFn({ method: "POST" })
       requestedOverviewAt: ctx.requested_overview_at ?? null,
       wantsOneOnOne: !!ctx.wants_one_on_one,
     });
-    if (ctx.recruiter_email) {
+    if (alertEmail) {
       await sendAgentNewApplicant(supabase as never, {
-        agentEmail: ctx.recruiter_email,
-        agentName: ctx.recruiter_name,
+        agentEmail: alertEmail,
+        agentName: alertName,
         applicantId: res.id,
         applicantName,
         applicantEmail: data.email,

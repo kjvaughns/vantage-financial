@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { INSTAGRAM_HANDLE, INSTAGRAM_URL } from "@/lib/next-steps";
 
 export const VANTAGE_LOGO_URL = "/vantage-logo.png";
 
@@ -90,6 +91,15 @@ export function PublicFooter() {
           <Link to="/apply" className="text-vantage-dim transition hover:text-vantage-gold">
             Apply
           </Link>
+          <span className="text-white/10">•</span>
+          <a
+            href={INSTAGRAM_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="font-semibold text-vantage-dim transition hover:text-vantage-gold"
+          >
+            Follow {INSTAGRAM_HANDLE}
+          </a>
           <span className="text-white/10">•</span>
           <span>Equal Opportunity</span>
         </div>

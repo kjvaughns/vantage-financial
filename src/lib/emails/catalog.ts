@@ -9,11 +9,13 @@
 
 import {
   DISCORD_INVITE_URL,
+  INSTAGRAM_URL,
   NIPR_URL,
   STATE_REQUIREMENTS_URL,
   XCEL_COURSE_URL,
   XCEL_PARTNER_CODE,
 } from "@/lib/next-steps";
+import { SCHEDULE_SUMMARY } from "@/lib/schedule";
 
 export type ApplicantEmailTemplate = {
   key: string;
@@ -105,7 +107,7 @@ export const APPLICANT_EMAIL_TEMPLATES: ApplicantEmailTemplate[] = [
     key: "training_instructions",
     label: "Training Instructions",
     subject: "Your Vantage training schedule",
-    body: `Hi {{first_name}},\n\nHere's what to expect for training. New Agent Training begins Mondays, and the Monday team meeting is mandatory. We'll share the full schedule and links in the portal.\n\nCome ready to learn and take notes.\n\nJoin the Vantage Discord — that's where training, announcements, and the team live: ${DISCORD_INVITE_URL}\n\n— The Vantage Team`,
+    body: `Hi {{first_name}},\n\nHere's what to expect for training: ${SCHEDULE_SUMMARY}\n\nCome ready to learn and take notes.\n\nJoin the Vantage Discord — that's where training, announcements, and the team live: ${DISCORD_INVITE_URL}\n\nFollow the team on Instagram: ${INSTAGRAM_URL}\n\n— The Vantage Team`,
   },
   {
     key: "not_moving_forward",

@@ -6,6 +6,7 @@
  * Client-safe: pure data. No secrets, no server imports.
  */
 
+import { SCHEDULE_BULLETS, SCHEDULE_SUMMARY } from "@/lib/schedule";
 import type { EmailVarKey } from "./vars";
 
 export type EmailAudience = "applicant" | "agent";
@@ -414,7 +415,7 @@ const applicantTemplates: EmailTemplateDef[] = [
       intro: GREET,
       lines: [
         "Onboarding is done — you're in training. This is where the reps happen, so show up on camera and ready to dial.",
-        "Your week: Monday 9:30 AM team meeting, Monday ~10:30 AM new agent training, Monday 7:00 PM company overview, Wednesday 10:30 AM agency training, Tuesday and Thursday 6:00 PM film review, live dials 10-6 daily.",
+        `Your week: ${SCHEDULE_SUMMARY}`,
         "Finish the Vantage Closer Course if you haven't yet — live training builds directly on it.",
       ],
       bullets: [
@@ -475,7 +476,7 @@ const applicantTemplates: EmailTemplateDef[] = [
         "1) Agent Cloud onboarding — create your Agent Cloud account with the Vantage invite link below, and select the upline shown in your portal checklist.",
         "2) Discord Licensed role — in the Vantage Discord, go to Start Here and select Licensed so the licensed agent channels unlock.",
         "3) Read the Vantage Financial Agent Playbook in the Academy Library.",
-        "4) Agent expectations and schedule — Monday 9:30 AM team meeting, Monday ~10:30 AM new agent training, Monday 7:00 PM company overview, Wednesday 10:30 AM agency training, Tuesday and Thursday 6:00 PM film review, live dials 10-6 daily.",
+        `4) Agent expectations and schedule — ${SCHEDULE_SUMMARY}`,
         "5) Complete the Vantage Closer Course before live training starts.",
       ],
       details: [
@@ -1049,11 +1050,7 @@ const stageTemplates: EmailTemplateDef[] = [
       lines: [
         "Onboarding and training are behind you — you're an active Vantage agent. From here it's dials, film review, and reps.",
       ],
-      bullets: [
-        "Live dials 10-6 daily",
-        "Monday 9:30 AM team meeting",
-        "Tuesday and Thursday 6:00 PM film review",
-      ],
+      bullets: ["Live dials 10-6 daily", ...SCHEDULE_BULLETS],
       ctaLabel: "Open the portal",
       ctaUrl: "{{portal_link}}",
     },

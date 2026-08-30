@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Check, ChevronsUpDown, Loader2, UserPlus } from "lucide-react";
+import { Check, ChevronsUpDown, Compass, Loader2, UserPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -12,7 +12,17 @@ import {
 } from "@/components/ui/command";
 import { searchRecruiters, type RecruiterOption } from "@/lib/applications.functions";
 
-export type RecruiterSelection = RecruiterOption & { custom?: boolean };
+export type RecruiterSelection = RecruiterOption & { custom?: boolean; self?: boolean };
+
+/** Sentinel selection for "nobody referred me — I found Vantage on my own". */
+export const SELF_REFERRAL: RecruiterSelection = {
+  id: "",
+  full_name: "I found Vantage on my own",
+  avatar_url: null,
+  recruiting_slug: null,
+  team_name: null,
+  self: true,
+};
 
 function initials(name: string | null): string {
   if (!name) return "?";
@@ -21,6 +31,13 @@ function initials(name: string | null): string {
 }
 
 function Avatar({ r }: { r: RecruiterSelection }) {
+  if (r.self) {
+    return (
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-vantage-gold/40 bg-vantage-gold/10 text-vantage-gold">
+        <Compass className="h-3.5 w-3.5" />
+      </span>
+    );
+  }
   if (r.avatar_url) {
     return <img src={r.avatar_url} alt="" className="h-7 w-7 shrink-0 rounded-full object-cover" />;
   }
@@ -127,6 +144,25 @@ export function RecruiterCombobox({
             onValueChange={setQuery}
           />
           <CommandList className="max-h-72 overflow-y-auto">
+            <CommandGroup heading="No one referred you?">
+              <CommandItem
+                value="__self__"
+                onSelect={() => {
+                  onChange(SELF_REFERRAL);
+                  setOpen(false);
+                }}
+                className="gap-2"
+              >
+                <Avatar r={SELF_REFERRAL} />
+                <span className="flex min-w-0 flex-col">
+                  <span className="truncate text-vantage-ivory">I found Vantage on my own</span>
+                  <span className="truncate text-[12px] text-vantage-faint">
+                    Pick this if you messaged us or found us online — don't guess a name
+                  </span>
+                </span>
+                {value?.self && <Check className="ml-auto h-4 w-4 text-vantage-gold" />}
+              </CommandItem>
+            </CommandGroup>
             {loading ? (
               <div className="flex items-center justify-center gap-2 py-6 text-sm text-vantage-muted">
                 <Loader2 className="h-4 w-4 animate-spin" /> Searching…

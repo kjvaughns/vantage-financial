@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { DISCORD_INVITE_URL, XCEL_COURSE_URL } from '@/lib/next-steps'
+import { DISCORD_INVITE_URL, INSTAGRAM_URL, XCEL_COURSE_URL } from '@/lib/next-steps'
 
 import {
   Body,
@@ -252,7 +252,7 @@ export function Shell({
   )
 }
 
-export const INSTAGRAM_URL = 'https://instagram.com/vantage.financial'
+export { INSTAGRAM_URL }
 
 export function greet(name?: string) {
   return name && name.trim() ? name.trim() : 'there'
