@@ -132,6 +132,7 @@ function RootShell({ children }: { children: ReactNode }) {
       </head>
       <body>
         {children}
+        <div dangerouslySetInnerHTML={{ __html: META_PIXEL_NOSCRIPT }} />
         <Scripts />
       </body>
     </html>
