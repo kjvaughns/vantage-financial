@@ -13,6 +13,23 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 
+// Meta (Facebook) Pixel — loads site-wide on every page.
+// Pixel ID 929825575167366 is a publishable tracking ID, safe in client code.
+const META_PIXEL_CODE = `!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '929825575167366');
+fbq('track', 'PageView');`;
+
+// No-JS fallback tracking pixel, rendered in <body>.
+const META_PIXEL_NOSCRIPT =
+  '<noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=929825575167366&ev=PageView&noscript=1" /></noscript>';
+
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-black px-4 text-vantage-ivory">
