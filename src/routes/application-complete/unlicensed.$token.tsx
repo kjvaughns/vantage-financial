@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { PublicShell } from "@/components/vantage/brand";
+import { trackApplicationLead } from "@/lib/meta-pixel";
 import {
   DISCORD_INVITE_URL,
   NIPR_URL,
@@ -53,6 +54,11 @@ function UnlicensedComplete() {
     enabled: ctx.found,
     retry: false,
   });
+
+  // Fire the Meta Pixel conversion on success-page load.
+  useEffect(() => {
+    trackApplicationLead(token, false);
+  }, [token]);
 
   useEffect(() => {
     if (!ctx.first_name) {
