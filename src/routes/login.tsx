@@ -4,9 +4,9 @@ import { PublicShell } from "@/components/vantage/brand";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/login")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    forgot: search.forgot === true || search.forgot === "true" ? true : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): { forgot?: boolean } =>
+    search.forgot === true || search.forgot === "true" ? { forgot: true } : {},
+
   head: () => ({
     meta: [
       { title: "Agent login — Vantage Financial" },
