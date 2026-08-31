@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ScheduleRouteImport } from './routes/schedule'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as EvaluationRouteImport } from './routes/evaluation'
 import { Route as ApplyRouteImport } from './routes/apply'
@@ -65,6 +66,11 @@ import { Route as AuthenticatedPortalAcademyCoursesSlugRouteImport } from './rou
 const ScheduleRoute = ScheduleRouteImport.update({
   id: '/schedule',
   path: '/schedule',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -368,6 +374,7 @@ export interface FileRoutesByFullPath {
   '/apply': typeof ApplyRoute
   '/evaluation': typeof EvaluationRoute
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/schedule': typeof ScheduleRoute
   '/portal': typeof AuthenticatedPortalRouteRouteWithChildren
   '/course-purchased/$token': typeof CoursePurchasedTokenRoute
@@ -420,6 +427,7 @@ export interface FileRoutesByTo {
   '/apply': typeof ApplyRoute
   '/evaluation': typeof EvaluationRoute
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/schedule': typeof ScheduleRoute
   '/course-purchased/$token': typeof CoursePurchasedTokenRoute
   '/join/$slug': typeof JoinSlugRoute
@@ -469,6 +477,7 @@ export interface FileRoutesById {
   '/apply': typeof ApplyRoute
   '/evaluation': typeof EvaluationRoute
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/schedule': typeof ScheduleRoute
   '/_authenticated/portal': typeof AuthenticatedPortalRouteRouteWithChildren
   '/course-purchased/$token': typeof CoursePurchasedTokenRoute
@@ -524,6 +533,7 @@ export interface FileRouteTypes {
     | '/apply'
     | '/evaluation'
     | '/login'
+    | '/reset-password'
     | '/schedule'
     | '/portal'
     | '/course-purchased/$token'
@@ -576,6 +586,7 @@ export interface FileRouteTypes {
     | '/apply'
     | '/evaluation'
     | '/login'
+    | '/reset-password'
     | '/schedule'
     | '/course-purchased/$token'
     | '/join/$slug'
@@ -624,6 +635,7 @@ export interface FileRouteTypes {
     | '/apply'
     | '/evaluation'
     | '/login'
+    | '/reset-password'
     | '/schedule'
     | '/_authenticated/portal'
     | '/course-purchased/$token'
@@ -679,6 +691,7 @@ export interface RootRouteChildren {
   ApplyRoute: typeof ApplyRoute
   EvaluationRoute: typeof EvaluationRoute
   LoginRoute: typeof LoginRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   ScheduleRoute: typeof ScheduleRoute
   CoursePurchasedTokenRoute: typeof CoursePurchasedTokenRoute
   JoinSlugRoute: typeof JoinSlugRoute
@@ -697,6 +710,13 @@ declare module '@tanstack/react-router' {
       path: '/schedule'
       fullPath: '/schedule'
       preLoaderRoute: typeof ScheduleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -1261,6 +1281,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApplyRoute: ApplyRoute,
   EvaluationRoute: EvaluationRoute,
   LoginRoute: LoginRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   ScheduleRoute: ScheduleRoute,
   CoursePurchasedTokenRoute: CoursePurchasedTokenRoute,
   JoinSlugRoute: JoinSlugRoute,
