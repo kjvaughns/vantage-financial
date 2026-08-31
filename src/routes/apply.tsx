@@ -183,14 +183,8 @@ function ApplyPage() {
         },
       });
 
-      // Fire Meta Pixel Lead conversion event on successful application.
-      if (typeof window !== "undefined" && typeof (window as any).fbq === "function") {
-        (window as any).fbq("track", "Lead", {
-          content_name: "Vantage Financial Application",
-          content_category: form.licensed ? "Licensed" : "Unlicensed",
-          status: "submitted",
-        });
-      }
+      // Meta Pixel conversion fires on the success page (reliable on load,
+      // not cut off by this redirect) — see src/lib/meta-pixel.ts.
 
       sessionStorage.setItem("vantage_applicant_first", form.first_name.trim());
       // Route by the applicant's own answer (source of truth on the client),
