@@ -8,6 +8,7 @@ import { getAcademyAdminSummary } from "@/lib/academy-content.functions";
 import { RecordingsManager } from "@/components/vantage/academy/recordings-manager";
 import { LibraryManager } from "@/components/vantage/academy/library-manager";
 import { CoursesManager } from "@/components/vantage/academy/courses-manager";
+import { TemplatesManager } from "@/components/vantage/academy/templates-manager";
 import {
   PageHeader,
   PageBody,
@@ -22,7 +23,7 @@ import {
 } from "@/components/portal/ui";
 import { ChevronLeft, PlayCircle, BookOpen, GraduationCap } from "lucide-react";
 
-type Section = "overview" | "recordings" | "library" | "courses";
+type Section = "overview" | "recordings" | "library" | "courses" | "templates";
 
 export const Route = createFileRoute("/_authenticated/portal/academy/admin")({
   head: () => ({
@@ -86,6 +87,7 @@ function AcademyAdmin() {
                 { value: "recordings", label: "Recordings" },
                 { value: "library", label: "Library" },
                 { value: "courses", label: "Courses" },
+                { value: "templates", label: "Templates" },
               ]}
             />
           }
@@ -95,6 +97,13 @@ function AcademyAdmin() {
         {section === "recordings" && <RecordingsManager />}
         {section === "library" && <LibraryManager />}
         {section === "courses" && <CoursesManager />}
+        {section === "templates" && (
+          <TemplatesManager
+            onApplied={(kind) =>
+              setSection(kind === "course" ? "courses" : kind === "library" ? "library" : "recordings")
+            }
+          />
+        )}
       </PageBody>
     </PortalShell>
   );
@@ -124,6 +133,18 @@ function Overview({ onGo }: { onGo: (s: Section) => void }) {
           }
         />
       </MetricRow>
+
+      <Panel
+        title="Start from a template"
+        description="Reusable starting points that create a draft you edit and publish."
+        actions={<Button variant="secondary" size="sm" onClick={() => onGo("templates")}>Templates</Button>}
+      >
+        <p className="p-secondary leading-snug">
+          Use a starter outline for a course, a set of library documents or a recording — then edit the draft and
+          publish when it's ready.
+        </p>
+      </Panel>
+
 
       <div className="grid gap-4 lg:grid-cols-3">
         {cards.map((c) => (

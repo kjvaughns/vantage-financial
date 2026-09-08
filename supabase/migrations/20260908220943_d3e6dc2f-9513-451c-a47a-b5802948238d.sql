@@ -1,0 +1,2 @@
+ALTER TABLE public.academy_templates DROP CONSTRAINT academy_templates_kind_check;
+ALTER TABLE public.academy_templates ADD CONSTRAINT academy_templates_kind_check CHECK (kind = ANY (ARRAY['course'::text, 'library'::text, 'recording'::text]));

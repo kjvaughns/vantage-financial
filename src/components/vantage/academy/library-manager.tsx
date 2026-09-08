@@ -35,7 +35,8 @@ import {
   LIBRARY_CATEGORIES,
 } from "@/lib/academy-content.functions";
 import { adminDeleteResource } from "@/lib/academy.functions";
-import { Plus, Trash2 } from "lucide-react";
+import { adminDuplicateLibraryItem } from "@/lib/academy-templates.functions";
+import { Plus, Trash2, Copy } from "lucide-react";
 
 type Form = {
   title: string;
@@ -70,6 +71,7 @@ export function LibraryManager() {
   const listFn = useServerFn(adminListLibraryV2);
   const statusFn = useServerFn(adminSetLibraryStatus);
   const delFn = useServerFn(adminDeleteResource);
+  const dupFn = useServerFn(adminDuplicateLibraryItem);
   const q = useQuery({ queryKey: ["academy", "admin", "library"], queryFn: () => listFn() });
   const [edit, setEdit] = useState<null | { id?: string }>(null);
   const [query, setQuery] = useState("");
@@ -165,6 +167,17 @@ export function LibraryManager() {
                           }}
                         >
                           {r.status === "published" ? "Unpublish" : "Publish"}
+                        </button>
+                        <button
+                          className="p-focus"
+                          style={{ color: "var(--p-text-3)" }}
+                          aria-label="Duplicate"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            act(() => dupFn({ data: { id: r.id } }), "Duplicated as a draft.");
+                          }}
+                        >
+                          <Copy size={14} />
                         </button>
                         <button
                           className="p-focus"

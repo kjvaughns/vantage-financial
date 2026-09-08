@@ -52,6 +52,11 @@ import {
   adminReorder,
 } from "@/lib/academy.functions";
 import {
+  adminDuplicateCourse,
+  adminSetCourseStatus,
+  adminSaveCourseAsTemplate,
+} from "@/lib/academy-templates.functions";
+import {
   GripVertical,
   Plus,
   Trash2,
@@ -129,10 +134,29 @@ export function CoursesManager() {
   const qc = useQueryClient();
   const listFn = useServerFn(adminListCourses);
   const delFn = useServerFn(adminDeleteCourse);
+  const dupFn = useServerFn(adminDuplicateCourse);
+  const statusFn = useServerFn(adminSetCourseStatus);
+  const tplFn = useServerFn(adminSaveCourseAsTemplate);
   const coursesQ = useQuery({ queryKey: ["academy", "courses"], queryFn: () => listFn() });
   const [selected, setSelected] = useState<string | null>(null);
   const [metaOpen, setMetaOpen] = useState<null | { id?: string }>(null);
   const courses = (coursesQ.data?.courses ?? []) as any[];
+
+  async function act(fn: () => Promise<unknown>, ok: string) {
+    try {
+      await fn();
+      qc.invalidateQueries({ queryKey: ["academy"] });
+      notify.success(ok);
+    } catch (e: any) {
+      notify.error(e?.message ?? "That didn't work. Please try again.");
+    }
+  }
+
+  async function saveAsTemplate(c: any) {
+    const title = prompt("Name this template", `${c.title} template`);
+    if (!title) return;
+    act(() => tplFn({ data: { course_id: c.id, title } }), "Saved as a template.");
+  }
 
   async function del(id: string) {
     if (!confirm("Delete this course and all of its content?")) return;
@@ -172,9 +196,39 @@ export function CoursesManager() {
                     </TD>
                     <TD><Badge tone={c.status === "published" ? "green" : "neutral"}>{c.status}</Badge></TD>
                     <TD align="right">
-                      <button onClick={(e) => { e.stopPropagation(); del(c.id); }} className="p-focus" style={{ color: "var(--p-text-3)" }} aria-label="Delete course">
-                        <Trash2 size={15} />
-                      </button>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          className="p-focus text-[12.5px]"
+                          style={{ color: "var(--p-text-2)" }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            act(
+                              () => statusFn({ data: { id: c.id, status: c.status === "published" ? "draft" : "published" } }),
+                              c.status === "published" ? "Moved to drafts." : "Published.",
+                            );
+                          }}
+                        >
+                          {c.status === "published" ? "Unpublish" : "Publish"}
+                        </button>
+                        <button
+                          className="p-focus text-[12.5px]"
+                          style={{ color: "var(--p-text-2)" }}
+                          onClick={(e) => { e.stopPropagation(); saveAsTemplate(c); }}
+                        >
+                          Save as template
+                        </button>
+                        <button
+                          className="p-focus"
+                          style={{ color: "var(--p-text-3)" }}
+                          aria-label="Duplicate course"
+                          onClick={(e) => { e.stopPropagation(); act(() => dupFn({ data: { id: c.id } }), "Duplicated as a draft."); }}
+                        >
+                          <Copy size={15} />
+                        </button>
+                        <button onClick={(e) => { e.stopPropagation(); del(c.id); }} className="p-focus" style={{ color: "var(--p-text-3)" }} aria-label="Delete course">
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
                     </TD>
                   </TR>
                 ))}
