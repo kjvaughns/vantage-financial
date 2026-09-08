@@ -2042,6 +2042,10 @@ export type Database = {
         Returns: Json
       }
       finalize_invitation_acceptance: { Args: { payload: Json }; Returns: Json }
+      find_applicant_duplicate: {
+        Args: { _email: string; _last_name: string; _phone: string }
+        Returns: string
+      }
       get_applicant_notify_context: { Args: { _token: string }; Returns: Json }
       get_evaluation_prefill: { Args: { _applicant_id: string }; Returns: Json }
       get_invitation_public: { Args: { _token: string }; Returns: Json }
@@ -2074,9 +2078,29 @@ export type Database = {
         Returns: boolean
       }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      lookup_applicant_duplicate: {
+        Args: { _email: string; _last_name: string; _phone: string }
+        Returns: Json
+      }
       mark_applicant_scheduled: { Args: { _email: string }; Returns: Json }
       mark_licensed_fallback: { Args: { _token: string }; Returns: Json }
       mark_scheduled_by_token: { Args: { _token: string }; Returns: Json }
+      normalize_phone: { Args: { _txt: string }; Returns: string }
+      possible_duplicate_applicants: {
+        Args: never
+        Returns: {
+          created_at: string
+          email: string
+          first_name: string
+          group_key: string
+          id: string
+          last_name: string
+          match_kind: string
+          phone: string
+          recruiter_name: string
+          stage_name: string
+        }[]
+      }
       promote_applicant_to_agent: { Args: { payload: Json }; Returns: Json }
       resend_invitation: { Args: { _id: string }; Returns: Json }
       resolve_one_on_one_url: { Args: { _profile_id: string }; Returns: string }
