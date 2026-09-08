@@ -171,6 +171,17 @@ export function LibraryManager() {
                         <button
                           className="p-focus"
                           style={{ color: "var(--p-text-3)" }}
+                          aria-label="Duplicate"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            act(() => dupFn({ data: { id: r.id } }), "Duplicated as a draft.");
+                          }}
+                        >
+                          <Copy size={14} />
+                        </button>
+                        <button
+                          className="p-focus"
+                          style={{ color: "var(--p-text-3)" }}
                           aria-label="Delete"
                           onClick={(e) => {
                             e.stopPropagation();
