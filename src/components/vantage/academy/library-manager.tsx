@@ -35,7 +35,8 @@ import {
   LIBRARY_CATEGORIES,
 } from "@/lib/academy-content.functions";
 import { adminDeleteResource } from "@/lib/academy.functions";
-import { Plus, Trash2 } from "lucide-react";
+import { adminDuplicateLibraryItem } from "@/lib/academy-templates.functions";
+import { Plus, Trash2, Copy } from "lucide-react";
 
 type Form = {
   title: string;
