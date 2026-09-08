@@ -1802,6 +1802,21 @@ export const createApplicantManual = createServerFn({ method: "POST" })
     const assigned = data.assigned_recruiter_id;
     const referred = data.referred_by_profile_id || assigned;
 
+    if (!data.confirm_duplicate) {
+      const { data: dupe } = await supabase.rpc("lookup_applicant_duplicate", {
+        _email: data.email.trim().toLowerCase(),
+        _phone: data.phone ?? "",
+        _last_name: data.last_name.trim(),
+      } as never);
+      const d = dupe as ApplicantDuplicate | null;
+      if (d?.found) {
+        throw new Error(
+          `DUPLICATE:${d.id}:${d.name ?? "This applicant"}${d.stage ? ` (${d.stage})` : ""}`,
+        );
+      }
+    }
+
+
     let stageId = data.stage_id || "";
     if (!stageId) {
       const { data: st } = await supabase
