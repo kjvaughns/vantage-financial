@@ -1231,9 +1231,29 @@ function StateExamCard({ applicant, onDone }: { applicant: any; onDone: () => vo
   );
 }
 
-function OnboardingProgressCard({ steps }: { steps: unknown }) {
-  const { done, total } = onboardingProgress(steps);
+function OnboardingProgressCard({ steps, applicantId }: { steps: unknown; applicantId: string }) {
+  const qc = useQueryClient();
+  const fetchContent = useServerFn(getOnboardingContent);
+  const setStep = useServerFn(setAgentOnboardingStep);
+  const contentQ = useQuery({ queryKey: ["onboarding", "content"], queryFn: () => fetchContent() });
   const s = (steps ?? {}) as Record<string, { completed?: boolean }>;
+  const defs = contentQ.data?.steps ?? [];
+  const list = defs.length
+    ? defs.map((d) => ({ key: d.step_key, label: d.title, required: d.is_required }))
+    : ONBOARDING_STEP_ORDER.map((k) => ({ key: k, label: ONBOARDING_STEP_LABELS[k], required: true }));
+  const required = list.filter((x) => x.required);
+  const total = required.length || list.length;
+  const done = (required.length ? required : list).filter((x) => s[x.key]?.completed === true).length;
+
+  const mut = useMutation({
+    mutationFn: (v: { step: string; completed: boolean }) =>
+      setStep({ data: { applicant_id: applicantId, step: v.step, completed: v.completed } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["applicant"] });
+      qc.invalidateQueries({ queryKey: ["applicants"] });
+    },
+  });
+
   return (
     <Panel
       title="Onboarding progress"
@@ -1249,10 +1269,16 @@ function OnboardingProgressCard({ steps }: { steps: unknown }) {
         />
       </div>
       <div className="flex flex-col gap-2">
-        {ONBOARDING_STEP_ORDER.map((k) => {
-          const stepDone = s[k]?.completed === true;
+        {list.map((item) => {
+          const stepDone = s[item.key]?.completed === true;
           return (
-            <div key={k} className="flex items-center gap-2.5 text-[13px]">
+            <button
+              key={item.key}
+              type="button"
+              disabled={mut.isPending}
+              onClick={() => mut.mutate({ step: item.key, completed: !stepDone })}
+              className="flex items-center gap-2.5 rounded-[8px] px-1 py-1 text-left text-[13px] transition-colors hover:bg-[var(--p-hover)] disabled:opacity-60"
+            >
               <span
                 className="flex h-4 w-4 flex-none items-center justify-center rounded-full border"
                 style={
@@ -1264,14 +1290,17 @@ function OnboardingProgressCard({ steps }: { steps: unknown }) {
               >
                 <Check size={10} strokeWidth={3} />
               </span>
-              <span className={stepDone ? "p-body" : "p-secondary"}>{ONBOARDING_STEP_LABELS[k]}</span>
-            </div>
+              <span className={stepDone ? "p-body" : "p-secondary"}>{item.label}</span>
+              {!item.required && <Badge tone="neutral">Optional</Badge>}
+            </button>
           );
         })}
       </div>
+      <p className="p-muted mt-2 text-[12px]">Tap a step to confirm or undo it for this agent.</p>
     </Panel>
   );
 }
+
 
 function OverviewToggle({ label, active, onToggle }: { label: string; active: boolean; onToggle: (v: boolean) => void }) {
   return (
