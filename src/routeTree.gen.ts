@@ -55,6 +55,7 @@ import { Route as AuthenticatedPortalApplicantsApplicantIdRouteImport } from './
 import { Route as AuthenticatedPortalAdminUsersRouteImport } from './routes/_authenticated/portal/admin/users'
 import { Route as AuthenticatedPortalAdminStagesRouteImport } from './routes/_authenticated/portal/admin/stages'
 import { Route as AuthenticatedPortalAdminSettingsRouteImport } from './routes/_authenticated/portal/admin/settings'
+import { Route as AuthenticatedPortalAdminOnboardingRouteImport } from './routes/_authenticated/portal/admin/onboarding'
 import { Route as AuthenticatedPortalAdminEmailsRouteImport } from './routes/_authenticated/portal/admin/emails'
 import { Route as AuthenticatedPortalAdminAuditRouteImport } from './routes/_authenticated/portal/admin/audit'
 import { Route as AuthenticatedPortalAcademyAdminRouteImport } from './routes/_authenticated/portal/academy/admin'
@@ -325,6 +326,12 @@ const AuthenticatedPortalAdminSettingsRoute =
     path: '/settings',
     getParentRoute: () => AuthenticatedPortalAdminRouteRoute,
   } as any)
+const AuthenticatedPortalAdminOnboardingRoute =
+  AuthenticatedPortalAdminOnboardingRouteImport.update({
+    id: '/onboarding',
+    path: '/onboarding',
+    getParentRoute: () => AuthenticatedPortalAdminRouteRoute,
+  } as any)
 const AuthenticatedPortalAdminEmailsRoute =
   AuthenticatedPortalAdminEmailsRouteImport.update({
     id: '/emails',
@@ -399,6 +406,7 @@ export interface FileRoutesByFullPath {
   '/portal/academy/admin': typeof AuthenticatedPortalAcademyAdminRoute
   '/portal/admin/audit': typeof AuthenticatedPortalAdminAuditRoute
   '/portal/admin/emails': typeof AuthenticatedPortalAdminEmailsRoute
+  '/portal/admin/onboarding': typeof AuthenticatedPortalAdminOnboardingRoute
   '/portal/admin/settings': typeof AuthenticatedPortalAdminSettingsRoute
   '/portal/admin/stages': typeof AuthenticatedPortalAdminStagesRoute
   '/portal/admin/users': typeof AuthenticatedPortalAdminUsersRouteWithChildren
@@ -446,6 +454,7 @@ export interface FileRoutesByTo {
   '/portal/academy/admin': typeof AuthenticatedPortalAcademyAdminRoute
   '/portal/admin/audit': typeof AuthenticatedPortalAdminAuditRoute
   '/portal/admin/emails': typeof AuthenticatedPortalAdminEmailsRoute
+  '/portal/admin/onboarding': typeof AuthenticatedPortalAdminOnboardingRoute
   '/portal/admin/settings': typeof AuthenticatedPortalAdminSettingsRoute
   '/portal/admin/stages': typeof AuthenticatedPortalAdminStagesRoute
   '/portal/admin/users': typeof AuthenticatedPortalAdminUsersRouteWithChildren
@@ -502,6 +511,7 @@ export interface FileRoutesById {
   '/_authenticated/portal/academy/admin': typeof AuthenticatedPortalAcademyAdminRoute
   '/_authenticated/portal/admin/audit': typeof AuthenticatedPortalAdminAuditRoute
   '/_authenticated/portal/admin/emails': typeof AuthenticatedPortalAdminEmailsRoute
+  '/_authenticated/portal/admin/onboarding': typeof AuthenticatedPortalAdminOnboardingRoute
   '/_authenticated/portal/admin/settings': typeof AuthenticatedPortalAdminSettingsRoute
   '/_authenticated/portal/admin/stages': typeof AuthenticatedPortalAdminStagesRoute
   '/_authenticated/portal/admin/users': typeof AuthenticatedPortalAdminUsersRouteWithChildren
@@ -558,6 +568,7 @@ export interface FileRouteTypes {
     | '/portal/academy/admin'
     | '/portal/admin/audit'
     | '/portal/admin/emails'
+    | '/portal/admin/onboarding'
     | '/portal/admin/settings'
     | '/portal/admin/stages'
     | '/portal/admin/users'
@@ -605,6 +616,7 @@ export interface FileRouteTypes {
     | '/portal/academy/admin'
     | '/portal/admin/audit'
     | '/portal/admin/emails'
+    | '/portal/admin/onboarding'
     | '/portal/admin/settings'
     | '/portal/admin/stages'
     | '/portal/admin/users'
@@ -660,6 +672,7 @@ export interface FileRouteTypes {
     | '/_authenticated/portal/academy/admin'
     | '/_authenticated/portal/admin/audit'
     | '/_authenticated/portal/admin/emails'
+    | '/_authenticated/portal/admin/onboarding'
     | '/_authenticated/portal/admin/settings'
     | '/_authenticated/portal/admin/stages'
     | '/_authenticated/portal/admin/users'
@@ -1027,6 +1040,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPortalAdminSettingsRouteImport
       parentRoute: typeof AuthenticatedPortalAdminRouteRoute
     }
+    '/_authenticated/portal/admin/onboarding': {
+      id: '/_authenticated/portal/admin/onboarding'
+      path: '/onboarding'
+      fullPath: '/portal/admin/onboarding'
+      preLoaderRoute: typeof AuthenticatedPortalAdminOnboardingRouteImport
+      parentRoute: typeof AuthenticatedPortalAdminRouteRoute
+    }
     '/_authenticated/portal/admin/emails': {
       id: '/_authenticated/portal/admin/emails'
       path: '/emails'
@@ -1122,6 +1142,7 @@ const AuthenticatedPortalAdminUsersRouteWithChildren =
 interface AuthenticatedPortalAdminRouteRouteChildren {
   AuthenticatedPortalAdminAuditRoute: typeof AuthenticatedPortalAdminAuditRoute
   AuthenticatedPortalAdminEmailsRoute: typeof AuthenticatedPortalAdminEmailsRoute
+  AuthenticatedPortalAdminOnboardingRoute: typeof AuthenticatedPortalAdminOnboardingRoute
   AuthenticatedPortalAdminSettingsRoute: typeof AuthenticatedPortalAdminSettingsRoute
   AuthenticatedPortalAdminStagesRoute: typeof AuthenticatedPortalAdminStagesRoute
   AuthenticatedPortalAdminUsersRoute: typeof AuthenticatedPortalAdminUsersRouteWithChildren
@@ -1132,6 +1153,8 @@ const AuthenticatedPortalAdminRouteRouteChildren: AuthenticatedPortalAdminRouteR
   {
     AuthenticatedPortalAdminAuditRoute: AuthenticatedPortalAdminAuditRoute,
     AuthenticatedPortalAdminEmailsRoute: AuthenticatedPortalAdminEmailsRoute,
+    AuthenticatedPortalAdminOnboardingRoute:
+      AuthenticatedPortalAdminOnboardingRoute,
     AuthenticatedPortalAdminSettingsRoute:
       AuthenticatedPortalAdminSettingsRoute,
     AuthenticatedPortalAdminStagesRoute: AuthenticatedPortalAdminStagesRoute,

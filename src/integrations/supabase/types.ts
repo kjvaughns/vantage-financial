@@ -14,6 +14,66 @@ export type Database = {
   }
   public: {
     Tables: {
+      academy_templates: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          kind: string
+          payload: Json
+          slug: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          kind: string
+          payload?: Json
+          slug: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          kind?: string
+          payload?: Json
+          slug?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      app_links: {
+        Row: {
+          description: string | null
+          key: string
+          label: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          description?: string | null
+          key: string
+          label: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          description?: string | null
+          key?: string
+          label?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
       applicant_action_tokens: {
         Row: {
           action: string
@@ -1409,6 +1469,147 @@ export type Database = {
         }
         Relationships: []
       }
+      onboarding_sections: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_published: boolean
+          position: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_published?: boolean
+          position?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_published?: boolean
+          position?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      onboarding_steps: {
+        Row: {
+          action_type: string
+          action_url: string | null
+          auto_course_id: string | null
+          button_label: string | null
+          completion_mode: string
+          course_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          instructions: string | null
+          internal_path: string | null
+          is_published: boolean
+          is_required: boolean
+          position: number
+          recording_id: string | null
+          resource_id: string | null
+          section_id: string | null
+          show_schedule: boolean
+          show_upline: boolean
+          step_key: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          action_type?: string
+          action_url?: string | null
+          auto_course_id?: string | null
+          button_label?: string | null
+          completion_mode?: string
+          course_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          instructions?: string | null
+          internal_path?: string | null
+          is_published?: boolean
+          is_required?: boolean
+          position?: number
+          recording_id?: string | null
+          resource_id?: string | null
+          section_id?: string | null
+          show_schedule?: boolean
+          show_upline?: boolean
+          step_key: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          action_type?: string
+          action_url?: string | null
+          auto_course_id?: string | null
+          button_label?: string | null
+          completion_mode?: string
+          course_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          instructions?: string | null
+          internal_path?: string | null
+          is_published?: boolean
+          is_required?: boolean
+          position?: number
+          recording_id?: string | null
+          resource_id?: string | null
+          section_id?: string | null
+          show_schedule?: boolean
+          show_upline?: boolean
+          step_key?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_steps_auto_course_id_fkey"
+            columns: ["auto_course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_steps_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_steps_recording_id_fkey"
+            columns: ["recording_id"]
+            isOneToOne: false
+            referencedRelation: "recordings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_steps_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "library_resources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_steps_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pipeline_stages: {
         Row: {
           color: string
@@ -1970,6 +2171,39 @@ export type Database = {
         }
         Relationships: []
       }
+      training_schedule_items: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          label: string
+          note: string | null
+          position: number
+          updated_at: string
+          when_text: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label: string
+          note?: string | null
+          position?: number
+          updated_at?: string
+          when_text: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          note?: string | null
+          position?: number
+          updated_at?: string
+          when_text?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1998,6 +2232,10 @@ export type Database = {
     Functions: {
       academy_can_manage: { Args: { _uid: string }; Returns: boolean }
       academy_slugify: { Args: { _txt: string }; Returns: string }
+      admin_set_onboarding_step: {
+        Args: { _applicant_id: string; _completed: boolean; _step: string }
+        Returns: Json
+      }
       can_access_user: {
         Args: { _target: string; _viewer: string }
         Returns: boolean
@@ -2086,6 +2324,10 @@ export type Database = {
       mark_licensed_fallback: { Args: { _token: string }; Returns: Json }
       mark_scheduled_by_token: { Args: { _token: string }; Returns: Json }
       normalize_phone: { Args: { _txt: string }; Returns: string }
+      onboarding_step_keys: {
+        Args: { _required_only?: boolean }
+        Returns: string[]
+      }
       possible_duplicate_applicants: {
         Args: never
         Returns: {
