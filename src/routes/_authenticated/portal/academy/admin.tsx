@@ -8,6 +8,7 @@ import { getAcademyAdminSummary } from "@/lib/academy-content.functions";
 import { RecordingsManager } from "@/components/vantage/academy/recordings-manager";
 import { LibraryManager } from "@/components/vantage/academy/library-manager";
 import { CoursesManager } from "@/components/vantage/academy/courses-manager";
+import { TemplatesManager } from "@/components/vantage/academy/templates-manager";
 import {
   PageHeader,
   PageBody,
