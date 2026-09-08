@@ -216,6 +216,8 @@ function ApplicantsPage() {
             onOpen={setOpenId}
             onAdd={() => setAddOpen(true)}
           />
+          </>
+
         ) : (
           <PipelineView
             stages={stages}
