@@ -123,7 +123,7 @@ function OnboardingAdmin() {
         <Tabs
           value={tab}
           onChange={(v) => setTab(v as Tab)}
-          options={[
+          tabs={[
             { value: "steps", label: "Steps" },
             { value: "schedule", label: "Weekly schedule" },
             { value: "links", label: "Shared links" },
