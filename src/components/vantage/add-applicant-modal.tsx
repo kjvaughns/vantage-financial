@@ -237,7 +237,7 @@ export function AddApplicantModal({
             <div className="flex flex-wrap items-center gap-3">
               {dupe.id && (
                 <a
-                  href={`/portal/crm/${dupe.id}`}
+                  href={`/portal/applicants?open=${dupe.id}`}
                   className="underline"
                   style={{ color: "var(--p-gold)" }}
                 >
