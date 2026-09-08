@@ -361,15 +361,11 @@ export const getApplicant = createServerFn({ method: "POST" })
     let referringRecruiterName: string | null =
       (app.referred_by_name_snapshot as string | null) ?? null;
     if (recruiterId) {
-      const { data: rec } = await supabase
-        .from("profiles")
-        .select("first_name, last_name")
-        .eq("id", recruiterId)
-        .maybeSingle();
-      if (rec) {
-        referringRecruiterName =
-          [rec.first_name, rec.last_name].filter(Boolean).join(" ") || referringRecruiterName;
-      }
+      const { data: recs } = await supabase.rpc("profile_display_names", {
+        _ids: [recruiterId],
+      });
+      const nm = ((recs ?? []) as any[])[0]?.name as string | undefined;
+      if (nm) referringRecruiterName = nm;
     }
     return {
       applicant: app,
