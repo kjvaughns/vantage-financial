@@ -23,7 +23,7 @@ import {
 } from "@/components/portal/ui";
 import { ChevronLeft, PlayCircle, BookOpen, GraduationCap } from "lucide-react";
 
-type Section = "overview" | "recordings" | "library" | "courses";
+type Section = "overview" | "recordings" | "library" | "courses" | "templates";
 
 export const Route = createFileRoute("/_authenticated/portal/academy/admin")({
   head: () => ({
@@ -87,6 +87,7 @@ function AcademyAdmin() {
                 { value: "recordings", label: "Recordings" },
                 { value: "library", label: "Library" },
                 { value: "courses", label: "Courses" },
+                { value: "templates", label: "Templates" },
               ]}
             />
           }
@@ -96,6 +97,13 @@ function AcademyAdmin() {
         {section === "recordings" && <RecordingsManager />}
         {section === "library" && <LibraryManager />}
         {section === "courses" && <CoursesManager />}
+        {section === "templates" && (
+          <TemplatesManager
+            onApplied={(kind) =>
+              setSection(kind === "course" ? "courses" : kind === "library" ? "library" : "recordings")
+            }
+          />
+        )}
       </PageBody>
     </PortalShell>
   );
