@@ -122,7 +122,7 @@ function OnboardingAdmin() {
         />
         <Tabs
           value={tab}
-          onChange={setTab}
+          onChange={(v) => setTab(v as Tab)}
           options={[
             { value: "steps", label: "Steps" },
             { value: "schedule", label: "Weekly schedule" },
@@ -323,7 +323,7 @@ function StepsTab({ data }: { data: any }) {
       )}
 
       {sectionOpen && (
-        <Drawer open title={sectionOpen.id ? "Edit section" : "Add section"} onClose={() => setSectionOpen(null)}>
+        <Drawer title={sectionOpen.id ? "Edit section" : "Add section"} onClose={() => setSectionOpen(null)}>
           <FormGrid>
             <Field label="Section title">
               <Input value={sectionOpen.title} onChange={(e) => setSectionOpen({ ...sectionOpen, title: e.target.value })} />
@@ -403,7 +403,7 @@ function StepDrawer({
   };
 
   return (
-    <Drawer open title={isNew ? "Add step" : "Edit step"} onClose={onClose} width={620}>
+    <Drawer title={isNew ? "Add step" : "Edit step"} onClose={onClose} width={620}>
       <FormGrid>
         <Field label="Step title">
           <Input value={v.title ?? ""} onChange={(e) => set({ title: e.target.value })} placeholder="Update Discord role" />
@@ -518,8 +518,8 @@ function StepDrawer({
       </FormGrid>
 
       <div className="mt-4 space-y-3">
-        <Toggle checked={v.is_published ?? true} onChange={(b) => set({ is_published: b })} label="Published" hint="Unpublished steps are hidden from agents." />
-        <Toggle checked={v.is_required ?? true} onChange={(b) => set({ is_required: b })} label="Required" hint="Required steps must all be done to finish onboarding." />
+        <Toggle checked={v.is_published ?? true} onChange={(b) => set({ is_published: b })} label="Published" description="Unpublished steps are hidden from agents." />
+        <Toggle checked={v.is_required ?? true} onChange={(b) => set({ is_required: b })} label="Required" description="Required steps must all be done to finish onboarding." />
         <Toggle checked={v.show_schedule ?? false} onChange={(b) => set({ show_schedule: b })} label="Show the weekly schedule in this step" />
         <Toggle checked={v.show_upline ?? false} onChange={(b) => set({ show_upline: b })} label="Show the agent's upline and their details" />
         {!isNew && (
@@ -630,7 +630,7 @@ function ScheduleTab({ items }: { items: ScheduleItemRow[] }) {
       </Panel>
 
       {editing && (
-        <Drawer open title={editing.id ? "Edit schedule item" : "Add schedule item"} onClose={() => setEditing(null)}>
+        <Drawer title={editing.id ? "Edit schedule item" : "Add schedule item"} onClose={() => setEditing(null)}>
           <FormGrid>
             <Field label="What it is">
               <Input value={editing.label ?? ""} onChange={(e) => setEditing({ ...editing, label: e.target.value })} placeholder="Mandatory Team Meeting" />
@@ -707,7 +707,7 @@ function LinksTab({ links }: { links: AppLinkRow[] }) {
       </Panel>
 
       {editing && (
-        <Drawer open title={editing.key ? "Edit link" : "Add link"} onClose={() => setEditing(null)}>
+        <Drawer title={editing.key ? "Edit link" : "Add link"} onClose={() => setEditing(null)}>
           <FormGrid>
             <Field label="Name">
               <Input value={editing.label ?? ""} onChange={(e) => setEditing({ ...editing, label: e.target.value })} />
