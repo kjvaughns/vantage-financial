@@ -2101,6 +2101,13 @@ export type Database = {
           stage_name: string
         }[]
       }
+      profile_display_names: {
+        Args: { _ids: string[] }
+        Returns: {
+          id: string
+          name: string
+        }[]
+      }
       promote_applicant_to_agent: { Args: { payload: Json }; Returns: Json }
       resend_invitation: { Args: { _id: string }; Returns: Json }
       resolve_one_on_one_url: { Args: { _profile_id: string }; Returns: string }
