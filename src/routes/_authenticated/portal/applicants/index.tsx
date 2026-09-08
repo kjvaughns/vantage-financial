@@ -8,6 +8,8 @@ import { PortalShell } from "@/components/vantage/portal-shell";
 import { ApplicantRecord } from "@/components/vantage/applicant-record";
 import { listApplicants, updateApplicantStage } from "@/lib/portal.functions";
 import { AddApplicantModal } from "@/components/vantage/add-applicant-modal";
+import { PossibleDuplicatesPanel } from "@/components/vantage/possible-duplicates";
+
 import { RecruitingLinkCard } from "@/components/vantage/recruiting-link-card";
 import { onboardingProgress } from "@/lib/onboarding";
 import { formatPhone } from "@/lib/phone";
