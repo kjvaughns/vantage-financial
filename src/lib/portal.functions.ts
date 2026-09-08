@@ -255,7 +255,7 @@ export const listApplicants = createServerFn({ method: "POST" })
     let query = supabase
       .from("applicants")
       .select(
-        "id, first_name, last_name, email, phone, instagram_handle, state, city, priority, status, current_stage_id, assigned_recruiter_id, referred_by_profile_id, original_recruiter_id, licensing_status, evaluation_completed_at, calendly_scheduled_at, overview_scheduled_at, overview_completed_at, licensed, hired_at, discord_confirmed, last_contacted_at, last_follow_up_at, onboarding_steps, created_at, updated_at, stage_entered_at",
+        "id, first_name, last_name, email, phone, instagram_handle, state, city, priority, status, current_stage_id, assigned_recruiter_id, referred_by_profile_id, original_recruiter_id, referred_by_name_snapshot, licensing_status, evaluation_completed_at, calendly_scheduled_at, overview_scheduled_at, overview_completed_at, licensed, hired_at, discord_confirmed, last_contacted_at, last_follow_up_at, onboarding_steps, created_at, updated_at, stage_entered_at",
       )
       .is("archived_at", null)
       .limit(data.limit);
