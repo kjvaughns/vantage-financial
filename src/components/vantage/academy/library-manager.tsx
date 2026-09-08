@@ -71,6 +71,7 @@ export function LibraryManager() {
   const listFn = useServerFn(adminListLibraryV2);
   const statusFn = useServerFn(adminSetLibraryStatus);
   const delFn = useServerFn(adminDeleteResource);
+  const dupFn = useServerFn(adminDuplicateLibraryItem);
   const q = useQuery({ queryKey: ["academy", "admin", "library"], queryFn: () => listFn() });
   const [edit, setEdit] = useState<null | { id?: string }>(null);
   const [query, setQuery] = useState("");
