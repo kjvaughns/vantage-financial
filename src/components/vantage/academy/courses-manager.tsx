@@ -196,9 +196,39 @@ export function CoursesManager() {
                     </TD>
                     <TD><Badge tone={c.status === "published" ? "green" : "neutral"}>{c.status}</Badge></TD>
                     <TD align="right">
-                      <button onClick={(e) => { e.stopPropagation(); del(c.id); }} className="p-focus" style={{ color: "var(--p-text-3)" }} aria-label="Delete course">
-                        <Trash2 size={15} />
-                      </button>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          className="p-focus text-[12.5px]"
+                          style={{ color: "var(--p-text-2)" }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            act(
+                              () => statusFn({ data: { id: c.id, status: c.status === "published" ? "draft" : "published" } }),
+                              c.status === "published" ? "Moved to drafts." : "Published.",
+                            );
+                          }}
+                        >
+                          {c.status === "published" ? "Unpublish" : "Publish"}
+                        </button>
+                        <button
+                          className="p-focus text-[12.5px]"
+                          style={{ color: "var(--p-text-2)" }}
+                          onClick={(e) => { e.stopPropagation(); saveAsTemplate(c); }}
+                        >
+                          Save as template
+                        </button>
+                        <button
+                          className="p-focus"
+                          style={{ color: "var(--p-text-3)" }}
+                          aria-label="Duplicate course"
+                          onClick={(e) => { e.stopPropagation(); act(() => dupFn({ data: { id: c.id } }), "Duplicated as a draft."); }}
+                        >
+                          <Copy size={15} />
+                        </button>
+                        <button onClick={(e) => { e.stopPropagation(); del(c.id); }} className="p-focus" style={{ color: "var(--p-text-3)" }} aria-label="Delete course">
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
                     </TD>
                   </TR>
                 ))}
