@@ -311,14 +311,12 @@ export const listApplicants = createServerFn({ method: "POST" })
     ) as string[];
     let nameById: Record<string, string> = {};
     if (recruiterIds.length) {
-      const { data: profs } = await supabase
-        .from("profiles")
-        .select("id, first_name, last_name")
-        .in("id", recruiterIds);
+      const { data: profs } = await supabase.rpc("profile_display_names", { _ids: recruiterIds });
       for (const p of (profs ?? []) as any[]) {
-        nameById[p.id] = [p.first_name, p.last_name].filter(Boolean).join(" ") || "";
+        if (p?.name) nameById[p.id] = p.name as string;
       }
     }
+
     const withRecruiter = applicants.map((a) => ({
       ...a,
       referring_recruiter_name:
