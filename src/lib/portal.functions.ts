@@ -1718,7 +1718,79 @@ const manualApplicantSchema = z.object({
   priority: z.enum(["low", "normal", "high"]).optional(),
   next_follow_up_at: z.string().optional().or(z.literal("")),
   notes: z.string().trim().max(2000).optional().or(z.literal("")),
+  confirm_duplicate: z.boolean().optional(),
 });
+
+export type ApplicantDuplicate = {
+  found: boolean;
+  id?: string;
+  name?: string;
+  email?: string | null;
+  phone?: string | null;
+  stage?: string | null;
+  recruiter_name?: string | null;
+  created_at?: string;
+};
+
+/** Look up an existing applicant that matches this email, or this phone plus
+ *  last name — used by the manual "Add applicant" form to warn before saving. */
+export const checkApplicantDuplicate = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        email: z.string().trim().max(200).optional().or(z.literal("")),
+        phone: z.string().trim().max(40).optional().or(z.literal("")),
+        last_name: z.string().trim().max(80).optional().or(z.literal("")),
+      })
+      .parse(d),
+  )
+  .handler(async ({ context, data }): Promise<ApplicantDuplicate> => {
+    if (!data.email && !data.phone) return { found: false };
+    const { data: res, error } = await context.supabase.rpc("lookup_applicant_duplicate", {
+      _email: data.email ?? "",
+      _phone: data.phone ?? "",
+      _last_name: data.last_name ?? "",
+    } as never);
+    if (error) return { found: false };
+    return (res ?? { found: false }) as ApplicantDuplicate;
+  });
+
+export type DuplicateGroupRow = {
+  group_key: string;
+  match_kind: string;
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+  phone: string | null;
+  stage_name: string | null;
+  recruiter_name: string | null;
+  created_at: string;
+};
+
+/** Applicants sharing an email address or phone number, for manual cleanup. */
+export const listPossibleDuplicates = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase.rpc("possible_duplicate_applicants" as never);
+    if (error) throw new Error(error.message);
+    const rows = (data ?? []) as DuplicateGroupRow[];
+    const groups = new Map<string, DuplicateGroupRow[]>();
+    for (const r of rows) {
+      const key = `${r.match_kind}:${r.group_key}`;
+      const list = groups.get(key) ?? [];
+      list.push(r);
+      groups.set(key, list);
+    }
+    return Array.from(groups.entries()).map(([key, members]) => ({
+      key,
+      match_kind: members[0]!.match_kind,
+      group_key: members[0]!.group_key,
+      members,
+    }));
+  });
+
 
 /** Manually create an applicant assigned within the caller's permission scope.
  *  Row-level security enforces that the assignee is self / downline / admin. */
