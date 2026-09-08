@@ -1,8 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { formatPhoneInput } from "@/lib/phone";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { getAssignableRecruiters, createApplicantManual } from "@/lib/portal.functions";
+import {
+  getAssignableRecruiters,
+  createApplicantManual,
+  checkApplicantDuplicate,
+  type ApplicantDuplicate,
+} from "@/lib/portal.functions";
 import { Modal, Field, Input, Select, Textarea, FormGrid, Button } from "@/components/portal/ui";
 
 export function AddApplicantModal({
@@ -16,6 +21,7 @@ export function AddApplicantModal({
 }) {
   const ctxFn = useServerFn(getAssignableRecruiters);
   const createFn = useServerFn(createApplicantManual);
+  const dupeFn = useServerFn(checkApplicantDuplicate);
   const ctxQ = useQuery({ queryKey: ["assignable"], queryFn: () => ctxFn() });
 
   const [f, setF] = useState({
@@ -37,10 +43,40 @@ export function AddApplicantModal({
     why_text: "",
   });
   const [error, setError] = useState("");
+  const [dupe, setDupe] = useState<ApplicantDuplicate | null>(null);
+  const [confirmed, setConfirmed] = useState(false);
   const set = (k: string, v: unknown) => setF((p) => ({ ...p, [k]: v }));
 
   const ctx = ctxQ.data;
   const assigned = f.assigned_recruiter_id || ctx?.defaultRecruiterId || "";
+
+  // Debounced duplicate lookup as soon as there is enough to match on.
+  useEffect(() => {
+    const email = f.email.trim();
+    const phone = f.phone.trim();
+    if (!email.includes("@") && phone.replace(/\D/g, "").length < 10) {
+      setDupe(null);
+      return;
+    }
+    let live = true;
+    const t = setTimeout(async () => {
+      try {
+        const res = await dupeFn({
+          data: { email, phone, last_name: f.last_name.trim() },
+        });
+        if (live) {
+          setDupe(res.found ? res : null);
+          setConfirmed(false);
+        }
+      } catch {
+        /* a failed check never blocks the form */
+      }
+    }, 500);
+    return () => {
+      live = false;
+      clearTimeout(t);
+    };
+  }, [f.email, f.phone, f.last_name, dupeFn]);
 
   const mut = useMutation({
     mutationFn: () =>
@@ -49,15 +85,32 @@ export function AddApplicantModal({
           ...f,
           state: f.state.toUpperCase(),
           assigned_recruiter_id: assigned,
+          confirm_duplicate: confirmed,
           next_follow_up_at: f.next_follow_up_at ? new Date(f.next_follow_up_at).toISOString() : "",
         } as any,
       }),
     onSuccess: (res: { id: string }) => onCreated(res.id),
-    onError: (e: unknown) => setError((e as Error).message || "Could not add applicant."),
+    onError: (e: unknown) => {
+      const msg = (e as Error).message || "Could not add applicant.";
+      if (msg.includes("DUPLICATE:")) {
+        const [, id, ...rest] = msg.slice(msg.indexOf("DUPLICATE:") + 10).split(":");
+        setDupe({ found: true, id, name: rest.join(":") || "An existing applicant" });
+        setError("");
+        return;
+      }
+      setError(msg);
+    },
   });
 
+  const blocked = !!dupe && !confirmed;
   const disabled =
-    mut.isPending || !f.first_name.trim() || !f.last_name.trim() || !f.email.trim() || !assigned;
+    mut.isPending ||
+    blocked ||
+    !f.first_name.trim() ||
+    !f.last_name.trim() ||
+    !f.email.trim() ||
+    !assigned;
+
 
   return (
     <Modal
