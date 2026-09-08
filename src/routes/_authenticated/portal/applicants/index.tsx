@@ -195,6 +195,9 @@ function ApplicantsPage() {
             />
           </Panel>
         ) : activeTab === "list" ? (
+          <>
+            <PossibleDuplicatesPanel onOpen={setOpenId} />
+
           <ListView
             data={data}
             isLoading={isLoading}
