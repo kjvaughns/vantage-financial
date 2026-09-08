@@ -52,6 +52,11 @@ import {
   adminReorder,
 } from "@/lib/academy.functions";
 import {
+  adminDuplicateCourse,
+  adminSetCourseStatus,
+  adminSaveCourseAsTemplate,
+} from "@/lib/academy-templates.functions";
+import {
   GripVertical,
   Plus,
   Trash2,
