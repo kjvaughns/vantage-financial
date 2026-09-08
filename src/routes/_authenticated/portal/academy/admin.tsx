@@ -134,6 +134,18 @@ function Overview({ onGo }: { onGo: (s: Section) => void }) {
         />
       </MetricRow>
 
+      <Panel
+        title="Start from a template"
+        description="Reusable starting points that create a draft you edit and publish."
+        actions={<Button variant="secondary" size="sm" onClick={() => onGo("templates")}>Templates</Button>}
+      >
+        <p className="p-secondary leading-snug">
+          Use a starter outline for a course, a set of library documents or a recording — then edit the draft and
+          publish when it's ready.
+        </p>
+      </Panel>
+
+
       <div className="grid gap-4 lg:grid-cols-3">
         {cards.map((c) => (
           <Panel
