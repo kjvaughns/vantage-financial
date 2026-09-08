@@ -134,10 +134,29 @@ export function CoursesManager() {
   const qc = useQueryClient();
   const listFn = useServerFn(adminListCourses);
   const delFn = useServerFn(adminDeleteCourse);
+  const dupFn = useServerFn(adminDuplicateCourse);
+  const statusFn = useServerFn(adminSetCourseStatus);
+  const tplFn = useServerFn(adminSaveCourseAsTemplate);
   const coursesQ = useQuery({ queryKey: ["academy", "courses"], queryFn: () => listFn() });
   const [selected, setSelected] = useState<string | null>(null);
   const [metaOpen, setMetaOpen] = useState<null | { id?: string }>(null);
   const courses = (coursesQ.data?.courses ?? []) as any[];
+
+  async function act(fn: () => Promise<unknown>, ok: string) {
+    try {
+      await fn();
+      qc.invalidateQueries({ queryKey: ["academy"] });
+      notify.success(ok);
+    } catch (e: any) {
+      notify.error(e?.message ?? "That didn't work. Please try again.");
+    }
+  }
+
+  async function saveAsTemplate(c: any) {
+    const title = prompt("Name this template", `${c.title} template`);
+    if (!title) return;
+    act(() => tplFn({ data: { course_id: c.id, title } }), "Saved as a template.");
+  }
 
   async function del(id: string) {
     if (!confirm("Delete this course and all of its content?")) return;
