@@ -255,7 +255,7 @@ export const listApplicants = createServerFn({ method: "POST" })
     let query = supabase
       .from("applicants")
       .select(
-        "id, first_name, last_name, email, phone, instagram_handle, state, city, priority, status, current_stage_id, assigned_recruiter_id, referred_by_profile_id, original_recruiter_id, licensing_status, evaluation_completed_at, calendly_scheduled_at, overview_scheduled_at, overview_completed_at, licensed, hired_at, discord_confirmed, last_contacted_at, last_follow_up_at, onboarding_steps, created_at, updated_at, stage_entered_at",
+        "id, first_name, last_name, email, phone, instagram_handle, state, city, priority, status, current_stage_id, assigned_recruiter_id, referred_by_profile_id, original_recruiter_id, referred_by_name_snapshot, licensing_status, evaluation_completed_at, calendly_scheduled_at, overview_scheduled_at, overview_completed_at, licensed, hired_at, discord_confirmed, last_contacted_at, last_follow_up_at, onboarding_steps, created_at, updated_at, stage_entered_at",
       )
       .is("archived_at", null)
       .limit(data.limit);
@@ -311,14 +311,12 @@ export const listApplicants = createServerFn({ method: "POST" })
     ) as string[];
     let nameById: Record<string, string> = {};
     if (recruiterIds.length) {
-      const { data: profs } = await supabase
-        .from("profiles")
-        .select("id, first_name, last_name")
-        .in("id", recruiterIds);
+      const { data: profs } = await supabase.rpc("profile_display_names", { _ids: recruiterIds });
       for (const p of (profs ?? []) as any[]) {
-        nameById[p.id] = [p.first_name, p.last_name].filter(Boolean).join(" ") || "";
+        if (p?.name) nameById[p.id] = p.name as string;
       }
     }
+
     const withRecruiter = applicants.map((a) => ({
       ...a,
       referring_recruiter_name:
@@ -363,15 +361,11 @@ export const getApplicant = createServerFn({ method: "POST" })
     let referringRecruiterName: string | null =
       (app.referred_by_name_snapshot as string | null) ?? null;
     if (recruiterId) {
-      const { data: rec } = await supabase
-        .from("profiles")
-        .select("first_name, last_name")
-        .eq("id", recruiterId)
-        .maybeSingle();
-      if (rec) {
-        referringRecruiterName =
-          [rec.first_name, rec.last_name].filter(Boolean).join(" ") || referringRecruiterName;
-      }
+      const { data: recs } = await supabase.rpc("profile_display_names", {
+        _ids: [recruiterId],
+      });
+      const nm = ((recs ?? []) as any[])[0]?.name as string | undefined;
+      if (nm) referringRecruiterName = nm;
     }
     return {
       applicant: app,
@@ -1394,6 +1388,22 @@ export const getLeaderboard = createServerFn({ method: "POST" })
       { first_name: string | null; last_name: string | null; avatar_url: string | null }
     > = {};
     for (const p of profilesRes.data ?? []) profileMap[p.id] = p;
+
+    // Names for agents outside the viewer's visible hierarchy.
+    const missingIds = Object.keys(byUser).filter((id) => !profileMap[id]);
+    if (missingIds.length) {
+      const { data: named } = await supabase.rpc("profile_display_names", { _ids: missingIds });
+      for (const n of (named ?? []) as any[]) {
+        const parts = String(n?.name ?? "").split(" ");
+        if (!n?.name) continue;
+        profileMap[n.id] = {
+          first_name: parts[0] ?? null,
+          last_name: parts.slice(1).join(" ") || null,
+          avatar_url: null,
+        };
+      }
+    }
+
 
     const rows = Object.values(byUser)
       .map((r) => ({
