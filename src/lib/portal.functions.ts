@@ -1389,6 +1389,22 @@ export const getLeaderboard = createServerFn({ method: "POST" })
     > = {};
     for (const p of profilesRes.data ?? []) profileMap[p.id] = p;
 
+    // Names for agents outside the viewer's visible hierarchy.
+    const missingIds = Object.keys(byUser).filter((id) => !profileMap[id]);
+    if (missingIds.length) {
+      const { data: named } = await supabase.rpc("profile_display_names", { _ids: missingIds });
+      for (const n of (named ?? []) as any[]) {
+        const parts = String(n?.name ?? "").split(" ");
+        if (!n?.name) continue;
+        profileMap[n.id] = {
+          first_name: parts[0] ?? null,
+          last_name: parts.slice(1).join(" ") || null,
+          avatar_url: null,
+        };
+      }
+    }
+
+
     const rows = Object.values(byUser)
       .map((r) => ({
         ...r,
