@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { formatPhone } from "@/lib/phone";
-import { SCHEDULE } from "@/lib/schedule";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -13,10 +12,8 @@ import {
   Badge,
   ErrorState,
   CardSkeleton,
-  Checkbox,
   notify,
 } from "@/components/portal/ui";
-import { AGENT_CLOUD_INVITE_URL, DISCORD_INVITE_URL } from "@/lib/next-steps";
 import {
   getMyOnboarding,
   completeOnboardingStep,
@@ -25,10 +22,11 @@ import {
   type OnboardingContext,
 } from "@/lib/portal.functions";
 import {
-  ONBOARDING_STEP_ORDER,
-  type OnboardingStepKey,
-  type OnboardingStepState,
-} from "@/lib/onboarding";
+  getOnboardingContent,
+  type OnboardingStepRow,
+  type ScheduleItemRow,
+} from "@/lib/onboarding-content.functions";
+import type { OnboardingStepState } from "@/lib/onboarding";
 
 export const Route = createFileRoute("/_authenticated/portal/onboarding")({
   head: () => ({
@@ -37,14 +35,9 @@ export const Route = createFileRoute("/_authenticated/portal/onboarding")({
   component: OnboardingPage,
 });
 
-const AGENT_CLOUD_INVITE = AGENT_CLOUD_INVITE_URL;
-const DISCORD_INVITE = DISCORD_INVITE_URL;
-
-type SelfCheckStep = Exclude<OnboardingStepKey, never>;
-
 function stepState(
   steps: Record<string, OnboardingStepState> | undefined,
-  key: OnboardingStepKey,
+  key: string,
 ): OnboardingStepState {
   return steps?.[key] ?? { completed: false, completed_at: null };
 }
@@ -54,21 +47,15 @@ function OnboardingPage() {
   const fetchOnboarding = useServerFn(getMyOnboarding);
   const completeStep = useServerFn(completeOnboardingStep);
   const notifyFn = useServerFn(notifyOnboarding);
-
   const fetchContext = useServerFn(getOnboardingContext);
+  const fetchContent = useServerFn(getOnboardingContent);
 
-  const q = useQuery({
-    queryKey: ["my-onboarding"],
-    queryFn: () => fetchOnboarding(),
-  });
-
-  const ctxQ = useQuery({
-    queryKey: ["onboarding-context"],
-    queryFn: () => fetchContext(),
-  });
+  const q = useQuery({ queryKey: ["my-onboarding"], queryFn: () => fetchOnboarding() });
+  const ctxQ = useQuery({ queryKey: ["onboarding-context"], queryFn: () => fetchContext() });
+  const contentQ = useQuery({ queryKey: ["onboarding", "content"], queryFn: () => fetchContent() });
 
   const mut = useMutation({
-    mutationFn: (step: SelfCheckStep) => completeStep({ data: { step } }),
+    mutationFn: (step: string) => completeStep({ data: { step } as any }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["my-onboarding"] });
       qc.invalidateQueries({ queryKey: ["applicants"] });
@@ -82,7 +69,7 @@ function OnboardingPage() {
     notifyFn({ data: { kind: "contracting_done" } }).catch(() => {});
   };
 
-  if (q.isLoading) {
+  if (q.isLoading || contentQ.isLoading) {
     return (
       <PortalShell>
         <PageBody>
@@ -114,6 +101,10 @@ function OnboardingPage() {
     );
   }
 
+  const defs = (contentQ.data?.steps ?? []) as OnboardingStepRow[];
+  const schedule = (contentQ.data?.schedule ?? []) as ScheduleItemRow[];
+  const links = contentQ.data?.links ?? {};
+  const courseById = contentQ.data?.courseById ?? {};
   const data = q.data;
 
   if (!data?.hasOnboarding) {
@@ -129,7 +120,14 @@ function OnboardingPage() {
               </p>
             </Panel>
             <Panel padded={false}>
-              <StepChecklist preview ctx={ctxQ.data} />
+              <StepChecklist
+                preview
+                defs={defs}
+                schedule={schedule}
+                links={links}
+                courseById={courseById}
+                ctx={ctxQ.data}
+              />
             </Panel>
           </div>
         </PageBody>
@@ -138,11 +136,12 @@ function OnboardingPage() {
   }
 
   const steps = data.steps as Record<string, OnboardingStepState>;
-  const done = data.done ?? 0;
-  const total = data.total ?? ONBOARDING_STEP_ORDER.length;
-  const allDone = !!data.complete;
+  const required = defs.filter((d) => d.is_required);
+  const total = required.length || defs.length || 1;
+  const done = required.filter((d) => stepState(steps, d.step_key).completed).length;
+  const allDone = total > 0 && done >= total;
   const pct = Math.round((done / total) * 100);
-  const currentIndex = ONBOARDING_STEP_ORDER.findIndex((k) => !stepState(steps, k).completed);
+  const currentIndex = defs.findIndex((d) => !stepState(steps, d.step_key).completed);
 
   return (
     <PortalShell>
@@ -153,11 +152,11 @@ function OnboardingPage() {
           <Panel>
             <div className="mb-2 flex items-center justify-between">
               <span className="p-label">
-                {allDone
-                  ? "All steps complete"
-                  : `Step ${Math.min(currentIndex + 1, total)} of ${total}`}
+                {allDone ? "All steps complete" : `Step ${Math.min(currentIndex + 1, total)} of ${total}`}
               </span>
-              <span className="p-metric" style={{ color: "var(--p-gold)" }}>{pct}%</span>
+              <span className="p-metric" style={{ color: "var(--p-gold)" }}>
+                {pct}%
+              </span>
             </div>
             <div className="h-2 overflow-hidden rounded-full" style={{ background: "var(--p-hover)" }}>
               <div
@@ -171,15 +170,18 @@ function OnboardingPage() {
 
           <Panel padded={false}>
             <StepChecklist
+              defs={defs}
+              schedule={schedule}
+              links={links}
+              courseById={courseById}
               steps={steps}
               currentIndex={currentIndex}
-              onComplete={(s) => mut.mutate(s)}
-              onCompleteAgentCloud={() => {
-                mut.mutate("agent_cloud_onboarding");
-                notifyContracting();
-              }}
               pending={mut.isPending}
               ctx={ctxQ.data}
+              onComplete={(key, showUpline) => {
+                mut.mutate(key);
+                if (showUpline) notifyContracting();
+              }}
             />
           </Panel>
         </div>
@@ -224,15 +226,6 @@ function CompletionPanel() {
   );
 }
 
-type StepDef = {
-  key: SelfCheckStep;
-  title: string;
-  summary: string;
-  actionLabel: string;
-  requireAgree?: string;
-  render: () => React.ReactNode;
-};
-
 function PrefillRow({ label, value }: { label: string; value: string | null }) {
   return (
     <div className="flex items-baseline justify-between gap-3 py-1">
@@ -244,223 +237,75 @@ function PrefillRow({ label, value }: { label: string; value: string | null }) {
   );
 }
 
-function AdminWarning({ children }: { children: React.ReactNode }) {
+function InfoBox({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div
-      className="mt-3 rounded-[10px] border p-3 text-[12px]"
-      style={{ borderColor: "var(--p-gold)", background: "var(--p-gold-soft)", color: "var(--p-text)" }}
+      className="mt-3 rounded-[10px] border p-3"
+      style={{ borderColor: "var(--p-border)", background: "var(--p-raised)" }}
     >
-      <strong>Configuration warning (admins only):</strong> {children}
+      <div className="p-label mb-1">{title}</div>
+      {children}
     </div>
   );
 }
 
-function stepDefs(ctx?: OnboardingContext): StepDef[] {
-  return [
-    {
-      key: "agent_cloud_onboarding",
-      title: "Agent Cloud onboarding",
-      summary: "Create your Agent Cloud account using the Vantage invite link.",
-      actionLabel: "I Created My Agent Cloud Account",
-      render: () => (
-        <>
-          <p className="p-secondary">
-            Create your Agent Cloud account using the Vantage invite link below. When Agent Cloud asks
-            for your upline, select or enter the leader shown here.
-          </p>
-          <div
-            className="mt-3 rounded-[10px] border p-3"
-            style={{ borderColor: "var(--p-border)", background: "var(--p-raised)" }}
-          >
-            <div className="p-label mb-1">Your upline</div>
-            {ctx?.upline ? (
-              <p className="text-[15px] font-semibold" style={{ color: "var(--p-gold)" }}>
-                {ctx.upline.name}
-              </p>
-            ) : (
-              <p className="p-secondary">
-                We couldn&apos;t determine your upline automatically. Contact your recruiter for your
-                upline before continuing.
-              </p>
-            )}
-          </div>
-          <div
-            className="mt-3 rounded-[10px] border p-3"
-            style={{ borderColor: "var(--p-border)", background: "var(--p-raised)" }}
-          >
-            <div className="p-label mb-1">Use these details</div>
-            <PrefillRow label="Full name" value={ctx?.prefill.fullName ?? null} />
-            <PrefillRow label="Email" value={ctx?.prefill.email ?? null} />
-            <PrefillRow label="Phone" value={formatPhone(ctx?.prefill.phone) || null} />
-            <PrefillRow label="NPN" value={ctx?.prefill.npn ?? null} />
-            <p className="p-muted mt-2 text-[12px]">
-              You&apos;ll also choose a password for Agent Cloud during setup.
-            </p>
-          </div>
-          <div className="mt-3">
-            <a href={AGENT_CLOUD_INVITE} target="_blank" rel="noreferrer noopener">
-              <Button variant="secondary" size="sm">Create Agent Cloud Account →</Button>
-            </a>
-          </div>
-        </>
-      ),
-    },
-    {
-      key: "discord_role_update",
-      title: "Update Discord role",
-      summary: "Select the Licensed role in Start Here to unlock the licensed agent channels.",
-      actionLabel: "I've Updated My Discord Role",
-      render: () => (
-        <>
-          <ol className="p-secondary ml-4 list-decimal space-y-1">
-            <li>Join the Vantage Financial Discord if you haven&apos;t already.</li>
-            <li>
-              Go to the <strong style={{ color: "var(--p-text)" }}>Start Here</strong> area.
-            </li>
-            <li>
-              Select <strong style={{ color: "var(--p-text)" }}>Licensed</strong>.
-            </li>
-          </ol>
-          <p className="p-muted mt-2">
-            Once you select Licensed, the full licensed agent Discord unlocks.
-          </p>
-          <div className="mt-3">
-            <a href={DISCORD_INVITE} target="_blank" rel="noreferrer noopener">
-              <Button variant="secondary" size="sm">Open Discord →</Button>
-            </a>
-          </div>
-        </>
-      ),
-    },
-    {
-      key: "read_agent_playbook",
-      title: "Read the Vantage Financial Agent Playbook",
-      summary: "Covers how we sell, our systems, and what's expected of every agent.",
-      actionLabel: "I Have Read the Playbook",
-      render: () => (
-        <>
-          <p className="p-secondary">
-            Read the Agent Playbook end to end — it covers how we sell, our systems, and what&apos;s
-            expected of every Vantage agent.
-          </p>
-          {ctx?.playbook ? (
-            <div className="mt-3">
-              <Link to="/portal/academy/library/$slug" params={{ slug: ctx.playbook.slug }}>
-                <Button variant="secondary" size="sm">Open Agent Playbook →</Button>
-              </Link>
-            </div>
-          ) : (
-            <>
-              <p className="p-muted mt-2">
-                The Agent Playbook isn&apos;t available yet — contact your recruiter.
-              </p>
-              {ctx?.isAdmin && (
-                <AdminWarning>
-                  No published Academy library resource with &quot;Playbook&quot; in the title was
-                  found. Publish the Agent Playbook in Academy → Manage → Library.
-                </AdminWarning>
-              )}
-            </>
-          )}
-        </>
-      ),
-    },
-    {
-      key: "agent_expectations_schedule",
-      title: "Agent expectations & schedule",
-      summary: "Weekly meeting schedule and the Vantage production standards.",
-      actionLabel: "I understand and agree",
-      requireAgree: "I understand and agree to the Vantage Financial standards and schedule.",
-      render: () => (
-        <>
-          <div className="p-label mb-1">Weekly schedule (CST)</div>
-          <ul className="p-secondary space-y-1">
-            {SCHEDULE.map((s) => (
-              <li key={s.label}>
-                <strong style={{ color: "var(--p-text)" }}>{s.label}</strong> — {s.when}
-                {s.note ? ` (${s.note})` : ""}
-              </li>
-            ))}
-          </ul>
-          <p className="p-muted mt-2">Encouraged to start earlier and continue calling later when possible.</p>
-
-          <div className="p-label mt-4 mb-1">Standards &amp; expectations</div>
-          <ul className="p-secondary ml-4 list-disc space-y-1">
-            <li>Cameras must be on while calling.</li>
-            <li>Stay unmuted while calling unless operationally necessary.</li>
-            <li>Do not be late to meetings.</li>
-            <li>$5,000 weekly and $20,000 monthly personal production is the Vantage standard.</li>
-            <li>Closing business consistently is a normal expectation of the sales role.</li>
-            <li>Agents below standard may be assigned additional training.</li>
-            <li>Consistently falling below production standards may result in loss of free lead eligibility and possible termination.</li>
-            <li>The Monday Team Meeting is mandatory.</li>
-            <li>Missing required meetings without prior communication may result in termination — communicate beforehand, not after.</li>
-          </ul>
-        </>
-      ),
-    },
-    {
-      key: "complete_vantage_closer_course",
-      title: "Complete the Vantage Closer Course",
-      summary: "Required pre-training course on the Vantage sales process and mindset.",
-      actionLabel: "I've completed the course",
-      render: () => (
-        <>
-          <p className="p-secondary">
-            The Vantage Closer Course is the required pre-training course covering the Vantage sales
-            process, sales psychology, mindset, and fundamentals you&apos;ll need before live training.
-          </p>
-          <p className="p-muted mt-2">This step completes automatically once you finish the course.</p>
-          {ctx?.closerCourse?.published ? (
-            <div className="mt-3">
-              <Link to="/portal/academy/courses/$slug" params={{ slug: ctx.closerCourse.slug }}>
-                <Button variant="secondary" size="sm">Start Vantage Closer Course →</Button>
-              </Link>
-            </div>
-          ) : (
-            <>
-              <p className="p-muted mt-2">
-                The course isn&apos;t available yet — contact your recruiter.
-              </p>
-              {ctx?.isAdmin && (
-                <AdminWarning>
-                  {ctx?.closerCourse
-                    ? "The Vantage Closer Course exists but isn't published. Publish it in Academy → Manage → Courses."
-                    : "No Academy course with \"Closer\" in the title was found. Create and publish the Vantage Closer Course in Academy → Manage → Courses."}
-                </AdminWarning>
-              )}
-            </>
-          )}
-        </>
-      ),
-    },
-  ];
+function defaultButtonLabel(def: OnboardingStepRow) {
+  if (def.button_label) return def.button_label;
+  switch (def.action_type) {
+    case "course":
+      return "Open the course";
+    case "resource":
+      return "Open the file";
+    case "presentation":
+      return "Watch the recording";
+    case "internal":
+      return "Open in the portal";
+    default:
+      return "Open link";
+  }
 }
 
-/** The single sequential onboarding checklist. Shared by the live agent view and the read-only preview. */
+/** The onboarding checklist, built from the admin-managed step list. */
 function StepChecklist({
+  defs,
+  schedule,
+  links,
+  courseById,
   steps,
   currentIndex = 0,
   onComplete,
-  onCompleteAgentCloud,
   pending,
   preview,
   ctx,
 }: {
+  defs: OnboardingStepRow[];
+  schedule: ScheduleItemRow[];
+  links: Record<string, string>;
+  courseById: Record<string, { slug: string; title: string; status: string }>;
   steps?: Record<string, OnboardingStepState>;
   currentIndex?: number;
-  onComplete?: (step: SelfCheckStep) => void;
-  onCompleteAgentCloud?: () => void;
+  onComplete?: (key: string, showUpline: boolean) => void;
   pending?: boolean;
   preview?: boolean;
   ctx?: OnboardingContext;
 }) {
-  const STEP_DEFS = stepDefs(ctx);
-  const allKeys = STEP_DEFS.map((d) => d.key);
+  const allKeys = defs.map((d) => d.step_key);
   const [open, setOpen] = useState<string[]>(() =>
-    preview ? allKeys : [STEP_DEFS[Math.min(currentIndex < 0 ? 0 : currentIndex, STEP_DEFS.length - 1)].key],
+    preview
+      ? allKeys
+      : defs.length
+        ? [defs[Math.min(currentIndex < 0 ? 0 : currentIndex, defs.length - 1)].step_key]
+        : [],
   );
-  const allOpen = open.length === allKeys.length;
+  const allOpen = open.length === allKeys.length && allKeys.length > 0;
+
+  if (defs.length === 0) {
+    return (
+      <div className="px-4 py-6">
+        <p className="p-secondary">No onboarding steps have been published yet.</p>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -469,40 +314,38 @@ function StepChecklist({
         style={{ borderBottom: "1px solid var(--p-border)" }}
       >
         <span className="p-label">Onboarding steps ({allKeys.length})</span>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setOpen(allOpen ? [] : allKeys)}
-        >
+        <Button variant="ghost" size="sm" onClick={() => setOpen(allOpen ? [] : allKeys)}>
           {allOpen ? "Collapse all" : "Expand all"}
         </Button>
       </div>
       <div className="divide-y" style={{ borderColor: "var(--p-border)" }}>
-        {STEP_DEFS.map((def, i) => {
-          const state = stepState(steps, def.key);
+        {defs.map((def, i) => {
+          const state = stepState(steps, def.step_key);
           const done = state.completed;
           const isCurrent = !preview && !done && i === currentIndex;
           const status: "done" | "current" | "upcoming" = done ? "done" : isCurrent ? "current" : "upcoming";
           return (
             <StepRow
-              key={def.key}
+              key={def.step_key}
               n={i + 1}
               def={def}
+              schedule={schedule}
+              links={links}
+              courseById={courseById}
+              ctx={ctx}
               status={preview ? "upcoming" : status}
               state={state}
               pending={pending}
               preview={preview}
-              expanded={open.includes(def.key)}
+              expanded={open.includes(def.step_key)}
               onToggle={() =>
                 setOpen((prev) =>
-                  prev.includes(def.key) ? prev.filter((k) => k !== def.key) : [...prev, def.key],
+                  prev.includes(def.step_key)
+                    ? prev.filter((k) => k !== def.step_key)
+                    : [...prev, def.step_key],
                 )
               }
-              onComplete={() =>
-                def.key === "agent_cloud_onboarding" && onCompleteAgentCloud
-                  ? onCompleteAgentCloud()
-                  : onComplete?.(def.key)
-              }
+              onComplete={() => onComplete?.(def.step_key, def.show_upline)}
             />
           );
         })}
@@ -511,10 +354,118 @@ function StepChecklist({
   );
 }
 
+function StepBody({
+  def,
+  schedule,
+  links,
+  courseById,
+  ctx,
+}: {
+  def: OnboardingStepRow;
+  schedule: ScheduleItemRow[];
+  links: Record<string, string>;
+  courseById: Record<string, { slug: string; title: string; status: string }>;
+  ctx?: OnboardingContext;
+}) {
+  const course = def.course_id ? courseById[def.course_id] : undefined;
+  const href =
+    def.action_type === "external"
+      ? def.action_url || links[def.step_key] || null
+      : null;
+
+  return (
+    <>
+      {def.description && <p className="p-secondary">{def.description}</p>}
+      {def.instructions && (
+        <div className="p-secondary mt-2 whitespace-pre-line leading-snug">{def.instructions}</div>
+      )}
+
+      {def.show_upline && (
+        <>
+          <InfoBox title="Your upline">
+            {ctx?.upline ? (
+              <p className="text-[15px] font-semibold" style={{ color: "var(--p-gold)" }}>
+                {ctx.upline.name}
+              </p>
+            ) : (
+              <p className="p-secondary">
+                We couldn&apos;t determine your upline automatically. Contact your recruiter before continuing.
+              </p>
+            )}
+          </InfoBox>
+          <InfoBox title="Use these details">
+            <PrefillRow label="Full name" value={ctx?.prefill.fullName ?? null} />
+            <PrefillRow label="Email" value={ctx?.prefill.email ?? null} />
+            <PrefillRow label="Phone" value={formatPhone(ctx?.prefill.phone) || null} />
+            <PrefillRow label="NPN" value={ctx?.prefill.npn ?? null} />
+          </InfoBox>
+        </>
+      )}
+
+      {def.show_schedule && schedule.length > 0 && (
+        <InfoBox title="Weekly schedule">
+          <ul className="space-y-1.5">
+            {schedule.map((s) => (
+              <li key={s.id} className="flex flex-wrap items-baseline gap-2">
+                <span className="text-[13px]" style={{ color: "var(--p-text)" }}>
+                  {s.label}
+                </span>
+                <Badge tone="gold">{s.when_text}</Badge>
+                {s.note && <span className="p-muted text-[12px]">{s.note}</span>}
+              </li>
+            ))}
+          </ul>
+        </InfoBox>
+      )}
+
+      {def.completion_mode === "auto" && (
+        <p className="p-muted mt-2">This step completes automatically once the course is finished.</p>
+      )}
+
+      <div className="mt-3 flex flex-wrap gap-2">
+        {href && (
+          <a href={href} target="_blank" rel="noreferrer noopener">
+            <Button variant="secondary" size="sm">
+              {defaultButtonLabel(def)} →
+            </Button>
+          </a>
+        )}
+        {def.action_type === "internal" && def.internal_path && (
+          <Link to={def.internal_path as any}>
+            <Button variant="secondary" size="sm">
+              {defaultButtonLabel(def)} →
+            </Button>
+          </Link>
+        )}
+        {def.action_type === "course" &&
+          (course && course.status !== "draft" ? (
+            <Link to="/portal/academy/courses/$slug" params={{ slug: course.slug }}>
+              <Button variant="secondary" size="sm">
+                {defaultButtonLabel(def)} →
+              </Button>
+            </Link>
+          ) : (
+            <p className="p-muted">The course isn&apos;t published yet — contact your recruiter.</p>
+          ))}
+        {(def.action_type === "resource" || def.action_type === "presentation") && (
+          <Link to="/portal/academy">
+            <Button variant="secondary" size="sm">
+              {defaultButtonLabel(def)} →
+            </Button>
+          </Link>
+        )}
+      </div>
+    </>
+  );
+}
 
 function StepRow({
   n,
   def,
+  schedule,
+  links,
+  courseById,
+  ctx,
   status,
   state,
   pending,
@@ -524,7 +475,11 @@ function StepRow({
   onComplete,
 }: {
   n: number;
-  def: StepDef;
+  def: OnboardingStepRow;
+  schedule: ScheduleItemRow[];
+  links: Record<string, string>;
+  courseById: Record<string, { slug: string; title: string; status: string }>;
+  ctx?: OnboardingContext;
   status: "done" | "current" | "upcoming";
   state: OnboardingStepState;
   pending?: boolean;
@@ -533,9 +488,6 @@ function StepRow({
   onToggle: () => void;
   onComplete: () => void;
 }) {
-  const [agreed, setAgreed] = useState(false);
-
-
   const indicator =
     status === "done" ? (
       <div
@@ -561,10 +513,7 @@ function StepRow({
     );
 
   return (
-    <div
-      className="px-4 py-4"
-      style={status === "current" ? { background: "var(--p-gold-soft)" } : undefined}
-    >
+    <div className="px-4 py-4" style={status === "current" ? { background: "var(--p-gold-soft)" } : undefined}>
       <div className="flex items-start gap-3">
         {indicator}
         <div className="min-w-0 flex-1">
@@ -579,12 +528,10 @@ function StepRow({
             </h3>
             {status === "done" && <Badge tone="green">Done</Badge>}
             {status === "current" && <Badge tone="gold">Current step</Badge>}
+            {!def.is_required && <Badge tone="neutral">Optional</Badge>}
             <span
               className="ml-auto text-[12px] transition-transform"
-              style={{
-                color: "var(--p-text-3)",
-                transform: expanded ? "rotate(180deg)" : "none",
-              }}
+              style={{ color: "var(--p-text-3)", transform: expanded ? "rotate(180deg)" : "none" }}
               aria-hidden
             >
               ▾
@@ -592,15 +539,10 @@ function StepRow({
           </button>
 
           {!expanded ? (
-            <p className="p-secondary mt-1">{def.summary}</p>
+            <p className="p-secondary mt-1">{def.description}</p>
           ) : (
-            <div className="mt-1.5">{def.render()}</div>
-          )}
-
-
-          {status === "current" && def.requireAgree && (
-            <div className="mt-3">
-              <Checkbox checked={agreed} onChange={setAgreed} label={def.requireAgree} />
+            <div className="mt-1.5">
+              <StepBody def={def} schedule={schedule} links={links} courseById={courseById} ctx={ctx} />
             </div>
           )}
 
@@ -611,15 +553,12 @@ function StepRow({
                   Completed
                   {state.completed_at ? ` · ${new Date(state.completed_at).toLocaleDateString()}` : ""}
                 </div>
-              ) : status === "current" ? (
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={onComplete}
-                  disabled={pending || (!!def.requireAgree && !agreed)}
-                >
-                  {def.actionLabel}
+              ) : status === "current" && def.completion_mode === "self" ? (
+                <Button variant="primary" size="sm" onClick={onComplete} disabled={pending}>
+                  Mark this step complete
                 </Button>
+              ) : status === "current" && def.completion_mode === "admin" ? (
+                <p className="p-muted text-[12px]">Your leader confirms this step once it&apos;s done.</p>
               ) : null}
             </div>
           )}
