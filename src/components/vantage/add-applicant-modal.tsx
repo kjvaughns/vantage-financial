@@ -223,6 +223,40 @@ export function AddApplicantModal({
           <Textarea rows={2} value={f.notes} onChange={(e) => set("notes", e.target.value)} />
         </Field>
 
+        {dupe?.found && (
+          <div
+            className="grid gap-2 rounded-[10px] border px-3 py-2 text-[13px]"
+            style={{ borderColor: "var(--p-gold)", background: "rgba(201,168,76,0.1)" }}
+          >
+            <div>
+              <strong>{dupe.name || "An applicant"}</strong> already exists
+              {dupe.stage ? ` — currently in ${dupe.stage}` : ""}
+              {dupe.recruiter_name ? `, assigned to ${dupe.recruiter_name}` : ""}.
+              {dupe.email ? ` (${dupe.email})` : ""}
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              {dupe.id && (
+                <a
+                  href={`/portal/crm/${dupe.id}`}
+                  className="underline"
+                  style={{ color: "var(--p-gold)" }}
+                >
+                  Open that record
+                </a>
+              )}
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={confirmed}
+                  onChange={(e) => setConfirmed(e.target.checked)}
+                />
+                Add anyway — this is a different person
+              </label>
+            </div>
+          </div>
+        )}
+
+
         {error && (
           <div
             className="rounded-[10px] border px-3 py-2 text-[13px]"
