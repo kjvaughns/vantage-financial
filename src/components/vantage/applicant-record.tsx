@@ -26,7 +26,11 @@ import { listEmailHistory } from "@/lib/email.functions";
 import { sendApplicantEmail as sendBrandedApplicantEmail } from "@/lib/email.functions";
 import { getInvitableContext, promoteApplicantToAgent } from "@/lib/invitations.functions";
 import {
-  onboardingProgress,
+  getOnboardingContent,
+  setAgentOnboardingStep,
+  type OnboardingStepRow,
+} from "@/lib/onboarding-content.functions";
+import {
   ONBOARDING_STEP_ORDER,
   ONBOARDING_STEP_LABELS,
 } from "@/lib/onboarding";
@@ -377,7 +381,7 @@ export function ApplicantRecord({
 
         {/* Onboarding progress */}
         {currentStage?.slug === "onboarding" && (
-          <OnboardingProgressCard steps={a.onboarding_steps} />
+          <OnboardingProgressCard steps={a.onboarding_steps} applicantId={a.id} />
         )}
 
         {/* Overview meeting */}
@@ -1239,11 +1243,11 @@ function OnboardingProgressCard({ steps, applicantId }: { steps: unknown; applic
   const s = (steps ?? {}) as Record<string, { completed?: boolean }>;
   const defs = contentQ.data?.steps ?? [];
   const list = defs.length
-    ? defs.map((d) => ({ key: d.step_key, label: d.title, required: d.is_required }))
+    ? defs.map((d: OnboardingStepRow) => ({ key: d.step_key, label: d.title, required: d.is_required }))
     : ONBOARDING_STEP_ORDER.map((k) => ({ key: k, label: ONBOARDING_STEP_LABELS[k], required: true }));
-  const required = list.filter((x) => x.required);
+  const required = list.filter((x: { required: boolean }) => x.required);
   const total = required.length || list.length;
-  const done = (required.length ? required : list).filter((x) => s[x.key]?.completed === true).length;
+  const done = (required.length ? required : list).filter((x: { key: string }) => s[x.key]?.completed === true).length;
 
   const mut = useMutation({
     mutationFn: (v: { step: string; completed: boolean }) =>
@@ -1269,7 +1273,7 @@ function OnboardingProgressCard({ steps, applicantId }: { steps: unknown; applic
         />
       </div>
       <div className="flex flex-col gap-2">
-        {list.map((item) => {
+        {list.map((item: { key: string; label: string; required: boolean }) => {
           const stepDone = s[item.key]?.completed === true;
           return (
             <button
