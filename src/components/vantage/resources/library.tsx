@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { Badge, TYPE_META, formatDisplayDate, Overlay } from "./shared";
 import { Toolbar, SearchField, SegmentedControl, EmptyState, Button } from "@/components/portal/ui";
+import { isPreviewableDocument } from "@/lib/academy/media";
+import { DocPreview } from "@/components/vantage/academy/doc-preview";
 
 export type LibraryItem = {
   id: string;
@@ -129,6 +131,11 @@ function ItemModal({ item, onClose }: { item: LibraryItem; onClose: () => void }
                 #{t}
               </span>
             ))}
+          </div>
+        )}
+        {item.url && isPreviewableDocument(item.url) && (
+          <div className="mt-4">
+            <DocPreview url={item.url} title={item.title} height="h-[55vh]" />
           </div>
         )}
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t pt-3" style={{ borderColor: "var(--p-border)" }}>

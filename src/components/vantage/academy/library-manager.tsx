@@ -295,6 +295,14 @@ function LibraryDrawer({ item, onClose, onSaved }: { item?: any; onClose: () => 
           folder="library"
           hint={f.type === "link" ? "Paste the destination URL." : "Upload the file or paste a link to it."}
         />
+        {f.url.trim() && (
+          <Button variant="secondary" size="sm" onClick={() => setPreviewOpen(true)}>
+            Preview
+          </Button>
+        )}
+        {previewOpen && (
+          <DocPreviewModal url={f.url} title={f.title || "Preview"} onClose={() => setPreviewOpen(false)} />
+        )}
 
         <FormGrid>
           <Field label="Duration / length" hint="Optional, e.g. 8:20 or 4 pages.">
