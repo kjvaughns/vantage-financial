@@ -17,7 +17,9 @@ import {
   notify,
 } from "@/components/portal/ui";
 import { getCourseLearner, markLessonComplete, submitQuiz } from "@/lib/academy.functions";
-import { resolveMedia } from "@/lib/academy/media";
+import { resolveMedia, isPreviewableDocument } from "@/lib/academy/media";
+import { DocPreview } from "@/components/vantage/academy/doc-preview";
+
 import { AudioBlock } from "@/components/vantage/academy/audio-block";
 import { NotesPreview } from "@/components/vantage/academy/media-fields";
 import { TranscriptViewer, useMediaSeek } from "@/components/vantage/academy/transcript-viewer";
