@@ -17,7 +17,9 @@ import {
   notify,
 } from "@/components/portal/ui";
 import { getCourseLearner, markLessonComplete, submitQuiz } from "@/lib/academy.functions";
-import { resolveMedia } from "@/lib/academy/media";
+import { resolveMedia, isPreviewableDocument } from "@/lib/academy/media";
+import { DocPreview } from "@/components/vantage/academy/doc-preview";
+
 import { AudioBlock } from "@/components/vantage/academy/audio-block";
 import { NotesPreview } from "@/components/vantage/academy/media-fields";
 import { TranscriptViewer, useMediaSeek } from "@/components/vantage/academy/transcript-viewer";
@@ -294,12 +296,18 @@ function LessonView({
         )}
         {lesson.blurb && <p className="p-secondary mt-2 whitespace-pre-wrap leading-relaxed">{lesson.blurb}</p>}
         {(kind === "resource" || kind === "link") && lesson.resource_url && (
-          <a href={lesson.resource_url} target="_blank" rel="noreferrer" className="mt-3 inline-block">
-            <Button variant="secondary" size="sm">
-              {lesson.resource_label || (kind === "link" ? "Open link" : "Open resource")} →
-            </Button>
-          </a>
+          <div className="mt-3 space-y-3">
+            {isPreviewableDocument(lesson.resource_url) && (
+              <DocPreview url={lesson.resource_url} title={lesson.title} height="h-[60vh]" />
+            )}
+            <a href={lesson.resource_url} target="_blank" rel="noreferrer" className="inline-block">
+              <Button variant="secondary" size="sm">
+                {lesson.resource_label || (kind === "link" ? "Open link" : "Open resource")} →
+              </Button>
+            </a>
+          </div>
         )}
+
         <div className="mt-4">
           <Button variant="primary" size="sm" onClick={() => mut.mutate()} disabled={completed} loading={mut.isPending}>
             {completed ? "✓ Completed" : "Mark complete"}
