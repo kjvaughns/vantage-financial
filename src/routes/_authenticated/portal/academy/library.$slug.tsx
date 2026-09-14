@@ -22,6 +22,7 @@ function ResourceDetail() {
   const { slug } = Route.useParams();
   const getFn = useServerFn(getLibraryResource);
   const q = useQuery({ queryKey: ["academy", "resource", slug], queryFn: () => getFn({ data: { slug } }) });
+  const [preview, setPreview] = useState(false);
 
   if (q.isError) {
     return (
