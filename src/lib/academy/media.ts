@@ -120,3 +120,77 @@ export function formatTimestamp(ms: number): string {
   const s = total % 60;
   return `${m}:${String(s).padStart(2, "0")}`;
 }
+
+/* ------------------------------------------------------------------ *
+ * Document preview (files, Google Drive links, PDFs, images)
+ * ------------------------------------------------------------------ */
+
+export type DocKind = "drive-doc" | "drive-file" | "pdf" | "image" | "office" | "web";
+
+export type ResolvedDocument = {
+  kind: DocKind;
+  /** URL safe to render in an iframe, or null when it can't be embedded. */
+  embedUrl: string | null;
+  /** URL to open/download in a new tab. */
+  downloadUrl: string | null;
+  /** Plain-language reason inline preview isn't possible, or null. */
+  blocker: string | null;
+};
+
+const PDF_RE = /\.pdf(\?|#|$)/i;
+const IMAGE_RE = /\.(png|jpe?g|gif|webp|avif|svg)(\?|#|$)/i;
+const OFFICE_RE = /\.(docx?|xlsx?|pptx?|csv)(\?|#|$)/i;
+
+function googleEditorPreview(url: string): string | null {
+  const m = url.match(
+    /docs\.google\.com\/(document|spreadsheets|presentation|forms)\/d\/([a-zA-Z0-9_-]{10,})/,
+  );
+  if (!m) return null;
+  return `https://docs.google.com/${m[1]}/d/${m[2]}/preview`;
+}
+
+export function resolveDocument(rawUrl?: string | null): ResolvedDocument {
+  const url = (rawUrl ?? "").trim();
+  if (!url) {
+    return { kind: "web", embedUrl: null, downloadUrl: null, blocker: "No file or link attached yet." };
+  }
+
+  const gdoc = googleEditorPreview(url);
+  if (gdoc) return { kind: "drive-doc", embedUrl: gdoc, downloadUrl: url, blocker: null };
+
+  const drive = driveFileId(url);
+  if (drive) {
+    return {
+      kind: "drive-file",
+      embedUrl: `https://drive.google.com/file/d/${drive}/preview`,
+      downloadUrl: url,
+      blocker: null,
+    };
+  }
+
+  if (PDF_RE.test(url)) return { kind: "pdf", embedUrl: url, downloadUrl: url, blocker: null };
+  if (IMAGE_RE.test(url)) return { kind: "image", embedUrl: url, downloadUrl: url, blocker: null };
+
+  const isStorage = /\/storage\/v1\/object\//.test(url);
+  if (isStorage) return { kind: "pdf", embedUrl: url, downloadUrl: url, blocker: null };
+
+  if (OFFICE_RE.test(url)) {
+    return {
+      kind: "office",
+      embedUrl: `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(url)}`,
+      downloadUrl: url,
+      blocker: null,
+    };
+  }
+
+  return {
+    kind: "web",
+    embedUrl: null,
+    downloadUrl: url,
+    blocker: "This link can't be shown inside the portal. Use the button to open it in a new tab.",
+  };
+}
+
+export function isPreviewableDocument(rawUrl?: string | null): boolean {
+  return !!resolveDocument(rawUrl).embedUrl;
+}

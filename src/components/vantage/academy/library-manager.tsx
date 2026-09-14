@@ -27,6 +27,7 @@ import {
   notify,
 } from "@/components/portal/ui";
 import { MediaSourceField, TranscriptPanel } from "./media-fields";
+import { DocPreviewModal } from "./doc-preview";
 import {
   adminListLibraryV2,
   adminUpsertLibraryItem,
@@ -231,6 +232,7 @@ function LibraryDrawer({ item, onClose, onSaved }: { item?: any; onClose: () => 
       : blank,
   );
   const [busy, setBusy] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setF((p) => ({ ...p, [k]: v }));
   const isMedia = f.type === "video" || f.type === "audio";
 
@@ -295,6 +297,14 @@ function LibraryDrawer({ item, onClose, onSaved }: { item?: any; onClose: () => 
           folder="library"
           hint={f.type === "link" ? "Paste the destination URL." : "Upload the file or paste a link to it."}
         />
+        {f.url.trim() && (
+          <Button variant="secondary" size="sm" onClick={() => setPreviewOpen(true)}>
+            Preview
+          </Button>
+        )}
+        {previewOpen && (
+          <DocPreviewModal url={f.url} title={f.title || "Preview"} onClose={() => setPreviewOpen(false)} />
+        )}
 
         <FormGrid>
           <Field label="Duration / length" hint="Optional, e.g. 8:20 or 4 pages.">

@@ -5,8 +5,10 @@ import { PortalShell } from "@/components/vantage/portal-shell";
 import { PageBody, Panel, Button, Badge, EmptyState, ErrorState, CardSkeleton } from "@/components/portal/ui";
 import { getLibraryResource } from "@/lib/academy.functions";
 import { ChevronLeft, Video, Headphones, FileText, Link2, Download, ExternalLink } from "lucide-react";
-import { resolveMedia } from "@/lib/academy/media";
+import { resolveMedia, isPreviewableDocument } from "@/lib/academy/media";
 import { AudioBlock } from "@/components/vantage/academy/audio-block";
+import { DocPreview, DocPreviewModal } from "@/components/vantage/academy/doc-preview";
+import { useState } from "react";
 
 export const Route = createFileRoute("/_authenticated/portal/academy/library/$slug")({
   head: () => ({ meta: [{ title: "Resource — Vantage Academy" }, { name: "robots", content: "noindex" }] }),
@@ -20,6 +22,7 @@ function ResourceDetail() {
   const { slug } = Route.useParams();
   const getFn = useServerFn(getLibraryResource);
   const q = useQuery({ queryKey: ["academy", "resource", slug], queryFn: () => getFn({ data: { slug } }) });
+  const [preview, setPreview] = useState(false);
 
   if (q.isError) {
     return (
@@ -101,7 +104,7 @@ function ResourceDetail() {
               }
             >
               {r.url ? (
-                <iframe src={r.url} title={r.title} className="h-[60vh] w-full rounded-[10px]" style={{ background: "var(--p-raised)" }} />
+                <DocPreview url={r.url} title={r.title} height="h-[65vh]" />
               ) : (
                 <div className="p-muted">No file attached.</div>
               )}
@@ -110,13 +113,26 @@ function ResourceDetail() {
           {r.type === "link" && (
             <Panel>
               {r.description && <p className="p-secondary mb-3">{r.description}</p>}
+              {r.url && isPreviewableDocument(r.url) && (
+                <div className="mb-3">
+                  <DocPreview url={r.url} title={r.title} height="h-[60vh]" />
+                </div>
+              )}
               {r.url && (
-                <a href={r.url} target="_blank" rel="noreferrer noopener">
-                  <Button variant="primary" size="sm"><ExternalLink size={14} /> Open</Button>
-                </a>
+                <div className="flex flex-wrap gap-2">
+                  {!isPreviewableDocument(r.url) && (
+                    <Button variant="secondary" size="sm" onClick={() => setPreview(true)}>
+                      Preview
+                    </Button>
+                  )}
+                  <a href={r.url} target="_blank" rel="noreferrer noopener">
+                    <Button variant="primary" size="sm"><ExternalLink size={14} /> Open</Button>
+                  </a>
+                </div>
               )}
             </Panel>
           )}
+          {preview && <DocPreviewModal url={r.url} title={r.title} onClose={() => setPreview(false)} />}
 
           {r.type !== "link" && r.description && <p className="p-secondary leading-relaxed">{r.description}</p>}
 
