@@ -27,6 +27,7 @@ import {
   notify,
 } from "@/components/portal/ui";
 import { MediaSourceField, TranscriptPanel } from "./media-fields";
+import { DocPreviewModal } from "./doc-preview";
 import {
   adminListLibraryV2,
   adminUpsertLibraryItem,
@@ -231,6 +232,7 @@ function LibraryDrawer({ item, onClose, onSaved }: { item?: any; onClose: () => 
       : blank,
   );
   const [busy, setBusy] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setF((p) => ({ ...p, [k]: v }));
   const isMedia = f.type === "video" || f.type === "audio";
 
