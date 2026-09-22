@@ -568,6 +568,25 @@ const agentTemplates: EmailTemplateDef[] = [
     },
   }),
   def({
+    name: "password-reset",
+    label: "Password reset link",
+    audience: "agent",
+    category: "security",
+    trigger: "Sent by hand when someone can't get into the portal",
+    manualOnly: true,
+    subject: "Reset your Vantage portal password",
+    body: {
+      title: "Reset your password",
+      intro: GREET,
+      lines: [
+        "Use the button below to choose a new password for your {{agency_name}} portal account. The link works once and expires in 24 hours.",
+      ],
+      ctaLabel: "Choose a new password",
+      ctaUrl: "{{reset_link}}",
+      note: "If you didn't ask for this, you can ignore it — your password stays the same.",
+    },
+  }),
+  def({
     name: "email-changed",
     label: "Email address changed",
     audience: "agent",
