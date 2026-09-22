@@ -212,9 +212,14 @@ export const sendApplicantEmail = createServerFn({ method: "POST" })
     // If a named catalog template is used, use the recruiting engine's send path
     // which handles the complex link resolution (invite vs login).
     if (data.template) {
+      const extra: Record<string, string> = {};
+      if (data.template === "password-reset") {
+        extra.reset_link = await buildPasswordResetLink(applicant.email);
+      }
       const result = await sendRecruitingEmail(applicant, data.template, {
         actorId: userId,
         sendKey: `manual-${data.template}-${applicant.id}-${stamp}`,
+        context: extra,
       });
       return result;
     }
