@@ -43,11 +43,20 @@ function LoginPage() {
     e.preventDefault();
     setError(null);
     setBusy(true);
-    await supabase.auth.resetPasswordForEmail(email.trim(), {
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
       redirectTo: `${window.location.origin}/reset-password`,
     });
     setBusy(false);
-    // Always show the same confirmation so the page never reveals who has an account.
+    // Rate limits and outages are real failures — say so instead of claiming an email is on its way.
+    if (error && (error.status === 429 || (error.status ?? 500) >= 500)) {
+      setError(
+        error.status === 429
+          ? "Too many reset requests right now. Please wait a minute and try again."
+          : "We couldn't send the reset email just now. Please try again in a moment."
+      );
+      return;
+    }
+    // Otherwise always show the same confirmation so the page never reveals who has an account.
     setSent(true);
   }
 
