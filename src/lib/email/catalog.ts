@@ -568,6 +568,25 @@ const agentTemplates: EmailTemplateDef[] = [
     },
   }),
   def({
+    name: "password-reset",
+    label: "Password reset link",
+    audience: "agent",
+    category: "security",
+    trigger: "Sent by hand when someone can't get into the portal",
+    manualOnly: true,
+    subject: "Reset your Vantage portal password",
+    body: {
+      title: "Reset your password",
+      intro: GREET,
+      lines: [
+        "Use the button below to choose a new password for your {{agency_name}} portal account. The link works once and expires in 24 hours.",
+      ],
+      ctaLabel: "Choose a new password",
+      ctaUrl: "{{reset_link}}",
+      note: "If you didn't ask for this, you can ignore it — your password stays the same.",
+    },
+  }),
+  def({
     name: "email-changed",
     label: "Email address changed",
     audience: "agent",
@@ -1210,10 +1229,15 @@ export function templateDef(name: string): EmailTemplateDef | undefined {
   return EMAIL_CATALOG[name];
 }
 
+/** Agent-audience templates a recruiter may still send by hand from a record. */
+const COMPOSER_AGENT_TEMPLATES = new Set(["password-reset"]);
+
 /** Templates a recruiter can pick in the Send Email composer. */
 export function composerTemplates(): EmailTemplateDef[] {
   return EMAIL_TEMPLATE_LIST.filter(
-    (t) => t.audience === "applicant" && t.category !== "campaign",
+    (t) =>
+      (t.audience === "applicant" && t.category !== "campaign") ||
+      COMPOSER_AGENT_TEMPLATES.has(t.name),
   );
 }
 

@@ -5,6 +5,26 @@ import { z } from "zod";
 import { EMAIL_TEMPLATE_LIST, composerTemplates, templateDef } from "@/lib/email/catalog";
 import { EMAIL_VAR_KEYS } from "@/lib/email/vars";
 
+/**
+ * Mint a one-time Supabase recovery link for an existing portal account so the
+ * branded "Password reset link" email can carry it.
+ */
+async function buildPasswordResetLink(email: string): Promise<string> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { SITE_URL } = await import("@/lib/email/links");
+  const { data, error } = await supabaseAdmin.auth.admin.generateLink({
+    type: "recovery",
+    email,
+    options: { redirectTo: `${SITE_URL}/reset-password` },
+  });
+  if (error || !data?.properties?.action_link) {
+    throw new Error(
+      "This person doesn't have a portal account yet, so there's no password to reset. Send them their portal invitation instead.",
+    );
+  }
+  return data.properties.action_link;
+}
+
 async function assertAdmin(supabase: any, userId: string) {
   const { data } = await supabase.from("user_roles").select("role").eq("user_id", userId);
   const roles = (data ?? []).map((r: { role: string }) => r.role);
@@ -212,9 +232,14 @@ export const sendApplicantEmail = createServerFn({ method: "POST" })
     // If a named catalog template is used, use the recruiting engine's send path
     // which handles the complex link resolution (invite vs login).
     if (data.template) {
+      const extra: Record<string, string> = {};
+      if (data.template === "password-reset") {
+        extra.reset_link = await buildPasswordResetLink(applicant.email);
+      }
       const result = await sendRecruitingEmail(applicant, data.template, {
         actorId: userId,
         sendKey: `manual-${data.template}-${applicant.id}-${stamp}`,
+        context: extra,
       });
       return result;
     }
