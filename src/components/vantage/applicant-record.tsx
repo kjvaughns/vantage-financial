@@ -845,7 +845,14 @@ function EmailComposerModal({
       }
       onSent();
     },
-    onError: () => notify.error("Couldn't send that email", "Please try again in a moment."),
+    onError: (err: any) =>
+      notify.error(
+        "Couldn't send that email",
+        typeof err?.message === "string" && err.message
+          ? err.message
+          : "Please try again in a moment.",
+      ),
+
   });
 
   const ready = mode === "template" ? !!templateName : !!subject.trim() && !!body.trim();
