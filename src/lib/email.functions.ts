@@ -17,13 +17,17 @@ async function buildPasswordResetLink(email: string): Promise<string> {
     email,
     options: { redirectTo: `${SITE_URL}/reset-password` },
   });
-  if (error || !data?.properties?.action_link) {
+  if (!error && data?.properties?.action_link) return data.properties.action_link;
+
+  const msg = (error?.message ?? "").toLowerCase();
+  if (!error || msg.includes("not found") || msg.includes("user")) {
     throw new Error(
-      "This person doesn't have a portal account yet, so there's no password to reset. Send them their portal invitation instead.",
+      `${email} doesn't have a portal account yet, so there's no password to reset. Send them their portal invitation instead.`,
     );
   }
-  return data.properties.action_link;
+  throw new Error(`Couldn't create a reset link: ${error.message}`);
 }
+
 
 async function assertAdmin(supabase: any, userId: string) {
   const { data } = await supabase.from("user_roles").select("role").eq("user_id", userId);
