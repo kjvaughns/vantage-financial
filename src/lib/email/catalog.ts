@@ -1210,10 +1210,15 @@ export function templateDef(name: string): EmailTemplateDef | undefined {
   return EMAIL_CATALOG[name];
 }
 
+/** Agent-audience templates a recruiter may still send by hand from a record. */
+const COMPOSER_AGENT_TEMPLATES = new Set(["password-reset"]);
+
 /** Templates a recruiter can pick in the Send Email composer. */
 export function composerTemplates(): EmailTemplateDef[] {
   return EMAIL_TEMPLATE_LIST.filter(
-    (t) => t.audience === "applicant" && t.category !== "campaign",
+    (t) =>
+      (t.audience === "applicant" && t.category !== "campaign") ||
+      COMPOSER_AGENT_TEMPLATES.has(t.name),
   );
 }
 
