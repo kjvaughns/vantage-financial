@@ -159,13 +159,7 @@ function UnlicensedComplete() {
               }}
               className="vantage-btn-primary flex-none px-6 py-3.5 text-[15px]"
             >
-              {booked
-                ? "Reschedule →"
-                : wantsOneOnOne
-                  ? "Book my 1:1 call →"
-                  : chosenLabel
-                    ? "Confirm my seat →"
-                    : "Book the overview →"}
+              {booked ? "Reschedule →" : chosenLabel ? "Confirm my call →" : "Book my 1:1 call →"}
             </a>
           ) : (
             <span className="flex-none text-[13px] text-vantage-faint">

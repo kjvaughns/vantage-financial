@@ -41,12 +41,6 @@ async function gatewayGet<T>(path: string, h: Record<string, string>): Promise<T
 
 const CENTRAL = "America/Chicago";
 
-const partsFmt = new Intl.DateTimeFormat("en-US", {
-  timeZone: CENTRAL,
-  weekday: "short",
-  hour: "numeric",
-  hour12: false,
-});
 
 const labelFmt = new Intl.DateTimeFormat("en-US", {
   timeZone: CENTRAL,
@@ -58,12 +52,6 @@ const labelFmt = new Intl.DateTimeFormat("en-US", {
   hour12: true,
 });
 
-function centralParts(iso: string) {
-  const parts = partsFmt.formatToParts(new Date(iso));
-  const weekday = parts.find((p) => p.type === "weekday")?.value ?? "";
-  const hour = Number(parts.find((p) => p.type === "hour")?.value ?? "-1");
-  return { weekday, hour };
-}
 
 /**
  * Fetch the recurring Monday-evening overview slots from Calendly.
