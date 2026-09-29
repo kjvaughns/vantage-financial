@@ -76,8 +76,8 @@ function centralParts(iso: string) {
 export async function fetchOverviewSlots(opts?: { weeks?: number; slug?: string }): Promise<OverviewSlot[]> {
   const h = headers();
   if (!h) return [];
-  const weeks = opts?.weeks ?? 6;
-  const slug = (opts?.slug ?? "overview").toLowerCase();
+  const weeks = opts?.weeks ?? 1;
+  const slug = (opts?.slug ?? "opportunity-meeting").toLowerCase();
 
   try {
     const me = await gatewayGet<{ resource: { uri: string } }>("/users/me", h);
@@ -88,9 +88,7 @@ export async function fetchOverviewSlots(opts?: { weeks?: number; slug?: string 
     }>(`/event_types?user=${encodeURIComponent(userUri)}&count=100`, h);
 
     const active = eventTypes.collection.filter((e) => e.active !== false);
-    const eventType =
-      active.find((e) => (e.slug ?? "").toLowerCase() === slug) ??
-      active.find((e) => (e.name ?? "").toLowerCase().includes("overview"));
+    const eventType = active.find((e) => (e.slug ?? "").toLowerCase() === slug);
     if (!eventType) return [];
 
     const slots: OverviewSlot[] = [];
@@ -98,7 +96,7 @@ export async function fetchOverviewSlots(opts?: { weeks?: number; slug?: string 
 
     for (let w = 0; w < weeks; w++) {
       const start = new Date(now + w * 7 * 86400000 + 10 * 60000);
-      const end = new Date(now + (w * 7 + 6) * 86400000 + 23 * 3600000);
+      const end = new Date(now + (w * 7 + 7) * 86400000 - 60000);
       const qs = new URLSearchParams({
         event_type: eventType.uri,
         start_time: start.toISOString().replace(/\.\d{3}Z$/, "Z"),
@@ -112,13 +110,11 @@ export async function fetchOverviewSlots(opts?: { weeks?: number; slug?: string 
         );
         batch = res.collection ?? [];
       } catch {
-        continue; // one bad window shouldn't kill the whole list
+        continue;
       }
 
       for (const t of batch) {
         if (!t.start_time || (t.status && t.status !== "available")) continue;
-        const { weekday, hour } = centralParts(t.start_time);
-        if (weekday !== "Mon" || hour < 17) continue; // Monday evening only
         if (slots.some((s) => s.startIso === t.start_time)) continue;
         slots.push({
           startIso: t.start_time,
@@ -129,7 +125,7 @@ export async function fetchOverviewSlots(opts?: { weeks?: number; slug?: string 
       }
     }
 
-    return slots.sort((a, b) => a.startIso.localeCompare(b.startIso)).slice(0, 8);
+    return slots.sort((a, b) => a.startIso.localeCompare(b.startIso));
   } catch (err) {
     console.error("fetchOverviewSlots failed", err);
     return [];

@@ -427,7 +427,7 @@ export const getOverviewBooking = createServerFn({ method: "POST" })
       requested_overview_at: row.requested_overview_at ?? null,
       wants_one_on_one: Boolean(row.wants_one_on_one),
       url: data.base_url
-        ? buildPrefilledUrl(data.base_url, row.requested_overview_at ?? null, prefill, "overview")
+        ? buildPrefilledUrl(data.base_url, row.requested_overview_at ?? null, prefill, "one_on_one")
         : null,
       one_on_one_url: row.one_on_one_url
         ? buildPrefilledUrl(row.one_on_one_url, null, prefill, "one_on_one")
