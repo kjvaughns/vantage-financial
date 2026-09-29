@@ -58,6 +58,14 @@ export async function queueEmail(
         full_name: toName || undefined,
         email,
         portal_link: params?.portalLink || undefined,
+        ...(params?.confirmationToken ? {
+          reschedule_link: `https://vantage-financial.net/reschedule/${encodeURIComponent(params.confirmationToken)}`,
+          one_on_one_link: `https://vantage-financial.net/reschedule/${encodeURIComponent(params.confirmationToken)}`,
+        } : {}),
+        ...(params?.bookedAt ? {
+          interview_date: new Date(params.bookedAt).toLocaleDateString("en-US", { timeZone: "America/Chicago", weekday: "long", month: "long", day: "numeric" }),
+          interview_time: new Date(params.bookedAt).toLocaleTimeString("en-US", { timeZone: "America/Chicago", hour: "numeric", minute: "2-digit" }) + " CT",
+        } : {}),
       },
     });
   } catch (e) {

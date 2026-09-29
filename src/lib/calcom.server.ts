@@ -68,7 +68,7 @@ async function bookOnce(input: {
   licensed?: boolean;
   instagram?: string | null;
   timeZone?: string;
-}): Promise<{ ok: true; uid: string | null } | { ok: false; error: string }> {
+}): Promise<{ ok: true; uid: string | null; rescheduleUrl: string | null } | { ok: false; error: string }> {
   const key = process.env["CALCOM_API_KEY"];
   if (!key) return { ok: false, error: "Cal.com is not configured" };
   try {
@@ -101,11 +101,33 @@ async function bookOnce(input: {
       console.error("Cal.com booking failed", res.status, text);
       return { ok: false, error: text.slice(0, 300) };
     }
-    const json = JSON.parse(text) as { data?: { uid?: string } };
-    return { ok: true, uid: json.data?.uid ?? null };
+    const json = JSON.parse(text) as { data?: { uid?: string; rescheduleUrl?: string } };
+    return { ok: true, uid: json.data?.uid ?? null, rescheduleUrl: json.data?.rescheduleUrl ?? null };
   } catch (err) {
     console.error("createCalBooking failed", err);
     return { ok: false, error: (err as Error).message };
+  }
+}
+
+/** Move an existing booking rather than creating a second calendar event. */
+export async function rescheduleCalBooking(uid: string, startIso: string, email: string): Promise<{ ok: true; uid: string } | { ok: false; error: string }> {
+  const key = process.env["CALCOM_API_KEY"];
+  if (!key) return { ok: false, error: "Booking is temporarily unavailable. Please reply to your interview email." };
+  try {
+    const res = await fetch(`${CAL_API}/bookings/${encodeURIComponent(uid)}/reschedule`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "cal-api-version": "2024-08-13", "Content-Type": "application/json" },
+      body: JSON.stringify({ start: new Date(startIso).toISOString(), rescheduledBy: email, reschedulingReason: "Applicant selected a new interview time" }),
+    });
+    if (!res.ok) {
+      console.error("Cal.com reschedule failed", res.status, await res.text());
+      return { ok: false, error: "That time could not be confirmed. Please select another time or reply to your interview email." };
+    }
+    const json = await res.json() as { data?: { uid?: string } };
+    return { ok: true, uid: json.data?.uid ?? uid };
+  } catch (error) {
+    console.error("Cal.com reschedule failed", error);
+    return { ok: false, error: "We couldn't update your booking. Please try again or reply to your interview email." };
   }
 }
 
