@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { PublicShell } from "@/components/vantage/brand";
 import { trackApplicationLead } from "@/lib/meta-pixel";
-import { CalendlyInline } from "@/components/vantage/calendly-inline";
+import { CalBookingCard } from "@/components/vantage/cal-booking-card";
 import {
   DISCORD_INVITE_URL,
   STATE_REQUIREMENTS_URL,
@@ -102,9 +102,7 @@ function LicensedComplete() {
     }
   }
 
-  const url = ctx.calendly_url;
   const contact = ctx.contact_name;
-  const oneOnOneUrl = bookingQuery.data?.one_on_one_url ?? null;
 
   return (
     <PublicShell>
@@ -120,42 +118,18 @@ function LicensedComplete() {
         <p className="mx-auto mt-4 max-w-[600px] text-[16px] leading-relaxed text-vantage-muted">
           You've been identified as a licensed applicant. The next step is a short interview with{" "}
           {contact ? <span className="text-vantage-fog">{contact}</span> : "your assigned Vantage recruiter"}
-          . Pick a time below to lock it in.
+          .
         </p>
 
-        {url ? (
-          <>
-            <CalendlyInline url={url} />
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-              <a href={url} target="_blank" rel="noreferrer noopener" className="vantage-btn-ghost px-6 py-3.5 text-[15px]">
-                Open Calendly in a new tab →
-              </a>
-              <button onClick={onConfirm} className="vantage-btn-primary px-6 py-3.5 text-[15px]">
-                {booked ? "Booked ✓" : "I've booked — continue →"}
-              </button>
-            </div>
-            <p className="mt-4 text-[13px] text-vantage-faint">
-              {booked
-                ? "Nice — check your email for the invite. Your resources are below."
-                : "Your application isn't complete until an interview time is selected."}
-            </p>
-          </>
-        ) : (
-          <div className="vantage-card vantage-card-gold mt-10 p-8 text-left md:p-10">
-            <h2 className="font-display text-[28px] leading-tight text-vantage-ivory">Your application was received</h2>
-            <p className="mt-3 text-[15px] leading-relaxed text-vantage-muted">
-              {contact ? <>Your recruiting manager, <span className="text-vantage-fog">{contact}</span>, will reach out shortly to schedule your interview.</> : "A recruiting manager will contact you shortly to schedule your interview."}
-            </p>
-            <p className="mt-2 text-[14px] text-vantage-faint">
-              You don't need to do anything else right now — watch your inbox and phone for outreach within one business day.
-            </p>
-          </div>
-        )}
+        <CalBookingCard
+          token={token}
+          chosenIso={bookingQuery.data?.requested_overview_at ?? null}
+          scheduled={String(ctx.scheduling_status ?? "").includes("sched")}
+        />
 
         {/* Resources — a 1:1 call, the licensing course and the team Discord */}
         <div className="mt-6 grid gap-4 text-left md:grid-cols-2">
-          {oneOnOneUrl && (
-            <div className="vantage-card flex flex-col gap-3 p-6">
+          <div className="vantage-card flex flex-col gap-3 p-6">
               <div className="font-display text-[20px] leading-tight text-vantage-ivory">
                 Prefer a 1:1 call?
               </div>
