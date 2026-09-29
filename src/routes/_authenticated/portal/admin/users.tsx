@@ -40,6 +40,10 @@ function UsersPage() {
   });
 
   const allUsers = data?.users ?? [];
+  const agentLinks = data?.agentLinks ?? [];
+  const uplineUsers = allUsers.filter((candidate: any) =>
+    candidate.is_active !== false && candidate.roles.some((role: string) => ["leader", "manager", "admin", "super_admin"].includes(role)),
+  );
   const users = allUsers.filter((u: any) => {
     if (!q.trim()) return true;
     const n = `${u.first_name ?? ""} ${u.last_name ?? ""} ${u.email ?? ""}`.toLowerCase();
@@ -116,13 +120,21 @@ function UsersPage() {
                     }
                   >
                     <option value="">— none —</option>
-                    {allUsers
+                    {uplineUsers
                       .filter((p: any) => p.id !== u.id)
                       .map((p: any) => (
                         <option key={p.id} value={p.id}>
                           {[p.first_name, p.last_name].filter(Boolean).join(" ") || p.email}
                         </option>
                       ))}
+                  </Select>
+                </div>
+
+                <div className="mt-3">
+                  <div className="p-label mb-1">AgentLink assignment</div>
+                  <Select value={u.assigned_agentlink_link_id ?? ""} onChange={(e) => profileMut.mutate({ id: u.id, assigned_agentlink_link_id: e.target.value || null })}>
+                    <option value="">— not assigned —</option>
+                    {agentLinks.filter((link: any) => link.owner_id === u.parent_user_id).map((link: any) => <option key={link.id} value={link.id}>{link.label}</option>)}
                   </Select>
                 </div>
 
@@ -228,13 +240,21 @@ function UsersPage() {
                         }
                       >
                         <option value="">— none —</option>
-                        {allUsers
+                        {uplineUsers
                           .filter((p: any) => p.id !== u.id)
                           .map((p: any) => (
                             <option key={p.id} value={p.id}>
                               {[p.first_name, p.last_name].filter(Boolean).join(" ") || p.email}
                             </option>
                           ))}
+                      </Select>
+                      <Select
+                        className="mt-2 h-9 w-44 text-[13px]"
+                        value={u.assigned_agentlink_link_id ?? ""}
+                        onChange={(e) => profileMut.mutate({ id: u.id, assigned_agentlink_link_id: e.target.value || null })}
+                      >
+                        <option value="">No AgentLink</option>
+                        {agentLinks.filter((link: any) => link.owner_id === u.parent_user_id).map((link: any) => <option key={link.id} value={link.id}>{link.label}</option>)}
                       </Select>
                     </TD>
                     <TD>

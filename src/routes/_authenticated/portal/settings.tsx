@@ -34,6 +34,10 @@ import {
   getMySchedulingSettings,
   updateMySchedulingSettings,
   getTeamRecruitingLinks,
+  getAgentLinkSettings,
+  saveAgentLink,
+  deleteAgentLink,
+  assignAgentLink,
 } from "@/lib/portal.functions";
 import { CalendlyInline } from "@/components/vantage/calendly-inline";
 import { RecruitingLinkCard } from "@/components/vantage/recruiting-link-card";
@@ -482,6 +486,7 @@ function RecruitingSection() {
     <div className="space-y-4">
       <RecruitingLinkCard />
       <TeamRecruitingLinksCard />
+      <AgentLinkSettingsPanel />
 
       <Panel title="Licensed scheduling">
         {q.isLoading ? (
@@ -544,6 +549,70 @@ function RecruitingSection() {
 
       <OneOnOneLinkPanel />
     </div>
+  );
+}
+
+function AgentLinkSettingsPanel() {
+  const getFn = useServerFn(getAgentLinkSettings);
+  const saveFn = useServerFn(saveAgentLink);
+  const deleteFn = useServerFn(deleteAgentLink);
+  const assignFn = useServerFn(assignAgentLink);
+  const qc = useQueryClient();
+  const q = useQuery({ queryKey: ["agentlink", "settings"], queryFn: () => getFn() });
+  const [label, setLabel] = useState("");
+  const [url, setUrl] = useState("");
+  const refresh = () => qc.invalidateQueries({ queryKey: ["agentlink", "settings"] });
+  const save = useMutation({
+    mutationFn: () => saveFn({ data: { label, url, is_active: true } }),
+    onSuccess: () => { setLabel(""); setUrl(""); refresh(); notify.success("AgentLink link saved."); },
+    onError: () => notify.error("Could not save that AgentLink link.", "Check the URL and try again."),
+  });
+  const remove = useMutation({ mutationFn: (id: string) => deleteFn({ data: { id } }), onSuccess: refresh });
+  const assign = useMutation({
+    mutationFn: (value: { agent_id: string; link_id: string | null }) => assignFn({ data: value }),
+    onSuccess: () => { refresh(); notify.success("AgentLink assignment saved."); },
+    onError: () => notify.error("Could not assign that link.", "Choose one of your active links."),
+  });
+
+  if (q.isLoading || !q.data?.canManage) return null;
+  const links = q.data.links ?? [];
+  const agents = q.data.agents ?? [];
+  const valid = label.trim().length > 0 && /^https:\/\/\S+$/i.test(url.trim());
+
+  return (
+    <Panel title="AgentLink contracting" description="Create your contracting links, then assign one link to each agent in your organization.">
+      <FormGrid>
+        <Field label="Link label"><Input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Example: Main agency account" /></Field>
+        <Field label="AgentLink URL"><Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://..." /></Field>
+      </FormGrid>
+      <Button className="mt-3" variant="primary" disabled={!valid} loading={save.isPending} onClick={() => save.mutate()}>Add link</Button>
+
+      {links.length > 0 && (
+        <div className="mt-5 divide-y" style={{ borderColor: "var(--p-border)" }}>
+          {links.map((link) => (
+            <div key={link.id} className="flex items-center justify-between gap-3 py-3">
+              <div className="min-w-0"><div className="p-body truncate">{link.label}</div><div className="p-muted truncate">{link.url}</div></div>
+              <Button variant="ghost" size="sm" onClick={() => remove.mutate(link.id)}>Remove</Button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {agents.length > 0 && (
+        <div className="mt-5 space-y-3">
+          <div className="p-label">Agent assignments</div>
+          {agents.map((agent: any) => (
+            <div key={agent.id} className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(220px,1fr)] sm:items-center">
+              <div className="min-w-0"><div className="p-body truncate">{agent.name}</div><div className="p-muted truncate">{agent.email}</div></div>
+              <Select value={agent.assigned_agentlink_link_id ?? ""} onChange={(e) => assign.mutate({ agent_id: agent.id, link_id: e.target.value || null })}>
+                <option value="">— not assigned —</option>
+                {links.filter((link) => link.is_active).map((link) => <option key={link.id} value={link.id}>{link.label}</option>)}
+              </Select>
+            </div>
+          ))}
+        </div>
+      )}
+    </Panel>
   );
 }
 

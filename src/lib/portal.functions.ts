@@ -1146,10 +1146,11 @@ export const adminListUsers = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     await assertAdmin(supabase, userId);
-    const [profilesRes, rolesRes, teamsRes] = await Promise.all([
+    const [profilesRes, rolesRes, teamsRes, agentLinksRes] = await Promise.all([
       supabase.from("profiles").select("*").order("created_at", { ascending: false }),
       supabase.from("user_roles").select("user_id, role"),
       supabase.from("teams").select("*").order("name"),
+      supabase.from("agentlink_links").select("id, owner_id, label, url, is_active").eq("is_active", true).order("label"),
     ]);
     const roleMap: Record<string, string[]> = {};
     for (const r of rolesRes.data ?? []) {
@@ -1158,6 +1159,7 @@ export const adminListUsers = createServerFn({ method: "GET" })
     return {
       users: (profilesRes.data ?? []).map((p: any) => ({ ...p, roles: roleMap[p.id] ?? [] })),
       teams: teamsRes.data ?? [],
+      agentLinks: agentLinksRes.data ?? [],
     };
   });
 
@@ -1203,6 +1205,7 @@ export const adminUpdateProfile = createServerFn({ method: "POST" })
         phone: z.string().optional(),
         team_id: z.string().uuid().nullable().optional(),
         parent_user_id: z.string().uuid().nullable().optional(),
+        assigned_agentlink_link_id: z.string().uuid().nullable().optional(),
         is_active: z.boolean().optional(),
         status: z.enum(["active", "inactive"]).optional(),
         can_receive_applicants: z.boolean().optional(),
@@ -1226,6 +1229,24 @@ export const adminUpdateProfile = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     await assertAdmin(supabase, userId);
     const { id, ...rest } = data;
+    if (data.parent_user_id === id) throw new Error("A user cannot report to themselves.");
+    if (data.parent_user_id) {
+      const { data: descendants } = await (supabase as any).rpc("descendant_ids", { _root: id });
+      if (((descendants ?? []) as { id: string }[]).some((row) => row.id === data.parent_user_id)) {
+        throw new Error("That assignment would create a reporting loop.");
+      }
+    }
+    if (data.assigned_agentlink_link_id) {
+      const { data: link } = await supabase
+        .from("agentlink_links")
+        .select("id, owner_id, is_active")
+        .eq("id", data.assigned_agentlink_link_id)
+        .maybeSingle();
+      const expectedOwner = data.parent_user_id ?? (await supabase.from("profiles").select("parent_user_id").eq("id", id).maybeSingle()).data?.parent_user_id;
+      if (!link?.is_active || !expectedOwner || link.owner_id !== expectedOwner) {
+        throw new Error("The AgentLink link must be active and owned by this agent's upline.");
+      }
+    }
     const { error } = await supabase.from("profiles").update(rest).eq("id", id);
     if (error) throw new Error(error.message);
     return { ok: true };
