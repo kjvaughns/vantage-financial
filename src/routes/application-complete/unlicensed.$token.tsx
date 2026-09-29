@@ -127,21 +127,9 @@ function UnlicensedComplete() {
               Start your pre-licensing course
             </div>
             <p className="text-[13.5px] leading-relaxed text-vantage-dim">
-              Life insurance pre-licensing through Xcel Solutions. Use our partner code at checkout
-              for the discounted rate.
+              Life insurance pre-licensing through our approved course — work through it at your own
+              pace and you'll be ready for the state exam.
             </p>
-            <button
-              onClick={copyCode}
-              className="flex items-center justify-between gap-3 rounded-[10px] border border-vantage-gold/40 bg-vantage-gold/[0.08] px-4 py-2.5 text-left transition hover:border-vantage-gold"
-            >
-              <span className="text-[12px] uppercase tracking-[0.08em] text-vantage-muted">
-                Partner code
-              </span>
-              <span className="font-display text-[18px] tracking-wide text-vantage-gold">
-                {XCEL_PARTNER_CODE}
-              </span>
-              <span className="text-[12px] text-vantage-faint">{copied ? "Copied" : "Copy"}</span>
-            </button>
             <a
               href={XCEL_COURSE_URL}
               target="_blank"

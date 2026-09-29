@@ -6,12 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { PublicShell } from "@/components/vantage/brand";
 import { trackApplicationLead } from "@/lib/meta-pixel";
 import { CalBookingCard } from "@/components/vantage/cal-booking-card";
-import {
-  DISCORD_INVITE_URL,
-  STATE_REQUIREMENTS_URL,
-  XCEL_COURSE_URL,
-  XCEL_PARTNER_CODE,
-} from "@/lib/next-steps";
+import { DISCORD_INVITE_URL } from "@/lib/next-steps";
 import {
   getOverviewBooking,
   getSchedulingContext,
