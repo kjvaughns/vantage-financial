@@ -16,14 +16,15 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "A technology-driven life insurance agency for serious agents: uncapped commission, daily pay opportunities, unlimited lead access, 20+ carriers, and a real path into leadership. See the full opportunity at the weekly Vantage Company Overview. Licensed and unlicensed candidates may apply.",
+          "A technology-driven life insurance agency for serious agents: uncapped commission, daily pay opportunities, unlimited lead access, 20+ carriers, and a real path into leadership. Watch the short opportunity video, then book a 1-on-1 interview. Licensed and unlicensed candidates may apply.",
       },
       { property: "og:title", content: "Vantage Financial" },
       {
         property: "og:description",
         content:
-          "Uncapped commission, daily pay opportunities, unlimited leads, and a real path into leadership. Apply and attend the weekly Vantage Company Overview.",
+          "Uncapped commission, daily pay opportunities, unlimited leads, and a real path into leadership. Watch the opportunity video and book your 1-on-1 interview.",
       },
+
       { property: "og:image", content: "https://vantagefinancial.lovable.app/vantage-og.png" },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
@@ -87,7 +88,7 @@ const whyCols = [
 
 const values = ["Skill", "Speed", "Production", "Leadership", "Accountability"];
 
-const overviewCovers = [
+const interviewCovers = [
   "How the Vantage sales system works",
   "Inbound and outbound lead opportunities",
   "Compensation and promotions",
@@ -98,21 +99,22 @@ const overviewCovers = [
 ];
 
 const licensedFlow = [
-  "Your application enters the Vantage recruiting portal",
-  "Your recruiter or manager is notified",
-  "You're directed to the licensed scheduling page",
-  "The team contacts qualified licensed applicants quickly",
-  "You begin evaluation, contracting, and onboarding",
+  "Watch the opportunity video before you apply",
+  "Pick a day and time for your 1-on-1 interview",
+  "Your interview is booked instantly when you submit",
+  "Your recruiter or manager is notified right away",
+  "Move into contracting, carrier appointments, and onboarding",
 ];
 
 const unlicensedFlow = [
-  "Receive the immediate steps to begin licensing",
-  "You're directed to the unlicensed success page",
-  "The Monday company overview scheduler is displayed",
-  "Select an available Monday overview",
-  "Receive licensing instructions and next steps",
-  "Complete the overview before moving deeper into onboarding",
+  "Watch the opportunity video before you apply",
+  "Pick a day and time for your 1-on-1 interview",
+  "Your interview is booked instantly when you submit",
+  "Start the online pre-licensing course right away",
+  "Check your state requirements and apply for your license",
+  "Get licensed, then begin onboarding and training",
 ];
+
 
 const whoFor = [
   "Serious candidates who want a real life insurance career",
@@ -164,16 +166,20 @@ const faqs = [
     a: "No. Licensed and unlicensed candidates may apply. Unlicensed applicants must complete their state licensing requirements before selling insurance.",
   },
   {
+    q: "What happens right after I apply?",
+    a: "You pick a day and time on the application, and your 1-on-1 interview is booked automatically the moment you submit. You'll get a confirmation with the details.",
+  },
+  {
+    q: "Do I have to watch the video first?",
+    a: "Yes. The short opportunity video covers the system, compensation, and expectations, so your interview can focus on whether you're a fit.",
+  },
+  {
     q: "What happens after I apply if I am unlicensed?",
-    a: "You'll receive the immediate licensing steps and be directed to schedule the Monday Vantage Company Overview.",
+    a: "You'll get the online pre-licensing course, your state's requirements, and the steps to apply for your license — plus your interview time.",
   },
   {
     q: "What happens after I apply if I am licensed?",
-    a: "Your recruiter or manager will be notified, and qualified licensed applicants will be contacted quickly.",
-  },
-  {
-    q: "When is the company overview?",
-    a: "Every Monday at 7:00 PM Central Time and 8:00 PM Eastern Time.",
+    a: "Your recruiter or manager is notified immediately, and your interview covers contracting, carrier appointments, and onboarding.",
   },
   {
     q: "Are leads provided?",
@@ -185,6 +191,7 @@ const faqs = [
   },
   { q: "Is income guaranteed?", a: "No. This is a performance-based sales opportunity." },
 ];
+
 
 function LandingPage() {
   const { ref } = Route.useSearch();
@@ -244,12 +251,14 @@ function LandingPage() {
                 search={applySearch}
                 className="vantage-btn-primary px-7 py-4 text-[16px]"
               >
-                Start Your Application <span>→</span>
+                Watch, Then Apply <span>→</span>
               </Link>
             </div>
             <p className="mt-4 text-[13.5px] text-vantage-faint">
-              Licensed and unlicensed candidates may apply.
+              Watch the video above, then book your 1-on-1 interview on the application. Licensed and
+              unlicensed candidates may apply.
             </p>
+
 
             {/* Credibility row */}
             <div className="mt-7 flex flex-wrap items-center justify-center gap-x-2.5 gap-y-2 text-[12.5px] text-vantage-muted">
@@ -296,14 +305,15 @@ function LandingPage() {
         />
         <div className="vantage-card vantage-card-gold p-7 md:p-8">
           <p className="text-[16px] leading-relaxed text-vantage-fog">
-            The full company structure, sales system, compensation path, training process, and
-            career opportunity are explained during the weekly{" "}
-            <a href="#overview" className="font-semibold text-vantage-gold hover:underline">
-              Vantage Company Overview
+            The company structure, sales system, compensation path, and training process are
+            explained in the opportunity video above — then we go deeper in your{" "}
+            <a href="#interview" className="font-semibold text-vantage-gold hover:underline">
+              1-on-1 interview
             </a>
             .
           </p>
         </div>
+
       </div>
 
       {/* WHY SERIOUS AGENTS CHOOSE Vantage */}
@@ -338,8 +348,8 @@ function LandingPage() {
               Already licensed?
             </div>
             <p className="text-[15px] leading-relaxed text-vantage-muted">
-              Licensed applicants are reviewed quickly and contacted directly by their recruiter or
-              manager.
+              Licensed applicants skip all pre-licensing material and go straight to a 1-on-1
+              interview about contracting and getting to work.
             </p>
             <div className="flex flex-col gap-2.5">
               {licensedFlow.map((s) => (
@@ -350,8 +360,7 @@ function LandingPage() {
               ))}
             </div>
             <p className="mt-1 text-[12.5px] text-vantage-faint">
-              Licensed applicants don't wait for the Monday overview unless their recruiter or
-              manager decides it's appropriate.
+              Bringing a team with you? There's a box on the application to tell us.
             </p>
           </div>
           <div className="vantage-card flex flex-col gap-4 p-8">
@@ -359,9 +368,8 @@ function LandingPage() {
               Not licensed yet?
             </div>
             <p className="text-[15px] leading-relaxed text-vantage-muted">
-              You don't need an active life insurance license to apply. Unlicensed applicants attend
-              the weekly Vantage Company Overview to understand the opportunity before beginning the
-              licensing process.
+              You don't need an active life insurance license to apply. You'll get the online
+              pre-licensing course and your state's requirements the moment you submit.
             </p>
             <div className="flex flex-col gap-2.5">
               {unlicensedFlow.map((s) => (
@@ -373,22 +381,23 @@ function LandingPage() {
             </div>
           </div>
         </div>
+
       </div>
 
-      {/* COMPANY OVERVIEW CTA */}
-      <div id="overview" className="mx-auto max-w-[1240px] px-6 pt-24 md:px-8">
+      {/* 1-ON-1 INTERVIEW CTA */}
+      <div id="interview" className="mx-auto max-w-[1240px] px-6 pt-24 md:px-8">
         <div className="vantage-card vantage-card-gold grid gap-8 p-10 md:grid-cols-2 md:p-14">
           <div>
             <div className="mb-3 vantage-kicker">The Full Opportunity</div>
             <h2 className="font-display text-[clamp(36px,5vw,62px)] leading-[0.96]">
-              See the full Vantage opportunity
+              Watch the video, then talk with us 1-on-1
             </h2>
             <p className="mt-5 text-[16.5px] leading-relaxed text-vantage-muted">
-              The website gives you the highlights. The Vantage Company Overview explains the
-              complete opportunity.
+              The video covers the opportunity end to end. Your 1-on-1 interview is where we answer
+              your questions and decide together if this is a fit.
             </p>
             <div className="mt-6 flex flex-col gap-2.5">
-              {overviewCovers.map((c) => (
+              {interviewCovers.map((c) => (
                 <div key={c} className="flex items-start gap-3 text-[15px] text-vantage-fog">
                   <span className="mt-0.5 text-vantage-gold">✦</span>
                   {c}
@@ -398,16 +407,17 @@ function LandingPage() {
           </div>
           <div className="flex flex-col justify-center gap-5">
             <div className="rounded-[16px] border border-vantage-gold/30 bg-black/30 p-6 text-center">
-              <div className="vantage-kicker mb-2 justify-center">Every Monday</div>
+              <div className="vantage-kicker mb-2 justify-center">Pick Your Time</div>
               <div className="font-display text-[clamp(30px,4vw,44px)] leading-none text-vantage-gold">
-                7:00 PM CT
+                1-on-1 Interview
               </div>
               <div className="mt-1 font-display text-[clamp(22px,3vw,30px)] leading-none text-vantage-ivory">
-                8:00 PM ET
+                Booked Instantly
               </div>
             </div>
             <p className="text-center text-[14px] font-semibold leading-relaxed text-vantage-fog">
-              This is not just an information call. It is part of our selection process.
+              Choose a day in the next 7 days and a time that works — it's confirmed the moment you
+              submit.
             </p>
             <Link
               to="/apply"
@@ -419,6 +429,7 @@ function LandingPage() {
           </div>
         </div>
       </div>
+
 
       {/* WHO THIS IS FOR */}
       <div className="mx-auto max-w-[1240px] px-6 pt-24 md:px-8">
@@ -500,10 +511,11 @@ function LandingPage() {
               Your empire starts with one application
             </h2>
             <p className="mt-5 text-[16.5px] leading-relaxed text-vantage-muted">
-              Complete the short application and tell us why you believe you would be a strong fit
-              for Vantage. Licensed applicants are contacted quickly. Unlicensed applicants receive
-              the licensing steps and reserve a seat for the next Monday company overview.
+              Complete the short application, tell us why you'd be a strong fit, and pick a time for
+              your 1-on-1 interview. Licensed applicants move toward contracting. Unlicensed
+              applicants get the pre-licensing course and state requirements right away.
             </p>
+
           </div>
           <div className="flex flex-col items-center justify-center gap-4 text-center">
             <Link
