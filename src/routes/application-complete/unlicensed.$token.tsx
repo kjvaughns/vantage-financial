@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { VslRequired } from "@/components/vantage/vsl-required";
+import { CalBookingCard } from "@/components/vantage/cal-booking-card";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -48,10 +49,9 @@ function UnlicensedComplete() {
   const [copied, setCopied] = useState(false);
 
   // Deep-link the exact Monday slot they chose on the application, pre-filled
-  // with their name, email and referrer. Calendly requires the final confirm tap.
   const bookingQuery = useQuery({
     queryKey: ["overview-booking", token],
-    queryFn: () => resolveBooking({ data: { token, base_url: ctx.calendly_url ?? "" } }),
+    queryFn: () => resolveBooking({ data: { token, base_url: "" } }),
     enabled: ctx.found,
     retry: false,
   });
@@ -86,30 +86,6 @@ function UnlicensedComplete() {
     );
   }
 
-  // Unlicensed branch: no embedded Calendly. Everyone either confirms the Monday
-  // overview seat they picked, or — when no date worked — books a 1:1 call with
-  // the nearest leader above their recruiter. They stay on this page either way.
-  const wantsOneOnOne = bookingQuery.data?.wants_one_on_one ?? false;
-  const oneOnOneUrl = bookingQuery.data?.one_on_one_url ?? null;
-  const chosenIso = bookingQuery.data?.requested_overview_at ?? null;
-  const overviewUrl = bookingQuery.data?.url || ctx.calendly_url || null;
-  const bookingUrl = overviewUrl || oneOnOneUrl;
-  const chosenLabel = chosenIso
-    ? new Intl.DateTimeFormat("en-US", {
-        timeZone: "America/Chicago",
-        weekday: "long",
-        month: "long",
-        day: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-      }).format(new Date(chosenIso)) + " CT"
-    : null;
-
-  const heading = chosenLabel ? "Confirm your 1:1 interview" : "Book your 1:1 interview call";
-  const blurb = chosenLabel
-    ? `You picked ${chosenLabel}. Your details are already filled in — one tap locks it in.`
-    : "Grab a time for a 1:1 call with a Vantage team leader. Your details are already filled in.";
-
   async function copyCode() {
     try {
       await navigator.clipboard.writeText(XCEL_PARTNER_CODE);
@@ -138,38 +114,11 @@ function UnlicensedComplete() {
           </p>
         </div>
 
-        {/* Primary next step — confirm the overview seat, or book a 1:1 */}
-        <div className="vantage-card vantage-card-gold mt-10 flex flex-col items-start gap-4 p-6 md:flex-row md:items-center md:justify-between md:p-8">
-          <div>
-            <div className="font-display text-[24px] leading-tight text-vantage-ivory">
-              {booked ? "You're booked — see you there" : heading}
-            </div>
-            <p className="mt-1.5 text-[14px] leading-relaxed text-vantage-muted">
-              {booked
-                ? `${chosenLabel ? `Confirmed for ${chosenLabel}. ` : ""}Check your email for the calendar invite, and watch the video above before we talk.`
-                : blurb}
-            </p>
-          </div>
-          {booked ? null : bookingUrl ? (
-            <a
-              href={bookingUrl}
-              target="_blank"
-              rel="noreferrer noopener"
-              onClick={() => {
-                setBooked(true);
-                // best-effort: record that they were routed to book
-                mark({ data: { token } }).catch(() => {});
-              }}
-              className="vantage-btn-primary flex-none px-6 py-3.5 text-[15px]"
-            >
-              {booked ? "Reschedule →" : chosenLabel ? "Confirm my call →" : "Book my 1:1 call →"}
-            </a>
-          ) : (
-            <span className="flex-none text-[13px] text-vantage-faint">
-              We'll email you the booking link shortly.
-            </span>
-          )}
-        </div>
+        <CalBookingCard
+          token={token}
+          chosenIso={bookingQuery.data?.requested_overview_at ?? null}
+          scheduled={String(ctx.scheduling_status ?? "").includes("sched")}
+        />
 
         {/* Head start: licensing course + community */}
         <div className="mt-4 grid gap-4 md:grid-cols-3">

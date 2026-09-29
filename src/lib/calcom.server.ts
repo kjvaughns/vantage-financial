@@ -50,12 +50,23 @@ export async function fetchCalSlots(): Promise<OverviewSlot[]> {
 }
 
 /** Book the slot directly — no confirmation step for the applicant. */
-export async function createCalBooking(input: {
+export async function createCalBooking(input: Parameters<typeof bookOnce>[0]) {
+  const first = await bookOnce(input);
+  // Cal.com rejects numbers it can't validate — retry without the phone rather than lose the booking.
+  if (!first.ok && input.phone && /phone|number/i.test(first.error)) {
+    return bookOnce({ ...input, phone: null });
+  }
+  return first;
+}
+
+async function bookOnce(input: {
   startIso: string;
   name: string;
   email: string;
   phone?: string | null;
   notes?: string | null;
+  licensed?: boolean;
+  instagram?: string | null;
   timeZone?: string;
 }): Promise<{ ok: true; uid: string | null } | { ok: false; error: string }> {
   const key = process.env["CALCOM_API_KEY"];
@@ -78,7 +89,11 @@ export async function createCalBooking(input: {
           timeZone: input.timeZone || "America/Chicago",
           ...(input.phone ? { phoneNumber: toE164(input.phone) } : {}),
         },
-        ...(input.notes ? { bookingFieldsResponses: { notes: input.notes } } : {}),
+        bookingFieldsResponses: {
+          "Recruit-Status": input.licensed ? "Licensed" : "Unlicensed",
+          ...(input.instagram ? { "Instagram-Handle": input.instagram } : {}),
+          ...(input.notes ? { notes: input.notes } : {}),
+        },
       }),
     });
     const text = await res.text();

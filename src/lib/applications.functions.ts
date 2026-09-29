@@ -90,6 +90,8 @@ export const submitApplication = createServerFn({ method: "POST" })
         name: `${data.first_name} ${data.last_name}`.trim(),
         email: data.email,
         phone: data.phone,
+        licensed: data.licensed,
+        instagram: data.instagram_handle || null,
         notes: [
           data.referred_by_name ? `Referred by ${data.referred_by_name}` : null,
           data.licensed ? "Licensed" : "Not licensed",
