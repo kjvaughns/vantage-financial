@@ -124,7 +124,7 @@ function InviteAcceptPage() {
             <ReadOnly label="Name" value={fullName || "—"} />
             <ReadOnly label="Email" value={invitation.email ?? "—"} />
           </div>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid grid-cols-[minmax(0,1fr)] gap-4 md:grid-cols-2 [&>*]:min-w-0">
             <Field label="Password *">
               <input
                 type="password"

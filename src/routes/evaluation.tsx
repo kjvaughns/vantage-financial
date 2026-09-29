@@ -137,16 +137,16 @@ function EvaluationPage() {
             </div>
 
             <div className="vantage-card mt-10 grid gap-5 p-6 md:p-10">
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid grid-cols-[minmax(0,1fr)] gap-4 md:grid-cols-2 [&>*]:min-w-0">
                 <Field label="First name *"><input className="vantage-input" value={firstName} onChange={(e) => setFirstName(e.target.value)} /></Field>
                 <Field label="Last name *"><input className="vantage-input" value={lastName} onChange={(e) => setLastName(e.target.value)} /></Field>
               </div>
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid grid-cols-[minmax(0,1fr)] gap-4 md:grid-cols-2 [&>*]:min-w-0">
                 <Field label="Email *"><input type="email" className="vantage-input" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} /></Field>
                 <Field label="Phone"><input type="tel" className="vantage-input" value={phone} onChange={(e) => setPhone(e.target.value)} /></Field>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid grid-cols-[minmax(0,1fr)] gap-4 md:grid-cols-2 [&>*]:min-w-0">
                 <Field label="Desired monthly income"><input className="vantage-input" placeholder="$" value={income} onChange={(e) => setIncome(e.target.value)} /></Field>
                 <Field label="Current employment status"><input className="vantage-input" value={employment} onChange={(e) => setEmployment(e.target.value)} /></Field>
               </div>
