@@ -54,11 +54,12 @@ export function PublicNav() {
             About
           </a>
           <a
-            href="/#overview"
+            href="/#interview"
             className="hidden text-[13.5px] font-semibold text-vantage-dim transition hover:text-vantage-ivory md:inline"
           >
-            The Overview
+            Your Interview
           </a>
+
           <a
             href="/#faq"
             className="hidden text-[13.5px] font-semibold text-vantage-dim transition hover:text-vantage-ivory md:inline"
