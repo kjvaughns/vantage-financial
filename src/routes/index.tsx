@@ -210,6 +210,37 @@ function LandingPage() {
 
   return (
     <PublicShell>
+      {/* VSL */}
+      <section id="vsl" className="mx-auto max-w-[1100px] px-6 pt-12 text-center md:px-8 md:pt-16">
+        <div className="vantage-reveal flex flex-col items-center">
+          <div className="vantage-kicker mb-3">Watch First</div>
+          <h1 className="max-w-[18ch] font-display text-[clamp(42px,7vw,78px)] leading-[0.92] text-vantage-ivory text-balance">
+            See the <span className="vantage-gold-text">Vantage opportunity</span>
+          </h1>
+          <p className="mt-4 max-w-[620px] text-[16px] leading-relaxed text-vantage-muted md:text-[17px]">
+            Get the full picture before you apply—how the opportunity works, what we provide, and
+            what it takes to win here.
+          </p>
+          <div className="mt-8 w-full overflow-hidden rounded-[8px] border border-vantage-gold/30 bg-black shadow-[0_24px_80px_rgba(0,0,0,0.45)]">
+            <iframe
+              className="aspect-video w-full"
+              src="https://www.youtube-nocookie.com/embed/F6PHSd9JtQs?rel=0"
+              title="Vantage Financial opportunity overview"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerPolicy="strict-origin-when-cross-origin"
+              allowFullScreen
+            />
+          </div>
+          <Link
+            to="/apply"
+            search={applySearch}
+            className="vantage-btn-primary mt-7 px-8 py-4 text-[16px]"
+          >
+            Apply After Watching <span>→</span>
+          </Link>
+        </div>
+      </section>
+
       {/* HERO */}
       <div id="top" className="relative overflow-hidden">
         <div className="mx-auto max-w-[920px] px-6 pt-[60px] pb-14 text-center md:px-8">
@@ -235,8 +266,8 @@ function LandingPage() {
               >
                 Start Your Application <span>→</span>
               </Link>
-              <a href="#overview" className="vantage-btn-ghost px-7 py-4 text-[16px]">
-                See the Overview
+              <a href="#vsl" className="vantage-btn-ghost px-7 py-4 text-[16px]">
+                Watch the VSL
               </a>
             </div>
             <p className="mt-4 text-[13.5px] text-vantage-faint">
