@@ -2,7 +2,7 @@ import * as React from 'react'
 import { Text } from '@react-email/components'
 import type { TemplateEntry } from './registry'
 import { GoldButton, Shell, greet, links, paragraph, type EmailLinkProps } from './_shell'
-import { NIPR_URL, STATE_REQUIREMENTS_URL, XCEL_PARTNER_CODE } from '@/lib/next-steps'
+import { NIPR_URL, STATE_REQUIREMENTS_URL } from '@/lib/next-steps'
 
 interface Props extends EmailLinkProps {
   firstName?: string
@@ -23,9 +23,8 @@ const Email = ({ firstName, ...rest }: Props) => {
       <GoldButton href="https://vantage-financial.net/watch" label="Watch before your call" />
       <GoldButton href={L.overviewUrl} label="Book the overview" />
       <Text style={paragraph}>
-        Don&apos;t wait on us to get moving — you can get a head start on licensing today.
-        Start the approved Xcel Solutions pre-licensing course now and use partner code{' '}
-        <strong>{XCEL_PARTNER_CODE}</strong> at checkout for our discounted rate:
+        Don&apos;t wait on us to get moving — you can get a head start on licensing today. Start our
+        approved pre-licensing course now:
       </Text>
       <GoldButton href={L.courseUrl} label="Start the licensing course" />
       <Text style={paragraph}>

@@ -83,7 +83,7 @@ export const APPLICANT_EMAIL_TEMPLATES: ApplicantEmailTemplate[] = [
     key: "licensing_instructions",
     label: "Licensing Instructions",
     subject: "Getting licensed — your next steps",
-    body: `Hi {{first_name}},\n\nHere's how to get your license so you can start writing business:\n\n1. Life Insurance Pre Licensing — ${XCEL_COURSE_URL} (partner code: ${XCEL_PARTNER_CODE})\n2. Schedule and pass your state exam.\n3. State Requirements — ${STATE_REQUIREMENTS_URL}\n4. Apply for License — ${NIPR_URL}\n5. Send us your NPN once you're licensed.\n\nReply with any questions — we'll check in each week until you're licensed.\n\nJoin the Vantage Discord — that's where training, announcements, and the team live: ${DISCORD_INVITE_URL}\n\n— The Vantage Team`,
+    body: `Hi {{first_name}},\n\nHere's how to get your license so you can start writing business:\n\n1. Life Insurance Pre Licensing — ${XCEL_COURSE_URL}\n2. Schedule and pass your state exam.\n3. State Requirements — ${STATE_REQUIREMENTS_URL}\n4. Apply for License — ${NIPR_URL}\n5. Send us your NPN once you're licensed.\n\nReply with any questions — we'll check in each week until you're licensed.\n\nJoin the Vantage Discord — that's where training, announcements, and the team live: ${DISCORD_INVITE_URL}\n\n— The Vantage Team`,
   },
   {
     key: "onboarding_invitation",
