@@ -348,6 +348,7 @@ export type Database = {
           team_id: string | null
           training_started_at: string | null
           updated_at: string
+          vsl_watched_at: string | null
           wants_one_on_one: boolean
           why_text: string | null
           zip: string | null
@@ -425,6 +426,7 @@ export type Database = {
           team_id?: string | null
           training_started_at?: string | null
           updated_at?: string
+          vsl_watched_at?: string | null
           wants_one_on_one?: boolean
           why_text?: string | null
           zip?: string | null
@@ -502,6 +504,7 @@ export type Database = {
           team_id?: string | null
           training_started_at?: string | null
           updated_at?: string
+          vsl_watched_at?: string | null
           wants_one_on_one?: boolean
           why_text?: string | null
           zip?: string | null
@@ -2323,6 +2326,7 @@ export type Database = {
       mark_applicant_scheduled: { Args: { _email: string }; Returns: Json }
       mark_licensed_fallback: { Args: { _token: string }; Returns: Json }
       mark_scheduled_by_token: { Args: { _token: string }; Returns: Json }
+      mark_vsl_watched_by_token: { Args: { _token: string }; Returns: Json }
       normalize_phone: { Args: { _txt: string }; Returns: string }
       onboarding_step_keys: {
         Args: { _required_only?: boolean }

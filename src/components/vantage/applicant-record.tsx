@@ -320,6 +320,16 @@ export function ApplicantRecord({
                 <span className="p-body text-[var(--p-muted)]">—</span>
               )}
             </div>
+            <div>
+              <div className="p-label mb-1">Watched VSL</div>
+              {(a as { vsl_watched_at?: string | null }).vsl_watched_at ? (
+                <span className="p-body text-[var(--p-gold)]">
+                  ✓ {new Date((a as { vsl_watched_at: string }).vsl_watched_at).toLocaleDateString()}
+                </span>
+              ) : (
+                <span className="p-body text-[var(--p-muted)]">Not yet</span>
+              )}
+            </div>
             <EditSelectField label="Status" value={a.recruiting_status ?? "pending"} onChange={(v) => save({ recruiting_status: v })}>
               {RECRUITING_STATUSES.map((s) => (
                 <option key={s} value={s}>{RECRUITING_STATUS_LABELS[s]}</option>

@@ -20,6 +20,7 @@ const Email = ({ firstName, ...rest }: Props) => {
         Your next step is the Vantage overview call. If you haven&apos;t booked it yet, grab a
         time here:
       </Text>
+      <GoldButton href="https://vantage-financial.net/watch" label="Watch before your call" />
       <GoldButton href={L.overviewUrl} label="Book the overview" />
       <Text style={paragraph}>
         Because you&apos;re already licensed, you can also grab time for a quick 1:1 with the

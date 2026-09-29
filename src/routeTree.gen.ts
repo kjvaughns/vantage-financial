@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WatchRouteImport } from './routes/watch'
 import { Route as ScheduleRouteImport } from './routes/schedule'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as LoginRouteImport } from './routes/login'
@@ -64,6 +65,11 @@ import { Route as AuthenticatedPortalAcademyPresentationsSlugRouteImport } from 
 import { Route as AuthenticatedPortalAcademyLibrarySlugRouteImport } from './routes/_authenticated/portal/academy/library.$slug'
 import { Route as AuthenticatedPortalAcademyCoursesSlugRouteImport } from './routes/_authenticated/portal/academy/courses.$slug'
 
+const WatchRoute = WatchRouteImport.update({
+  id: '/watch',
+  path: '/watch',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ScheduleRoute = ScheduleRouteImport.update({
   id: '/schedule',
   path: '/schedule',
@@ -383,6 +389,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/schedule': typeof ScheduleRoute
+  '/watch': typeof WatchRoute
   '/portal': typeof AuthenticatedPortalRouteRouteWithChildren
   '/course-purchased/$token': typeof CoursePurchasedTokenRoute
   '/join/$slug': typeof JoinSlugRoute
@@ -437,6 +444,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/schedule': typeof ScheduleRoute
+  '/watch': typeof WatchRoute
   '/course-purchased/$token': typeof CoursePurchasedTokenRoute
   '/join/$slug': typeof JoinSlugRoute
   '/portal-invite/$token': typeof PortalInviteTokenRoute
@@ -488,6 +496,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/schedule': typeof ScheduleRoute
+  '/watch': typeof WatchRoute
   '/_authenticated/portal': typeof AuthenticatedPortalRouteRouteWithChildren
   '/course-purchased/$token': typeof CoursePurchasedTokenRoute
   '/join/$slug': typeof JoinSlugRoute
@@ -545,6 +554,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/schedule'
+    | '/watch'
     | '/portal'
     | '/course-purchased/$token'
     | '/join/$slug'
@@ -599,6 +609,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/schedule'
+    | '/watch'
     | '/course-purchased/$token'
     | '/join/$slug'
     | '/portal-invite/$token'
@@ -649,6 +660,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/schedule'
+    | '/watch'
     | '/_authenticated/portal'
     | '/course-purchased/$token'
     | '/join/$slug'
@@ -706,6 +718,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ScheduleRoute: typeof ScheduleRoute
+  WatchRoute: typeof WatchRoute
   CoursePurchasedTokenRoute: typeof CoursePurchasedTokenRoute
   JoinSlugRoute: typeof JoinSlugRoute
   PortalInviteTokenRoute: typeof PortalInviteTokenRoute
@@ -718,6 +731,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/watch': {
+      id: '/watch'
+      path: '/watch'
+      fullPath: '/watch'
+      preLoaderRoute: typeof WatchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/schedule': {
       id: '/schedule'
       path: '/schedule'
@@ -1306,6 +1326,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ScheduleRoute: ScheduleRoute,
+  WatchRoute: WatchRoute,
   CoursePurchasedTokenRoute: CoursePurchasedTokenRoute,
   JoinSlugRoute: JoinSlugRoute,
   PortalInviteTokenRoute: PortalInviteTokenRoute,
