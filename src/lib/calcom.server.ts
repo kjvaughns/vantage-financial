@@ -50,7 +50,16 @@ export async function fetchCalSlots(): Promise<OverviewSlot[]> {
 }
 
 /** Book the slot directly — no confirmation step for the applicant. */
-export async function createCalBooking(input: {
+export async function createCalBooking(input: Parameters<typeof bookOnce>[0]) {
+  const first = await bookOnce(input);
+  // Cal.com rejects numbers it can't validate — retry without the phone rather than lose the booking.
+  if (!first.ok && input.phone && /phone|number/i.test(first.error)) {
+    return bookOnce({ ...input, phone: null });
+  }
+  return first;
+}
+
+async function bookOnce(input: {
   startIso: string;
   name: string;
   email: string;
