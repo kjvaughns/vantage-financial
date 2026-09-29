@@ -29,6 +29,13 @@
       "when": 1790675525139,
       "tag": "0003_notify_context_has_downlines",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790717185644,
+      "tag": "0004_add_agentlink_contracting_links",
+      "breakpoints": true
     }
   ]
 }

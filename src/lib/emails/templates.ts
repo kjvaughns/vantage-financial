@@ -187,7 +187,7 @@ export function welcomeOnboarding(params: TemplateParams): RenderedEmail {
     button(portal, "Open your portal") +
     p(`Here's what's waiting for you, five quick steps:`) +
     `<table role="presentation" cellspacing="0" cellpadding="0" style="margin:4px 0 14px 0">` +
-    li("Agent Cloud onboarding") +
+    li("AgentLink contracting — complete your profile to 100%, including E&O") +
     li("Discord Licensed role") +
     li("Read the Agent Playbook") +
     li("Expectations & schedule") +

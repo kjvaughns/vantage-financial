@@ -369,7 +369,9 @@ function StepBody({
 }) {
   const course = def.course_id ? courseById[def.course_id] : undefined;
   const href =
-    def.action_type === "external"
+    def.step_key === "agent_cloud_onboarding"
+      ? ctx?.agentLink?.url ?? null
+      : def.action_type === "external"
       ? def.action_url || links[def.step_key] || null
       : null;
 
@@ -400,6 +402,12 @@ function StepBody({
             <PrefillRow label="NPN" value={ctx?.prefill.npn ?? null} />
           </InfoBox>
         </>
+      )}
+
+      {def.step_key === "agent_cloud_onboarding" && !ctx?.agentLink && (
+        <InfoBox title="AgentLink assignment needed">
+          <p className="p-secondary">Your contracting link has not been assigned yet. Contact your upline before creating an AgentLink account.</p>
+        </InfoBox>
       )}
 
       {def.show_schedule && schedule.length > 0 && (
@@ -553,7 +561,7 @@ function StepRow({
                   Completed
                   {state.completed_at ? ` · ${new Date(state.completed_at).toLocaleDateString()}` : ""}
                 </div>
-              ) : status === "current" && def.completion_mode === "self" ? (
+              ) : status === "current" && def.completion_mode === "self" && (def.step_key !== "agent_cloud_onboarding" || !!ctx?.agentLink) ? (
                 <Button variant="primary" size="sm" onClick={onComplete} disabled={pending}>
                   Mark this step complete
                 </Button>

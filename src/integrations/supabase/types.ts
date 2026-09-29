@@ -50,6 +50,44 @@ export type Database = {
         }
         Relationships: []
       }
+      agentlink_links: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          label: string
+          owner_id: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label: string
+          owner_id: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          owner_id?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agentlink_links_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       app_links: {
         Row: {
           description: string | null
@@ -1707,6 +1745,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          assigned_agentlink_link_id: string | null
           avatar_url: string | null
           can_invite_agents: boolean
           can_invite_leaders: boolean
@@ -1742,6 +1781,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          assigned_agentlink_link_id?: string | null
           avatar_url?: string | null
           can_invite_agents?: boolean
           can_invite_leaders?: boolean
@@ -1777,6 +1817,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          assigned_agentlink_link_id?: string | null
           avatar_url?: string | null
           can_invite_agents?: boolean
           can_invite_leaders?: boolean
@@ -1812,6 +1853,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "profiles_assigned_agentlink_link_id_fkey"
+            columns: ["assigned_agentlink_link_id"]
+            isOneToOne: false
+            referencedRelation: "agentlink_links"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profiles_manager_id_fkey"
             columns: ["manager_id"]

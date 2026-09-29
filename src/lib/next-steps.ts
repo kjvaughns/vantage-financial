@@ -19,6 +19,5 @@ export const DISCORD_INVITE_URL = "https://discord.gg/sFgEEPRSmw";
 export const INSTAGRAM_URL = "https://instagram.com/vantage.financial";
 export const INSTAGRAM_HANDLE = "@vantage.financial";
 
-/** Agent Cloud onboarding invite for newly licensed Vantage agents. */
-export const AGENT_CLOUD_INVITE_URL =
-  "https://useagentcloud.com/invite/dcee6766-4b8f-44c0-9f4c-025ccdcbce2e";
+/** @deprecated AgentLink links are assigned per agent by their upline. */
+export const AGENT_CLOUD_INVITE_URL = "";
