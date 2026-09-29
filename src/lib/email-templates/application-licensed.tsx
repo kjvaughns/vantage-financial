@@ -17,22 +17,22 @@ const Email = ({ firstName, ...rest }: Props) => {
         Hey {greet(firstName)}, we&apos;ve got your application — welcome.
       </Text>
       <Text style={paragraph}>
-        Your next step is the Vantage overview call. If you haven&apos;t booked it yet, grab a
-        time here:
+        Because you&apos;re already licensed, we skip the basics. Watch the short video first, then
+        make sure your 1:1 interview is on the calendar:
       </Text>
       <GoldButton href="https://vantage-financial.net/watch" label="Watch before your call" />
-      <GoldButton href={L.overviewUrl} label="Book the overview" />
+      <GoldButton href={L.ownerCalendlyUrl} label="Book your 1:1 call" />
       <Text style={paragraph}>
-        Because you&apos;re already licensed, you can also grab time for a quick 1:1 with the
-        team to fast-track things if you&apos;d rather move now:
+        Have your NPN, the states and lines you&apos;re licensed for, your current carrier
+        appointments and release status, and — if agents are coming with you — how many. We&apos;ll
+        cover contracting, comp and lead flow on the call.
       </Text>
-      <GoldButton href={L.ownerCalendlyUrl} label="Book a 1:1 call" />
       <Text style={paragraph}>
-        Then join the Vantage Discord — that&apos;s where training, announcements, and the team
+        Then join the Vantage Discord — that&apos;s where training, carrier updates, and the team
         live:
       </Text>
       <GoldButton href={L.discordInviteUrl} label="Join the Discord" />
-      <Text style={paragraph}>Either way — let&apos;s move. See you soon.</Text>
+      <Text style={paragraph}>Let&apos;s move. See you soon.</Text>
     </Shell>
   )
 }
