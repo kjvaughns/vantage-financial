@@ -367,6 +367,15 @@ export const markScheduled = createServerFn({ method: "POST" })
     return result as { matched: boolean; id?: string };
   });
 
+export const markVslWatched = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => z.object({ token: z.string().min(10).max(128) }).parse(data))
+  .handler(async ({ data }) => {
+    const supabase = serverClient();
+    const { data: result, error } = await supabase.rpc("mark_vsl_watched_by_token", { _token: data.token });
+    if (error) throw new Error(error.message);
+    return result as { matched: boolean };
+  });
+
 
 export type OverviewBooking = {
   found: boolean;
