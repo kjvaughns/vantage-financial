@@ -62,6 +62,7 @@ const initial: Form = {
   phone: "",
   state: "",
   licensed: null,
+  has_downlines: false,
   overview_slot: "",
   instagram_handle: "",
   why_text: "",
