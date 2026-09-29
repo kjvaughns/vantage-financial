@@ -74,6 +74,7 @@ const Email = ({
       <Row label="Phone" value={applicantPhone} />
       <Row label="State" value={state} />
       <Row label="Instagram" value={instagramHandle} />
+      <Row label="Watched VSL" value="Not yet — they were asked to watch before the 1:1" />
       <Row label="Referred by" value={referredByName} />
       <Row label="Why they applied" value={whyText} />
       {applicantUrl ? <GoldButton href={applicantUrl} label="Open in the portal" /> : null}

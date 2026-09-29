@@ -68,6 +68,7 @@ function buildPayload(a: RecruitAlert) {
           { name: "License", value: a.licensed ? "Licensed" : "Unlicensed", inline: true },
           { name: "Scheduled", value: scheduleLabel(a), inline: false },
           ...(a.state ? [{ name: "State", value: a.state, inline: true }] : []),
+          { name: "Watched VSL", value: "Not yet — sent to watch before 1:1", inline: true },
         ],
         timestamp: new Date().toISOString(),
       },

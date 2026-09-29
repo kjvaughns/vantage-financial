@@ -108,6 +108,7 @@ function LicensedComplete() {
   return (
     <PublicShell>
       <div className="mx-auto max-w-[900px] px-6 pt-14 pb-24 text-center md:px-8">
+        <VslRequired token={token} />
         <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-vantage-gold text-[26px] text-vantage-card shadow-[0_0_40px_rgba(201,168,76,0.5)]">
           ✓
         </div>
