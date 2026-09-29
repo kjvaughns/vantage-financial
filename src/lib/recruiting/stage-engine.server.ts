@@ -459,11 +459,9 @@ export async function applicantContext(
 ): Promise<EmailContext> {
   const recruiter = await loadRecruiter(a);
   const interviewAt = a.scheduled_event_start ?? a.calendly_scheduled_at ?? a.requested_overview_at;
-  const rescheduleUrl =
-    a.scheduled_event_url ??
-    recruiter?.one_on_one_calendly_url ??
-    recruiter?.licensed_calendly_url ??
-    `${SITE_URL}/schedule`;
+  const rescheduleUrl = a.confirmation_token
+    ? `${SITE_URL}/reschedule/${encodeURIComponent(a.confirmation_token)}`
+    : `${SITE_URL}/apply`;
   const cheatSheet = await settingValue("licensing_cheat_sheet_url");
   const courseToken = await createActionToken(a.id, "course_purchased");
   
@@ -490,7 +488,7 @@ export async function applicantContext(
     overview_time: formatTime(interviewAt) ?? undefined,
     overview_when: formatWhen(interviewAt) ?? undefined,
     reschedule_link: rescheduleUrl,
-    one_on_one_link: recruiter?.one_on_one_calendly_url ?? `${SITE_URL}/schedule`,
+    one_on_one_link: rescheduleUrl,
     exam_date: formatDate(a.exam_date) ?? undefined,
     exam_time: formatTime(a.exam_date) ?? undefined,
     exam_when: formatWhen(a.exam_date) ?? undefined,

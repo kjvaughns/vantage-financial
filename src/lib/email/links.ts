@@ -26,6 +26,8 @@ export function emailLinks(overrides: Partial<EmailContext> = {}): EmailContext 
     evaluation_link: `${SITE_URL}/evaluation`,
     overview_link: `${SITE_URL}/apply`,
     one_on_one_link: `${SITE_URL}/apply`,
+    reschedule_link: `${SITE_URL}/apply`,
+    vsl_link: `${SITE_URL}/watch`,
     course_link: XCEL_COURSE_URL,
     discord_link: DISCORD_INVITE_URL,
     agent_cloud_link: AGENT_CLOUD_INVITE_URL,

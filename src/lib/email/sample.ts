@@ -7,6 +7,7 @@ export function sampleContext(): EmailContext {
   return {
     agency_name: AGENCY_NAME,
     ...emailLinks(),
+    reschedule_link: "https://vantage-financial.net/reschedule/sample-token",
     first_name: "Jordan",
     last_name: "Reyes",
     full_name: "Jordan Reyes",
