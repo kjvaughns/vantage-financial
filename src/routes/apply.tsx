@@ -13,6 +13,7 @@ import {
   getRecruiterBySlug,
 } from "@/lib/applications.functions";
 import { getOverviewSlots } from "@/lib/calendly.functions";
+import { InterviewSlotPicker } from "@/components/vantage/interview-slot-picker";
 import { getReferral } from "@/lib/referral";
 
 
@@ -140,7 +141,7 @@ function ApplyPage() {
     if (!form.phone.trim() || form.phone.replace(/\D/g, "").length < 7) errs.push("phone");
     if (!form.state) errs.push("your state");
     if (form.licensed === null) errs.push("your licensing status");
-    if (!slotsQuery.isLoading && !form.overview_slot) errs.push("the overview date you can attend");
+    if (!slotsQuery.isLoading && slots.length > 0 && !form.overview_slot) errs.push("a time for your 1:1 call");
     if (!recruiter) errs.push("who referred you");
 
     if (!form.why_text.trim() || form.why_text.trim().length < 10)

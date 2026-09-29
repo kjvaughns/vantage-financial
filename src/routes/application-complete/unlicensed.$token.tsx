@@ -103,16 +103,10 @@ function UnlicensedComplete() {
       }).format(new Date(chosenIso)) + " CT"
     : null;
 
-  const heading = wantsOneOnOne
-    ? "Book a 1:1 call"
-    : chosenLabel
-      ? "Confirm your overview seat"
-      : "Book your Vantage overview";
-  const blurb = wantsOneOnOne
-    ? "None of the Monday overview dates worked for you, so grab a time for a 1:1 call with a Vantage team leader. Your details are already filled in."
-    : chosenLabel
-      ? `You picked ${chosenLabel}. Your details are already filled in — one tap locks in your seat.`
-      : "Monday nights, 7:00 PM CT / 8:00 PM ET. This is where we walk you through how it all works and what's next.";
+  const heading = chosenLabel ? "Confirm your 1:1 interview" : "Book your 1:1 interview call";
+  const blurb = chosenLabel
+    ? `You picked ${chosenLabel}. Your details are already filled in — one tap locks it in.`
+    : "Grab a time for a 1:1 call with a Vantage team leader. Your details are already filled in.";
 
   async function copyCode() {
     try {
