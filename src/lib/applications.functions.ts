@@ -241,7 +241,7 @@ export const submitApplication = createServerFn({ method: "POST" })
     }
 
 
-    return res;
+    return { ...res, booked_at, booking_error };
   });
 
 

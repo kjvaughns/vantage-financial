@@ -65,7 +65,8 @@ function UnlicensedComplete() {
     if (!ctx.first_name) {
       setFirstName(sessionStorage.getItem("vantage_applicant_first") || "there");
     }
-  }, [ctx.first_name]);
+    if (sessionStorage.getItem(`vantage_booked_${token}`)) setBooked(true);
+  }, [ctx.first_name, token]);
 
   if (!ctx.found) {
     return (
@@ -145,11 +146,11 @@ function UnlicensedComplete() {
             </div>
             <p className="mt-1.5 text-[14px] leading-relaxed text-vantage-muted">
               {booked
-                ? "Check your email for the calendar invite. Keep working through the steps below in the meantime."
+                ? `${chosenLabel ? `Confirmed for ${chosenLabel}. ` : ""}Check your email for the calendar invite, and watch the video above before we talk.`
                 : blurb}
             </p>
           </div>
-          {bookingUrl ? (
+          {booked ? null : bookingUrl ? (
             <a
               href={bookingUrl}
               target="_blank"
