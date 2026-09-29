@@ -87,7 +87,7 @@ const applicantTemplates: EmailTemplateDef[] = [
       intro: GREET,
       lines: [
         "Thanks for applying to {{agency_name}}. Because you're already licensed, the next step is a short interview with our team.",
-        "If you selected a time on your application, your 1:1 is already booked. Watch the opportunity video before we talk so we can focus on your goals, contracting, and next steps.",
+        "If your time was confirmed on the application, your 1:1 is already booked. Otherwise, use the link below to choose an available time. Watch the opportunity video before we talk so we can focus on your goals, contracting, and next steps.",
       ],
       ctaLabel: "View or move your interview",
       ctaUrl: "{{reschedule_link}}",
@@ -107,7 +107,7 @@ const applicantTemplates: EmailTemplateDef[] = [
       title: "Application received",
       intro: GREET,
       lines: [
-        "Thanks for applying to {{agency_name}}. If you selected a time, your 1:1 interview is already booked. Watch the opportunity video before we talk so we can focus on your questions.",
+        "Thanks for applying to {{agency_name}}. If your time was confirmed on the application, your 1:1 interview is already booked. Otherwise, use the link below to choose a time. Watch the opportunity video before we talk so we can focus on your questions.",
       ],
       bullets: [
         "Watch the opportunity video before your 1:1",
@@ -310,7 +310,7 @@ const applicantTemplates: EmailTemplateDef[] = [
       intro: GREET,
       lines: [
         "Congratulations — you've been selected to join {{agency_name}}. Your recruiter will confirm the right next step for your licensing status.",
-        "If you're already licensed, skip pre-licensing and prepare your NPN, carrier appointments, and any downline details for onboarding. If you're not licensed yet, start your pre-licensing course and check your state requirements.",
+        "If you're already licensed, skip pre-licensing and prepare your NPN, carrier appointments, and any downline details for onboarding. If you're not licensed yet, start your pre-licensing course and check your state requirements. Before your 1:1, watch {{vsl_link}}.",
       ],
       bullets: [
         "Licensed: share your NPN with your recruiter and start your Agent Cloud onboarding when invited",
@@ -945,7 +945,7 @@ const stageTemplates: EmailTemplateDef[] = [
       intro: GREET,
       lines: [
         "Your course is the only thing standing between you and getting paid, so treat it like a job.",
-        "Start your pre-licensing course at getlicensed.insuracloud.ai and check the state requirements before scheduling your exam. Join the Vantage Discord for support.",
+        "Start your pre-licensing course at getlicensed.insuracloud.ai and check the state requirements before scheduling your exam. Join the Vantage Discord for support. If you missed your 1:1, choose a new time: {{reschedule_link}}.",
         "Most agents finish in two to three weeks studying an hour or two a day. When you're ready to test, tell your recruiter and we'll get your exam on the calendar.",
       ],
       bullets: [

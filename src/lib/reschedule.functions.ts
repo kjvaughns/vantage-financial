@@ -24,12 +24,15 @@ export const chooseNewInterviewTime = createServerFn({ method: "POST" })
       .select("id, first_name, last_name, email, phone, licensed, state, scheduled_event_id, scheduled_event_start, scheduling_status")
       .eq("confirmation_token", data.token).is("archived_at", null).maybeSingle();
     if (error || !a) return { ok: false as const, error: "This interview link is invalid. Please reply to your application email." };
+    if (a.scheduled_event_start && !a.scheduled_event_id) {
+      return { ok: false as const, error: "This interview was booked before online changes were available. Please reply to your interview email so we can move it without creating a second booking." };
+    }
     const start = new Date(data.startIso);
     if (!Number.isFinite(start.getTime()) || start.getTime() < Date.now() + 10 * 60_000 || start.getTime() > Date.now() + 7 * 86400_000) {
       return { ok: false as const, error: "Please choose an available time in the next seven days." };
     }
     const slots = await fetchCalSlots();
-    if (!slots.some((slot) => slot.startIso === start.toISOString())) {
+    if (!slots.some((slot) => new Date(slot.startIso).getTime() === start.getTime())) {
       return { ok: false as const, error: "That time is no longer available. Please refresh and choose another." };
     }
 
@@ -44,7 +47,7 @@ export const chooseNewInterviewTime = createServerFn({ method: "POST" })
     const { error: saveError } = await supabaseAdmin.from("applicants").update({
       scheduled_event_id: uid,
       scheduled_event_start: start.toISOString(),
-      scheduled_event_url: uid ? `https://cal.com/reschedule/${encodeURIComponent(uid)}` : null,
+      scheduled_event_url: "rescheduleUrl" in booked && booked.rescheduleUrl ? booked.rescheduleUrl : uid ? `https://cal.com/reschedule/${encodeURIComponent(uid)}` : null,
       requested_overview_at: start.toISOString(),
       calendly_scheduled_at: start.toISOString(),
       scheduling_status: "scheduled",
