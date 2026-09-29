@@ -188,6 +188,7 @@ function ApplyPage() {
       // not cut off by this redirect) — see src/lib/meta-pixel.ts.
 
       sessionStorage.setItem("vantage_applicant_first", form.first_name.trim());
+      if (res.booked_at) sessionStorage.setItem(`vantage_booked_${res.token}`, res.booked_at);
       // Route by the applicant's own answer (source of truth on the client),
       // falling back to the server's echo. Prevents any drift between the two.
       const isLicensed =
@@ -318,8 +319,8 @@ function ApplyPage() {
                 onChange={(iso) => set("overview_slot", iso)}
               />
               <p className="mt-2 text-[12.5px] leading-relaxed text-vantage-muted">
-                Live availability, shown in your time zone. After you submit, your details are
-                pre-filled — one tap confirms it.
+                Live availability, shown in your time zone. Your call is booked automatically when
+                you submit — the calendar invite lands in your email.
               </p>
             </Field>
           )}

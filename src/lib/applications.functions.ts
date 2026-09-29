@@ -80,6 +80,33 @@ export const submitApplication = createServerFn({ method: "POST" })
       if (slotError) console.error("set_requested_overview failed", slotError.message);
     }
 
+    // Book the chosen 1:1 time directly on Cal.com — no extra confirm step.
+    let booked_at: string | null = null;
+    let booking_error: string | null = null;
+    if (data.requested_overview_at && data.requested_overview_at !== "none") {
+      const { createCalBooking } = await import("@/lib/calcom.server");
+      const b = await createCalBooking({
+        startIso: data.requested_overview_at,
+        name: `${data.first_name} ${data.last_name}`.trim(),
+        email: data.email,
+        phone: data.phone,
+        notes: [
+          data.referred_by_name ? `Referred by ${data.referred_by_name}` : null,
+          data.licensed ? "Licensed" : "Not licensed",
+          data.state ? `State: ${data.state}` : null,
+        ]
+          .filter(Boolean)
+          .join(" · "),
+      });
+      if (b.ok) {
+        booked_at = data.requested_overview_at;
+        const { error: mErr } = await (supabase as any).rpc("mark_scheduled_by_token", { _token: res.token });
+        if (mErr) console.error("mark_scheduled_by_token failed", mErr.message);
+      } else {
+        booking_error = b.error;
+      }
+    }
+
     // Recruiter + applicant details for the agent alert, the agent's copy of the
     // applicant email, and the Discord recruiting bot. Token-gated RPC — never
     // blocks the submission.
@@ -214,7 +241,7 @@ export const submitApplication = createServerFn({ method: "POST" })
     }
 
 
-    return res;
+    return { ...res, booked_at, booking_error };
   });
 
 

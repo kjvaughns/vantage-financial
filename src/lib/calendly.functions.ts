@@ -8,7 +8,7 @@ export type { OverviewSlot };
  * Never throws — an empty list means "fall back to the plain booking link".
  */
 export const getOverviewSlots = createServerFn({ method: "GET" }).handler(async () => {
-  const { fetchOverviewSlots } = await import("@/lib/calendly.server");
-  const slots = await fetchOverviewSlots();
+  const { fetchCalSlots } = await import("@/lib/calcom.server");
+  const slots = await fetchCalSlots();
   return { slots };
 });
