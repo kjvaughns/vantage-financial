@@ -60,6 +60,7 @@ export type EmailVarKey =
   | "recruiter_email"
   | "recruiter_phone"
   | "reschedule_link"
+  | "vsl_link"
   | "exam_date"
   | "exam_time"
   | "exam_when"
@@ -104,6 +105,7 @@ export const EMAIL_VAR_KEYS: EmailVarKey[] = [
   "agent_cloud_link",
   "overview_link",
   "one_on_one_link",
+  "vsl_link",
   "invitation_link",
   "reset_link",
   "verification_link",

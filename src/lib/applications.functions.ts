@@ -105,6 +105,21 @@ export const submitApplication = createServerFn({ method: "POST" })
         booked_at = data.requested_overview_at;
         const { error: mErr } = await (supabase as any).rpc("mark_scheduled_by_token", { _token: res.token });
         if (mErr) console.error("mark_scheduled_by_token failed", mErr.message);
+        if (b.uid) {
+          try {
+            const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+            const { error: saveError } = await supabaseAdmin.from("applicants").update({
+              scheduled_event_id: b.uid,
+              scheduled_event_start: booked_at,
+              scheduled_event_url: b.rescheduleUrl || `https://cal.com/reschedule/${encodeURIComponent(b.uid)}`,
+            }).eq("id", res.id);
+            if (saveError) console.error("Saving Cal.com booking failed", saveError.message);
+            else {
+              const { startSequence } = await import("@/lib/recruiting/stage-engine.server");
+              await startSequence(res.id, "interview_reminders", booked_at);
+            }
+          } catch (saveError) { console.error("Saving Cal.com booking failed", saveError); }
+        }
       } else {
         booking_error = b.error;
       }
@@ -183,7 +198,7 @@ export const submitApplication = createServerFn({ method: "POST" })
       toName: applicantName,
       applicantId: res.id,
       template: res.success_page_type === "licensed" ? "application_licensed" : "application_unlicensed",
-      params: { firstName: data.first_name, licensed: res.success_page_type === "licensed" },
+      params: { firstName: data.first_name, licensed: res.success_page_type === "licensed", bookedAt: booked_at, confirmationToken: res.token },
       copyTo: ctx.recruiter_email
         ? { email: ctx.recruiter_email, name: ctx.recruiter_name }
         : null,

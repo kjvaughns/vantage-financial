@@ -81,6 +81,8 @@ export type TemplateParams = {
   firstName?: string;
   licensed?: boolean;
   portalLink?: string;
+  bookedAt?: string | null;
+  confirmationToken?: string;
   links?: EmailLinks;
 };
 

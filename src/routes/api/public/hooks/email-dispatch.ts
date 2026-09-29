@@ -306,6 +306,7 @@ async function runEnrollment(): Promise<Record<string, number>> {
       .from("applicants")
       .select("id, exam_result")
       .in("current_stage_id", licensingStageIds)
+      .eq("licensed", false)
       .is("archived_at", null)
       .is("exam_passed_at", null)
       .not("email", "is", null)

@@ -19,6 +19,7 @@ import { Route as ApplicationCompleteRouteImport } from './routes/application-co
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApplicationCompleteIndexRouteImport } from './routes/application-complete/index'
+import { Route as RescheduleTokenRouteImport } from './routes/reschedule.$token'
 import { Route as PortalInviteTokenRouteImport } from './routes/portal-invite/$token'
 import { Route as JoinSlugRouteImport } from './routes/join.$slug'
 import { Route as CoursePurchasedTokenRouteImport } from './routes/course-purchased.$token'
@@ -115,6 +116,11 @@ const ApplicationCompleteIndexRoute =
     path: '/',
     getParentRoute: () => ApplicationCompleteRoute,
   } as any)
+const RescheduleTokenRoute = RescheduleTokenRouteImport.update({
+  id: '/reschedule/$token',
+  path: '/reschedule/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PortalInviteTokenRoute = PortalInviteTokenRouteImport.update({
   id: '/portal-invite/$token',
   path: '/portal-invite/$token',
@@ -394,6 +400,7 @@ export interface FileRoutesByFullPath {
   '/course-purchased/$token': typeof CoursePurchasedTokenRoute
   '/join/$slug': typeof JoinSlugRoute
   '/portal-invite/$token': typeof PortalInviteTokenRoute
+  '/reschedule/$token': typeof RescheduleTokenRoute
   '/application-complete/': typeof ApplicationCompleteIndexRoute
   '/portal/academy': typeof AuthenticatedPortalAcademyRouteRouteWithChildren
   '/portal/admin': typeof AuthenticatedPortalAdminRouteRouteWithChildren
@@ -448,6 +455,7 @@ export interface FileRoutesByTo {
   '/course-purchased/$token': typeof CoursePurchasedTokenRoute
   '/join/$slug': typeof JoinSlugRoute
   '/portal-invite/$token': typeof PortalInviteTokenRoute
+  '/reschedule/$token': typeof RescheduleTokenRoute
   '/application-complete': typeof ApplicationCompleteIndexRoute
   '/portal/calendar': typeof AuthenticatedPortalCalendarRoute
   '/portal/leaderboard': typeof AuthenticatedPortalLeaderboardRoute
@@ -501,6 +509,7 @@ export interface FileRoutesById {
   '/course-purchased/$token': typeof CoursePurchasedTokenRoute
   '/join/$slug': typeof JoinSlugRoute
   '/portal-invite/$token': typeof PortalInviteTokenRoute
+  '/reschedule/$token': typeof RescheduleTokenRoute
   '/application-complete/': typeof ApplicationCompleteIndexRoute
   '/_authenticated/portal/academy': typeof AuthenticatedPortalAcademyRouteRouteWithChildren
   '/_authenticated/portal/admin': typeof AuthenticatedPortalAdminRouteRouteWithChildren
@@ -559,6 +568,7 @@ export interface FileRouteTypes {
     | '/course-purchased/$token'
     | '/join/$slug'
     | '/portal-invite/$token'
+    | '/reschedule/$token'
     | '/application-complete/'
     | '/portal/academy'
     | '/portal/admin'
@@ -613,6 +623,7 @@ export interface FileRouteTypes {
     | '/course-purchased/$token'
     | '/join/$slug'
     | '/portal-invite/$token'
+    | '/reschedule/$token'
     | '/application-complete'
     | '/portal/calendar'
     | '/portal/leaderboard'
@@ -665,6 +676,7 @@ export interface FileRouteTypes {
     | '/course-purchased/$token'
     | '/join/$slug'
     | '/portal-invite/$token'
+    | '/reschedule/$token'
     | '/application-complete/'
     | '/_authenticated/portal/academy'
     | '/_authenticated/portal/admin'
@@ -722,6 +734,7 @@ export interface RootRouteChildren {
   CoursePurchasedTokenRoute: typeof CoursePurchasedTokenRoute
   JoinSlugRoute: typeof JoinSlugRoute
   PortalInviteTokenRoute: typeof PortalInviteTokenRoute
+  RescheduleTokenRoute: typeof RescheduleTokenRoute
   ApiPublicHooksEmailDispatchRoute: typeof ApiPublicHooksEmailDispatchRoute
   ApiPublicWebhooksCalendlyRoute: typeof ApiPublicWebhooksCalendlyRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -800,6 +813,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/application-complete/'
       preLoaderRoute: typeof ApplicationCompleteIndexRouteImport
       parentRoute: typeof ApplicationCompleteRoute
+    }
+    '/reschedule/$token': {
+      id: '/reschedule/$token'
+      path: '/reschedule/$token'
+      fullPath: '/reschedule/$token'
+      preLoaderRoute: typeof RescheduleTokenRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/portal-invite/$token': {
       id: '/portal-invite/$token'
@@ -1330,6 +1350,7 @@ const rootRouteChildren: RootRouteChildren = {
   CoursePurchasedTokenRoute: CoursePurchasedTokenRoute,
   JoinSlugRoute: JoinSlugRoute,
   PortalInviteTokenRoute: PortalInviteTokenRoute,
+  RescheduleTokenRoute: RescheduleTokenRoute,
   ApiPublicHooksEmailDispatchRoute: ApiPublicHooksEmailDispatchRoute,
   ApiPublicWebhooksCalendlyRoute: ApiPublicWebhooksCalendlyRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
