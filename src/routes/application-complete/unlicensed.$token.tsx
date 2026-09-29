@@ -49,7 +49,6 @@ function UnlicensedComplete() {
   const [copied, setCopied] = useState(false);
 
   // Deep-link the exact Monday slot they chose on the application, pre-filled
-  // with their name, email and referrer. Calendly requires the final confirm tap.
   const bookingQuery = useQuery({
     queryKey: ["overview-booking", token],
     queryFn: () => resolveBooking({ data: { token, base_url: "" } }),
@@ -86,30 +85,6 @@ function UnlicensedComplete() {
       </PublicShell>
     );
   }
-
-  // Unlicensed branch: no embedded Calendly. Everyone either confirms the Monday
-  // overview seat they picked, or — when no date worked — books a 1:1 call with
-  // the nearest leader above their recruiter. They stay on this page either way.
-  const wantsOneOnOne = bookingQuery.data?.wants_one_on_one ?? false;
-  const oneOnOneUrl = bookingQuery.data?.one_on_one_url ?? null;
-  const chosenIso = bookingQuery.data?.requested_overview_at ?? null;
-  const overviewUrl = bookingQuery.data?.url || ctx.calendly_url || null;
-  const bookingUrl = overviewUrl || oneOnOneUrl;
-  const chosenLabel = chosenIso
-    ? new Intl.DateTimeFormat("en-US", {
-        timeZone: "America/Chicago",
-        weekday: "long",
-        month: "long",
-        day: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-      }).format(new Date(chosenIso)) + " CT"
-    : null;
-
-  const heading = chosenLabel ? "Confirm your 1:1 interview" : "Book your 1:1 interview call";
-  const blurb = chosenLabel
-    ? `You picked ${chosenLabel}. Your details are already filled in — one tap locks it in.`
-    : "Grab a time for a 1:1 call with a Vantage team leader. Your details are already filled in.";
 
   async function copyCode() {
     try {

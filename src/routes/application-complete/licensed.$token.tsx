@@ -129,23 +129,6 @@ function LicensedComplete() {
 
         {/* Resources — a 1:1 call, the licensing course and the team Discord */}
         <div className="mt-6 grid gap-4 text-left md:grid-cols-2">
-          <div className="vantage-card flex flex-col gap-3 p-6">
-              <div className="font-display text-[20px] leading-tight text-vantage-ivory">
-                Prefer a 1:1 call?
-              </div>
-              <p className="text-[13.5px] leading-relaxed text-vantage-dim">
-                Grab a time directly with a Vantage team leader — your details are already filled in.
-              </p>
-              <a
-                href={oneOnOneUrl}
-                target="_blank"
-                rel="noreferrer noopener"
-                className="vantage-btn-ghost mt-auto px-5 py-3 text-center text-[14px]"
-              >
-                Book a 1:1 call →
-              </a>
-            </div>
-          )}
 
           <div className="vantage-card flex flex-col gap-3 p-6">
             <div className="font-display text-[20px] leading-tight text-vantage-ivory">
