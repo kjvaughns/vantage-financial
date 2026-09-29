@@ -89,6 +89,7 @@ const applicantTemplates: EmailTemplateDef[] = [
         "Thanks for applying to {{agency_name}}. Because you're already licensed, the next step is a short interview with our team.",
         "If your time was confirmed on the application, your 1:1 is already booked. Otherwise, use the link below to choose an available time. Watch the opportunity video before we talk so we can focus on your goals, contracting, and next steps.",
       ],
+      details: [{ label: "Booked date", value: "{{interview_date}}" }, { label: "Booked time", value: "{{interview_time}}" }],
       ctaLabel: "View or move your interview",
       ctaUrl: "{{reschedule_link}}",
       secondaryCtaLabel: "Watch before your call",
@@ -109,6 +110,7 @@ const applicantTemplates: EmailTemplateDef[] = [
       lines: [
         "Thanks for applying to {{agency_name}}. If your time was confirmed on the application, your 1:1 interview is already booked. Otherwise, use the link below to choose a time. Watch the opportunity video before we talk so we can focus on your questions.",
       ],
+      details: [{ label: "Booked date", value: "{{interview_date}}" }, { label: "Booked time", value: "{{interview_time}}" }],
       bullets: [
         "Watch the opportunity video before your 1:1",
         "Start the pre-licensing course at getlicensed.insuracloud.ai",
