@@ -309,34 +309,16 @@ function ApplyPage() {
             </div>
           </Field>
 
-          {!slotsQuery.isLoading && (
-            <Field label="Which overview can you attend? *">
-              <select
-                className="vantage-input w-full appearance-none"
+          {!slotsQuery.isLoading && slots.length > 0 && (
+            <Field label="Book your 1:1 interview call *">
+              <InterviewSlotPicker
+                slots={slots}
                 value={form.overview_slot}
-                onChange={(e) => set("overview_slot", e.target.value)}
-              >
-                <option value="">
-                  {slots.length > 0 ? "Select a Monday overview…" : "Select an option…"}
-                </option>
-                {slots.map((s) => (
-                  <option key={s.startIso} value={s.startIso}>
-                    {s.label}
-                    {s.seatsLeft !== null && s.seatsLeft <= 5 ? ` — ${s.seatsLeft} seats left` : ""}
-                  </option>
-                ))}
-                <option value="none">
-                  {slots.length > 0
-                    ? "None of these work — I'd like a 1:1 call"
-                    : "I'd like a 1:1 call"}
-                </option>
-              </select>
+                onChange={(iso) => set("overview_slot", iso)}
+              />
               <p className="mt-2 text-[12.5px] leading-relaxed text-vantage-muted">
-                {form.overview_slot === "none"
-                  ? "No problem — after you submit we'll give you a link to book a 1:1 call with a team leader."
-                  : slots.length > 0
-                    ? "Live availability from our calendar. After you submit, your seat is pre-filled — one tap confirms it."
-                    : "No Monday overviews are open right now — pick a 1:1 call and we'll get you scheduled."}
+                Live availability, shown in your time zone. After you submit, your details are
+                pre-filled — one tap confirms it.
               </p>
             </Field>
           )}
