@@ -91,7 +91,7 @@ function UnlicensedComplete() {
   const oneOnOneUrl = bookingQuery.data?.one_on_one_url ?? null;
   const chosenIso = bookingQuery.data?.requested_overview_at ?? null;
   const overviewUrl = bookingQuery.data?.url || ctx.calendly_url || null;
-  const bookingUrl = wantsOneOnOne ? oneOnOneUrl : overviewUrl;
+  const bookingUrl = overviewUrl || oneOnOneUrl;
   const chosenLabel = chosenIso
     ? new Intl.DateTimeFormat("en-US", {
         timeZone: "America/Chicago",
