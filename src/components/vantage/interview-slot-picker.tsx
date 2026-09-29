@@ -41,7 +41,7 @@ export function InterviewSlotPicker({
       <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-vantage-muted">
         1 · Pick a day
       </div>
-      <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-2 sm:grid sm:grid-cols-7 sm:overflow-visible">
+      <div className="v-scroller -mx-1 flex gap-2 overflow-x-auto px-1 pb-2 sm:grid sm:grid-cols-7 sm:overflow-visible">
         {days.map((d, i) => {
           const active = d.key === dayKey;
           const empty = d.slots.length === 0;
