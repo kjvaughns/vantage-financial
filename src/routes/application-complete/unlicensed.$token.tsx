@@ -25,7 +25,7 @@ export const Route = createFileRoute("/application-complete/unlicensed/$token")(
       { property: "og:title", content: "You're in — here's your next step" },
       {
         property: "og:description",
-        content: "Book your overview and get a head start on licensing.",
+        content: "Book your 1:1 interview and get a head start on licensing.",
       },
       { name: "robots", content: "noindex" },
     ],
@@ -91,7 +91,7 @@ function UnlicensedComplete() {
   const oneOnOneUrl = bookingQuery.data?.one_on_one_url ?? null;
   const chosenIso = bookingQuery.data?.requested_overview_at ?? null;
   const overviewUrl = bookingQuery.data?.url || ctx.calendly_url || null;
-  const bookingUrl = wantsOneOnOne ? oneOnOneUrl : overviewUrl;
+  const bookingUrl = overviewUrl || oneOnOneUrl;
   const chosenLabel = chosenIso
     ? new Intl.DateTimeFormat("en-US", {
         timeZone: "America/Chicago",
@@ -103,16 +103,10 @@ function UnlicensedComplete() {
       }).format(new Date(chosenIso)) + " CT"
     : null;
 
-  const heading = wantsOneOnOne
-    ? "Book a 1:1 call"
-    : chosenLabel
-      ? "Confirm your overview seat"
-      : "Book your Vantage overview";
-  const blurb = wantsOneOnOne
-    ? "None of the Monday overview dates worked for you, so grab a time for a 1:1 call with a Vantage team leader. Your details are already filled in."
-    : chosenLabel
-      ? `You picked ${chosenLabel}. Your details are already filled in — one tap locks in your seat.`
-      : "Monday nights, 7:00 PM CT / 8:00 PM ET. This is where we walk you through how it all works and what's next.";
+  const heading = chosenLabel ? "Confirm your 1:1 interview" : "Book your 1:1 interview call";
+  const blurb = chosenLabel
+    ? `You picked ${chosenLabel}. Your details are already filled in — one tap locks it in.`
+    : "Grab a time for a 1:1 call with a Vantage team leader. Your details are already filled in.";
 
   async function copyCode() {
     try {
@@ -165,13 +159,7 @@ function UnlicensedComplete() {
               }}
               className="vantage-btn-primary flex-none px-6 py-3.5 text-[15px]"
             >
-              {booked
-                ? "Reschedule →"
-                : wantsOneOnOne
-                  ? "Book my 1:1 call →"
-                  : chosenLabel
-                    ? "Confirm my seat →"
-                    : "Book the overview →"}
+              {booked ? "Reschedule →" : chosenLabel ? "Confirm my call →" : "Book my 1:1 call →"}
             </a>
           ) : (
             <span className="flex-none text-[13px] text-vantage-faint">
@@ -299,7 +287,7 @@ const NEXT_STEPS = [
   {
     n: "1",
     t: "Lock in your call",
-    d: "Confirm your Monday overview seat — or your 1:1 call — using the button above.",
+    d: "Confirm your 1:1 interview call using the button above.",
   },
   {
     n: "2",
@@ -314,7 +302,7 @@ const NEXT_STEPS = [
 ];
 
 const LICENSING_CHECKLIST = [
-  "Attend the Monday overview (or your 1:1 call)",
+  "Attend your 1:1 interview call",
   "Join the Vantage Discord",
   `Life Insurance Pre Licensing — Xcel course, partner code ${XCEL_PARTNER_CODE}`,
   "Complete the required education",

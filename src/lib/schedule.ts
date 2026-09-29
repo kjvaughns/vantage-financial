@@ -17,7 +17,6 @@ export const SCHEDULE: ScheduleItem[] = [
     when: "Daily 10:00 AM",
     note: "Training Room Discord voice channel",
   },
-  { label: "Company Overview", when: "Monday 7:00 PM" },
   { label: "Agency Training", when: "Wednesday 10:30 AM" },
   {
     label: "Film Review",
@@ -29,7 +28,7 @@ export const SCHEDULE: ScheduleItem[] = [
 
 /** One-line summary used inside email copy. */
 export const SCHEDULE_SUMMARY =
-  "Monday 9:00 AM team meeting, daily 10:00 AM new agent live training, Monday 7:00 PM company overview, Wednesday 10:30 AM agency training, film review Monday through Thursday 6:00 PM in the Training Room (mandatory if you haven't closed a deal that day), live dials 10-6 daily.";
+  "Monday 9:00 AM team meeting, daily 10:00 AM new agent live training, Wednesday 10:30 AM agency training, film review Monday through Thursday 6:00 PM in the Training Room (mandatory if you haven't closed a deal that day), live dials 10-6 daily.";
 
 /** Short bullets for emails that list only the essentials. */
 export const SCHEDULE_BULLETS = [
