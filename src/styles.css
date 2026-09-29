@@ -453,3 +453,22 @@ textarea.vantage-input { padding: 14px; height: auto; min-height: 110px; resize:
 @utility p-snap-item {
   scroll-snap-align: start;
 }
+
+/* Brand-matched scrollbars for horizontal chip scrollers (e.g. pick-a-day strip). */
+@utility v-scroller {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--color-vantage-gold) 55%, transparent) transparent;
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--color-vantage-gold) 45%, transparent);
+    border-radius: 999px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: var(--color-vantage-gold-hi);
+  }
+}
