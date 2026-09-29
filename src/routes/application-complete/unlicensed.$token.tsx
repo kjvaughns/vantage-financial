@@ -221,7 +221,7 @@ const NEXT_STEPS = [
   {
     n: "2",
     t: "Get a head start",
-    d: `Start the Xcel pre-licensing course with partner code ${XCEL_PARTNER_CODE} and join the Discord.`,
+    d: "Start your pre-licensing course, check your state requirements, and join the Discord.",
   },
   {
     n: "3",
@@ -233,7 +233,7 @@ const NEXT_STEPS = [
 const LICENSING_CHECKLIST = [
   "Attend your 1:1 interview call",
   "Join the Vantage Discord",
-  `Life Insurance Pre Licensing — Xcel course, partner code ${XCEL_PARTNER_CODE}`,
+  "Life Insurance Pre Licensing — start the course",
   "Complete the required education",
   "Schedule and pass the state exam",
   "State Requirements — check the steps for your state",
