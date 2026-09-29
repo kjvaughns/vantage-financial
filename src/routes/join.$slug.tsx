@@ -151,7 +151,7 @@ function JoinPage() {
         </div>
 
         <div className="vantage-card mt-10 grid gap-4 p-6 md:p-10">
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid grid-cols-[minmax(0,1fr)] gap-4 md:grid-cols-2 [&>*]:min-w-0">
             <Field label="First name *">
               <input
                 className="vantage-input"
@@ -202,7 +202,7 @@ function JoinPage() {
               onChange={(e) => set("instagram_handle", e.target.value)}
             />
           </Field>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid grid-cols-[minmax(0,1fr)] gap-4 md:grid-cols-2 [&>*]:min-w-0">
             <Field label="Password *">
               <input
                 type="password"
