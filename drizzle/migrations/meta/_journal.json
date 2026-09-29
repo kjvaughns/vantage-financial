@@ -15,6 +15,20 @@
       "when": 1790649109659,
       "tag": "0001_vsl_watched",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790675498720,
+      "tag": "0002_applicant_has_downlines",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790675525139,
+      "tag": "0003_notify_context_has_downlines",
+      "breakpoints": true
     }
   ]
 }

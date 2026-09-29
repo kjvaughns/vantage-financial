@@ -298,6 +298,7 @@ export type Database = {
           exam_provider: string | null
           exam_result: string | null
           first_name: string
+          has_downlines: boolean
           hired_at: string | null
           id: string
           instagram_handle: string | null
@@ -376,6 +377,7 @@ export type Database = {
           exam_provider?: string | null
           exam_result?: string | null
           first_name: string
+          has_downlines?: boolean
           hired_at?: string | null
           id?: string
           instagram_handle?: string | null
@@ -454,6 +456,7 @@ export type Database = {
           exam_provider?: string | null
           exam_result?: string | null
           first_name?: string
+          has_downlines?: boolean
           hired_at?: string | null
           id?: string
           instagram_handle?: string | null

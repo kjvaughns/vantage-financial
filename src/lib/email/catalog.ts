@@ -301,7 +301,7 @@ const applicantTemplates: EmailTemplateDef[] = [
       bullets: [
         "Join the Vantage Discord — that's where questions get answered and team sales get posted",
         "Complete Start Here as an unlicensed agent",
-        "Get your licensing course (use partner code AFE at checkout)",
+        "Get your licensing course",
         "Screenshot your course confirmation and post it in #unlicensed with \"I've got the course\"",
         "Study daily — most agents finish in two to three weeks",
       ],
@@ -352,17 +352,17 @@ const applicantTemplates: EmailTemplateDef[] = [
       intro: GREET,
       lines: [
         "Your licensing course is the gate to everything else, so start it today and work it daily.",
-        "Three steps, in this order: 1) start the Life Insurance Pre Licensing course with partner code AFE, 2) check your State Requirements, 3) apply for your license on nipr.com.",
+        "Three steps, in this order: 1) start the Life Insurance Pre Licensing course, 2) check your State Requirements, 3) apply for your license on nipr.com.",
       ],
       bullets: [
-        "Life Insurance Pre Licensing — enroll with partner code AFE",
+        "Life Insurance Pre Licensing — enroll in the course",
         "Study daily — most agents finish in two to three weeks",
         "State Requirements — check the exact steps for your state",
         "Apply for License — apply on nipr.com",
         "Complete fingerprinting and background checks if your state requires them",
         "Tell your recruiter the day you pass",
       ],
-      ctaLabel: "Start pre licensing (code AFE)",
+      ctaLabel: "Start pre licensing",
       ctaUrl: "{{course_link}}",
       secondaryCtaLabel: "State requirements",
       secondaryCtaUrl: "{{state_requirements_link}}",
@@ -383,7 +383,7 @@ const applicantTemplates: EmailTemplateDef[] = [
       intro: GREET,
       lines: [
         "Quick nudge on your licensing course. Consistent daily study is what gets people through fast.",
-        "The order stays the same: finish Life Insurance Pre Licensing (partner code AFE), check your State Requirements, then apply for your license on nipr.com — including fingerprinting if your state requires it.",
+        "The order stays the same: finish Life Insurance Pre Licensing, check your State Requirements, then apply for your license on nipr.com — including fingerprinting if your state requires it.",
       ],
       ctaLabel: "Back to your course",
       ctaUrl: "{{course_link}}",
@@ -1122,7 +1122,7 @@ const sequenceTemplates: EmailTemplateDef[] = [
       intro: GREET,
       lines: [
         "Checking in on your pre-licensing course. The agents who finish fast do a chapter a day — that's it.",
-        "Use partner code AFE when you enroll, and tell {{recruiter_name}} where you're at so we can keep you on pace.",
+        "Enroll in the course and tell {{recruiter_name}} where you're at so we can keep you on pace.",
       ],
       bullets: [
         "Knock out one chapter today",

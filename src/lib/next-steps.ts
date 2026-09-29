@@ -2,14 +2,13 @@
  * Shared next-step resources handed to applicants after they apply.
  * Keep these in one place so the thank-you pages and emails never drift.
  */
-export const XCEL_COURSE_URL =
-  "https://partners.xcelsolutions.com/afe";
+export const XCEL_COURSE_URL = "https://getlicensed.insuracloud.ai";
 
-export const XCEL_PARTNER_CODE = "AFE";
+/** Legacy partner code — no longer used. Kept only so old imports don't break. */
+export const XCEL_PARTNER_CODE = "";
 
-/** State-by-state licensing requirements (Xcel partner page). */
-export const STATE_REQUIREMENTS_URL =
-  "https://partners.xcelsolutions.com/insurance-license/requirements?partner=afe";
+/** State-by-state licensing requirements. */
+export const STATE_REQUIREMENTS_URL = "https://getlicensed.insuracloud.ai/state-requirements";
 
 /** Where applicants formally apply for their state license. */
 export const NIPR_URL = "https://nipr.com";

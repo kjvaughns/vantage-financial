@@ -6,12 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { PublicShell } from "@/components/vantage/brand";
 import { trackApplicationLead } from "@/lib/meta-pixel";
 import { CalBookingCard } from "@/components/vantage/cal-booking-card";
-import {
-  DISCORD_INVITE_URL,
-  STATE_REQUIREMENTS_URL,
-  XCEL_COURSE_URL,
-  XCEL_PARTNER_CODE,
-} from "@/lib/next-steps";
+import { DISCORD_INVITE_URL } from "@/lib/next-steps";
 import {
   getOverviewBooking,
   getSchedulingContext,
@@ -44,7 +39,6 @@ function LicensedComplete() {
   const resolveBooking = useServerFn(getOverviewBooking);
   const [firstName, setFirstName] = useState(ctx.first_name || "there");
   const [booked, setBooked] = useState(false);
-  const [copied, setCopied] = useState(false);
   const flagged = useRef(false);
 
   // Licensed applicants can also grab a 1:1 call with the nearest leader above
@@ -92,16 +86,6 @@ function LicensedComplete() {
     setBooked(true);
   }
 
-  async function copyCode() {
-    try {
-      await navigator.clipboard.writeText(XCEL_PARTNER_CODE);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1600);
-    } catch {
-      /* noop */
-    }
-  }
-
   const contact = ctx.contact_name;
 
   return (
@@ -111,14 +95,14 @@ function LicensedComplete() {
         <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-vantage-gold text-[26px] text-vantage-card shadow-[0_0_40px_rgba(201,168,76,0.5)]">
           ✓
         </div>
-        <div className="vantage-eyebrow-pill mb-4 inline-flex">Licensed applicant</div>
+        <div className="vantage-eyebrow-pill mb-4 inline-flex">Licensed agent</div>
         <h1 className="font-display text-[clamp(36px,6vw,58px)] leading-[0.96]">
           Welcome, {firstName} — let's get you interviewed
         </h1>
         <p className="mx-auto mt-4 max-w-[600px] text-[16px] leading-relaxed text-vantage-muted">
-          You've been identified as a licensed applicant. The next step is a short interview with{" "}
+          You're already licensed, so we can skip straight to the business conversation with{" "}
           {contact ? <span className="text-vantage-fog">{contact}</span> : "your assigned Vantage recruiter"}
-          .
+          {" "}— contracting, carriers, lead flow and comp.
         </p>
 
         <CalBookingCard
@@ -127,45 +111,20 @@ function LicensedComplete() {
           scheduled={String(ctx.scheduling_status ?? "").includes("sched")}
         />
 
-        {/* Resources — a 1:1 call, the licensing course and the team Discord */}
+        {/* Licensed-agent resources — prep for the call and the team Discord */}
         <div className="mt-6 grid gap-4 text-left md:grid-cols-2">
-
           <div className="vantage-card flex flex-col gap-3 p-6">
             <div className="font-display text-[20px] leading-tight text-vantage-ivory">
-              Continuing education & licensing
+              Have these ready for the call
             </div>
-            <p className="text-[13.5px] leading-relaxed text-vantage-dim">
-              Adding lines or a new state? Use Xcel Solutions with our partner code for the
-              discounted rate.
-            </p>
-            <button
-              onClick={copyCode}
-              className="flex items-center justify-between gap-3 rounded-[10px] border border-vantage-gold/40 bg-vantage-gold/[0.08] px-4 py-2.5 text-left transition hover:border-vantage-gold"
-            >
-              <span className="text-[12px] uppercase tracking-[0.08em] text-vantage-muted">
-                Partner code
-              </span>
-              <span className="font-display text-[18px] tracking-wide text-vantage-gold">
-                {XCEL_PARTNER_CODE}
-              </span>
-              <span className="text-[12px] text-vantage-faint">{copied ? "Copied" : "Copy"}</span>
-            </button>
-            <a
-              href={XCEL_COURSE_URL}
-              target="_blank"
-              rel="noreferrer noopener"
-              className="vantage-btn-ghost mt-auto px-5 py-3 text-center text-[14px]"
-            >
-              Open the course →
-            </a>
-            <a
-              href={STATE_REQUIREMENTS_URL}
-              target="_blank"
-              rel="noreferrer noopener"
-              className="vantage-btn-ghost px-5 py-3 text-center text-[14px]"
-            >
-              State requirements →
-            </a>
+            <ul className="flex flex-col gap-2.5">
+              {CALL_PREP.map((p) => (
+                <li key={p} className="flex items-start gap-3 text-[14px] leading-relaxed text-vantage-fog">
+                  <span className="mt-[7px] h-1.5 w-1.5 flex-none rounded-full bg-vantage-gold" />
+                  {p}
+                </li>
+              ))}
+            </ul>
           </div>
 
           <div className="vantage-card flex flex-col gap-3 p-6">
@@ -173,7 +132,8 @@ function LicensedComplete() {
               Join the Vantage Discord
             </div>
             <p className="text-[13.5px] leading-relaxed text-vantage-dim">
-              Training, announcements, and the people who'll help you get producing fast.
+              Training, carrier updates, announcements, and the producers who'll help you get writing
+              business fast.
             </p>
             <a
               href={DISCORD_INVITE_URL}
@@ -186,6 +146,22 @@ function LicensedComplete() {
           </div>
         </div>
 
+        {/* What happens next — licensed producer track, no pre-licensing */}
+        <div className="mt-12 text-left">
+          <div className="vantage-kicker mb-4">What happens next</div>
+          <div className="grid gap-4 md:grid-cols-3">
+            {LICENSED_STEPS.map((s) => (
+              <div key={s.n} className="vantage-card flex flex-col gap-2.5 p-6">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full border-[1.5px] border-vantage-gold/50 font-display text-[18px] text-vantage-gold">
+                  {s.n}
+                </div>
+                <div className="font-display text-[20px] leading-tight text-vantage-ivory">{s.t}</div>
+                <div className="text-[13.5px] leading-relaxed text-vantage-dim">{s.d}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         <div className="mt-8">
           <Link to="/" className="vantage-btn-ghost px-6 py-3.5 text-[15px]">Back to Vantage →</Link>
         </div>
@@ -193,3 +169,29 @@ function LicensedComplete() {
     </PublicShell>
   );
 }
+
+const CALL_PREP = [
+  "Your NPN (National Producer Number)",
+  "States you're licensed in, plus any lines beyond life",
+  "Carriers you're currently appointed with and your release status",
+  "Roughly what you're writing now, and what you want to be writing",
+  "If you have agents joining you, how many and where they're licensed",
+];
+
+const LICENSED_STEPS = [
+  {
+    n: "1",
+    t: "Watch the video, then take the call",
+    d: "The video covers the opportunity so we can spend the call on your business, not the basics.",
+  },
+  {
+    n: "2",
+    t: "Get contracted",
+    d: "We handle carrier contracting and appointments, and set your comp level and override structure.",
+  },
+  {
+    n: "3",
+    t: "Onboard and start writing",
+    d: "Agent Cloud access, lead flow turned on, and live training with the team — usually within days.",
+  },
+];

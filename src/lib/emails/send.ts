@@ -75,6 +75,7 @@ export type AgentApplicantAlert = {
   applicantPhone?: string;
   state?: string;
   licensed?: boolean;
+  hasDownlines?: boolean;
   instagramHandle?: string;
   whyText?: string;
   /** Pre-formatted schedule line (CT slot, 1:1 request, or not scheduled). */
@@ -101,6 +102,7 @@ export async function sendAgentNewApplicant(
     applicantPhone: alert.applicantPhone,
     state: alert.state,
     licensed: !!alert.licensed,
+    hasDownlines: !!alert.hasDownlines,
     instagramHandle: alert.instagramHandle,
     whyText: alert.whyText,
     scheduleLabel: alert.scheduleLabel,

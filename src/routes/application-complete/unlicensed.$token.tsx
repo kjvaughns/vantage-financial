@@ -11,7 +11,6 @@ import {
   NIPR_URL,
   STATE_REQUIREMENTS_URL,
   XCEL_COURSE_URL,
-  XCEL_PARTNER_CODE,
 } from "@/lib/next-steps";
 import {
   getOverviewBooking,
@@ -46,7 +45,6 @@ function UnlicensedComplete() {
   const resolveBooking = useServerFn(getOverviewBooking);
   const [firstName, setFirstName] = useState(ctx.first_name || "there");
   const [booked, setBooked] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   // Deep-link the exact Monday slot they chose on the application, pre-filled
   const bookingQuery = useQuery({
@@ -86,15 +84,6 @@ function UnlicensedComplete() {
     );
   }
 
-  async function copyCode() {
-    try {
-      await navigator.clipboard.writeText(XCEL_PARTNER_CODE);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1600);
-    } catch {
-      /* noop */
-    }
-  }
 
   return (
     <PublicShell>
@@ -127,21 +116,9 @@ function UnlicensedComplete() {
               Start your pre-licensing course
             </div>
             <p className="text-[13.5px] leading-relaxed text-vantage-dim">
-              Life insurance pre-licensing through Xcel Solutions. Use our partner code at checkout
-              for the discounted rate.
+              Life insurance pre-licensing through our approved course — work through it at your own
+              pace and you'll be ready for the state exam.
             </p>
-            <button
-              onClick={copyCode}
-              className="flex items-center justify-between gap-3 rounded-[10px] border border-vantage-gold/40 bg-vantage-gold/[0.08] px-4 py-2.5 text-left transition hover:border-vantage-gold"
-            >
-              <span className="text-[12px] uppercase tracking-[0.08em] text-vantage-muted">
-                Partner code
-              </span>
-              <span className="font-display text-[18px] tracking-wide text-vantage-gold">
-                {XCEL_PARTNER_CODE}
-              </span>
-              <span className="text-[12px] text-vantage-faint">{copied ? "Copied" : "Copy"}</span>
-            </button>
             <a
               href={XCEL_COURSE_URL}
               target="_blank"
@@ -244,7 +221,7 @@ const NEXT_STEPS = [
   {
     n: "2",
     t: "Get a head start",
-    d: `Start the Xcel pre-licensing course with partner code ${XCEL_PARTNER_CODE} and join the Discord.`,
+    d: "Start your pre-licensing course, check your state requirements, and join the Discord.",
   },
   {
     n: "3",
@@ -256,7 +233,7 @@ const NEXT_STEPS = [
 const LICENSING_CHECKLIST = [
   "Attend your 1:1 interview call",
   "Join the Vantage Discord",
-  `Life Insurance Pre Licensing — Xcel course, partner code ${XCEL_PARTNER_CODE}`,
+  "Life Insurance Pre Licensing — start the course",
   "Complete the required education",
   "Schedule and pass the state exam",
   "State Requirements — check the steps for your state",

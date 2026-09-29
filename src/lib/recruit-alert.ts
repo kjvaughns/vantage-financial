@@ -8,6 +8,8 @@ export type RecruitAlert = {
   lastName: string;
   recruiterName?: string | null;
   licensed: boolean;
+  /** Licensed producer bringing their own agents over. */
+  hasDownlines?: boolean;
   /** ISO-8601 overview slot they picked, when they picked one. */
   requestedOverviewAt?: string | null;
   wantsOneOnOne?: boolean;
