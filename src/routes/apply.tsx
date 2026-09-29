@@ -244,7 +244,7 @@ function ApplyPage() {
           )}
         </div>
 
-        <div className="vantage-card mt-12 grid gap-4 p-6 md:p-10">
+        <div className="vantage-card mt-12 grid grid-cols-[minmax(0,1fr)] gap-4 p-5 sm:p-6 md:p-10 [&>*]:min-w-0">
           <div className="grid grid-cols-[minmax(0,1fr)] gap-4 md:grid-cols-2 [&>*]:min-w-0">
             <Field label="First name *">
               <input
