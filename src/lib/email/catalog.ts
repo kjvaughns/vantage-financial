@@ -315,7 +315,7 @@ const applicantTemplates: EmailTemplateDef[] = [
         "If you're already licensed, skip pre-licensing and prepare your NPN, carrier appointments, and any downline details for onboarding. If you're not licensed yet, start your pre-licensing course and check your state requirements. Before your 1:1, watch {{vsl_link}}.",
       ],
       bullets: [
-        "Licensed: share your NPN with your recruiter and start your Agent Cloud onboarding when invited",
+        "Licensed: share your NPN with your recruiter and start AgentLink contracting from your portal when invited",
         "Unlicensed: start your course at getlicensed.insuracloud.ai and review state requirements",
         "Join the Vantage Discord and follow the Start Here instructions for your status",
       ],
@@ -346,7 +346,7 @@ const applicantTemplates: EmailTemplateDef[] = [
         "Everything you need lives in the agent portal — onboarding checklist, training, resources, and the team calendar.",
       ],
       bullets: [
-        "Create your Agent Cloud account",
+        "Complete your AgentLink profile to 100%, including E&O",
         "Select the Licensed role in Discord Start Here",
         "Read the Vantage Financial Agent Playbook",
         "Review agent expectations and the weekly schedule",
@@ -418,7 +418,7 @@ const applicantTemplates: EmailTemplateDef[] = [
       title: "Your portal account is ready",
       intro: GREET,
       lines: [
-        "Set your password and you'll land in your onboarding checklist: Agent Cloud, Discord Licensed role, Agent Playbook, expectations and schedule, Vantage Closer Course, then live training.",
+        "Set your password and you'll land in your onboarding checklist: AgentLink contracting, Discord Licensed role, Agent Playbook, expectations and schedule, Vantage Closer Course, then live training.",
       ],
       ctaLabel: "Set up your account",
       ctaUrl: "{{invitation_link}}",
@@ -495,19 +495,17 @@ const applicantTemplates: EmailTemplateDef[] = [
       lines: [
         "You're licensed and officially a Vantage agent. First, create your portal account and password using the secure registration button below. Your name, email, phone, and state will already be filled in; you'll only need to confirm your NPN and choose a password.",
         "After registration, follow these onboarding steps in order before live training.",
-        "1) Agent Cloud onboarding — create your Agent Cloud account with the Vantage invite link below, and select the upline shown in your portal checklist.",
+        "1) AgentLink contracting — use the link assigned by your upline in the portal, create your account directly under them, and complete your entire AgentLink profile to 100%, including E&O.",
         "2) Discord Licensed role — in the Vantage Discord, go to Start Here and select Licensed so the licensed agent channels unlock.",
         "3) Read the Vantage Financial Agent Playbook in the Academy Library.",
         `4) Agent expectations and schedule — ${SCHEDULE_SUMMARY}`,
         "5) Complete the Vantage Closer Course before live training starts.",
       ],
       details: [
-        { label: "Agent Cloud", value: "{{agent_cloud_link}}" },
+        { label: "AgentLink", value: "Assigned in your portal checklist" },
         { label: "Discord", value: "{{discord_link}}" },
         { label: "Academy", value: "{{academy_link}}" },
       ],
-      secondaryCtaLabel: "Create Agent Cloud account",
-      secondaryCtaUrl: "{{agent_cloud_link}}",
       ctaLabel: "Create my agent account",
       ctaUrl: "{{onboarding_link}}",
       note: "This secure registration link is unique to you. If you already created your account, it opens your onboarding checklist instead.",
@@ -524,7 +522,7 @@ const applicantTemplates: EmailTemplateDef[] = [
     body: {
       title: "Onboarding complete",
       intro: GREET,
-      lines: ["Agent Cloud, your Discord Licensed role, the Agent Playbook, expectations and schedule, and the Vantage Closer Course are complete. Next is live training, dials, and film review."],
+      lines: ["AgentLink contracting, your Discord Licensed role, the Agent Playbook, expectations and schedule, and the Vantage Closer Course are complete. Next is live training, dials, and film review."],
       ctaLabel: "Open the portal",
       ctaUrl: "{{portal_link}}",
     },

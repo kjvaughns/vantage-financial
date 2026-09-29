@@ -31,13 +31,13 @@ const Email = ({ firstName, portalLink, copyFor }: Props) => (
     </Text>
     <GoldButton href={portalLink || '#'} label="Create my agent account" />
     <Text style={paragraph}>Here&apos;s what&apos;s waiting for you — five quick steps:</Text>
-    <Step label="Agent Cloud onboarding" />
+    <Step label="AgentLink contracting" />
     <Step label="Discord Licensed role" />
     <Step label="Read the Agent Playbook" />
     <Step label="Expectations & schedule" />
     <Step label="Vantage Closer Course" />
     <Text style={paragraph}>
-      Start with Agent Cloud — create your account with the Vantage invite link, and use the upline
+      Start with AgentLink — use the contracting link assigned by your upline, then complete your profile to 100%, including E&amp;O. Your upline
       shown in your portal checklist.
     </Text>
     <Text style={paragraph}>Knock these out and you&apos;re fully onboarded. Let&apos;s build.</Text>

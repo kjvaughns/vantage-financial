@@ -192,6 +192,6 @@ const LICENSED_STEPS = [
   {
     n: "3",
     t: "Onboard and start writing",
-    d: "Agent Cloud access, lead flow turned on, and live training with the team — usually within days.",
+    d: "AgentLink contracting, lead flow turned on, and live training with the team — usually within days.",
   },
 ];

@@ -148,6 +148,127 @@ type TeamRecruitingLink = {
   can_receive_applicants: boolean;
 };
 
+export type AgentLinkRow = {
+  id: string;
+  owner_id: string;
+  label: string;
+  url: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+const agentLinkUrlSchema = z
+  .string()
+  .trim()
+  .url()
+  .max(500)
+  .refine((value) => value.startsWith("https://"), "Use a secure https:// link");
+
+async function agentLinkAccess(supabase: any, userId: string) {
+  const { data } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+  const roles = ((data ?? []) as { role: string }[]).map((row) => row.role);
+  const isAdmin = roles.some((role) => role === "admin" || role === "super_admin");
+  const isUpline = isAdmin || roles.some((role) => role === "manager" || role === "leader");
+  return { isAdmin, isUpline };
+}
+
+export const getAgentLinkSettings = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const access = await agentLinkAccess(supabase, userId);
+    if (!access.isUpline) return { canManage: false, links: [], agents: [] };
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const admin = supabaseAdmin as any;
+    let agentIds: string[] = [];
+    if (access.isAdmin) {
+      const { data } = await admin.from("profiles").select("id").eq("is_active", true);
+      agentIds = ((data ?? []) as { id: string }[]).map((row) => row.id);
+    } else {
+      const { data } = await admin.rpc("descendant_ids", { _root: userId });
+      agentIds = ((data ?? []) as { id: string }[]).map((row) => row.id);
+    }
+
+    const [{ data: links }, { data: agents }] = await Promise.all([
+      admin.from("agentlink_links").select("*").eq("owner_id", userId).order("created_at"),
+      agentIds.length
+        ? admin
+            .from("profiles")
+            .select("id, first_name, last_name, email, parent_user_id, assigned_agentlink_link_id")
+            .in("id", agentIds)
+            .order("first_name")
+        : Promise.resolve({ data: [] }),
+    ]);
+    return {
+      canManage: true,
+      links: (links ?? []) as AgentLinkRow[],
+      agents: ((agents ?? []) as any[]).map((agent) => ({
+        ...agent,
+        name: [agent.first_name, agent.last_name].filter(Boolean).join(" ") || agent.email || "Unnamed",
+      })),
+    };
+  });
+
+export const saveAgentLink = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ id: z.string().uuid().optional(), label: z.string().trim().min(1).max(100), url: agentLinkUrlSchema, is_active: z.boolean() }).parse(input),
+  )
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    const access = await agentLinkAccess(supabase, userId);
+    if (!access.isUpline) throw new Error("Only uplines can manage AgentLink links.");
+    const payload = { label: data.label, url: data.url, is_active: data.is_active };
+    const query = data.id
+      ? supabase.from("agentlink_links").update(payload).eq("id", data.id).eq("owner_id", userId)
+      : supabase.from("agentlink_links").insert({ ...payload, owner_id: userId });
+    const { error } = await query;
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const deleteAgentLink = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    const { error } = await supabase.from("agentlink_links").delete().eq("id", data.id).eq("owner_id", userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const assignAgentLink = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ agent_id: z.string().uuid(), link_id: z.string().uuid().nullable() }).parse(input))
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    const access = await agentLinkAccess(supabase, userId);
+    if (!access.isUpline) throw new Error("Only uplines can assign AgentLink links.");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const admin = supabaseAdmin as any;
+    if (!access.isAdmin) {
+      const { data: descendants } = await admin.rpc("descendant_ids", { _root: userId });
+      if (!((descendants ?? []) as { id: string }[]).some((row) => row.id === data.agent_id)) {
+        throw new Error("You can only assign links to agents in your organization.");
+      }
+    }
+    if (data.link_id) {
+      const { data: link } = await admin
+        .from("agentlink_links")
+        .select("id, owner_id, is_active")
+        .eq("id", data.link_id)
+        .maybeSingle();
+      if (!link?.is_active || (!access.isAdmin && link.owner_id !== userId)) {
+        throw new Error("Choose one of your active AgentLink links.");
+      }
+    }
+    const { error } = await admin.from("profiles").update({ assigned_agentlink_link_id: data.link_id }).eq("id", data.agent_id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 /** Dashboard KPIs + activity feed for the signed-in user. */
 export const getDashboard = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -502,7 +623,7 @@ export const notifyOnboarding = createServerFn({ method: "POST" })
     const name = `${app.first_name ?? ""} ${app.last_name ?? ""}`.trim() || "An agent";
     const isContracting = data.kind === "contracting_done";
     const summary = isContracting
-      ? "Created their Agent Cloud account (agent-reported)"
+      ? "Completed their AgentLink profile (agent-reported)"
       : "Onboarding complete — trainer notified";
 
     await supabase.from("applicant_activities").insert({
@@ -517,10 +638,10 @@ export const notifyOnboarding = createServerFn({ method: "POST" })
       try {
         const { sendRawEmail } = await import("@/lib/email-templates/send-email");
         const subject = isContracting
-          ? `${name} created their Agent Cloud account`
+          ? `${name} completed their AgentLink profile`
           : `${name} completed onboarding`;
         const line = isContracting
-          ? `${name} has completed Agent Cloud onboarding.`
+          ? `${name} reports their AgentLink profile is 100% complete, including E&O.`
           : `${name} has completed onboarding and is ready for New Agent Live Training.`;
         await sendRawEmail(
           copy.email,
@@ -2210,13 +2331,14 @@ export type OnboardingContext = {
     phone: string | null;
     npn: string | null;
   };
-  upline: { name: string; role: string | null } | null;
+  upline: { id: string; name: string; role: string | null } | null;
+  agentLink: { id: string; label: string; url: string } | null;
   playbook: { slug: string; title: string } | null;
   closerCourse: { slug: string; title: string; published: boolean } | null;
 };
 
 /** Contextual data for the onboarding checklist: the agent's nearest upline in
- *  the Vantage hierarchy, the details to reuse during Agent Cloud setup, and the
+ *  the Vantage hierarchy, their assigned AgentLink URL, and the
  *  live Academy records backing the Playbook and Closer Course steps. */
 export const getOnboardingContext = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -2242,7 +2364,7 @@ export const getOnboardingContext = createServerFn({ method: "POST" })
 
     const { data: meFull } = await admin
       .from("profiles")
-      .select("id, parent_user_id, manager_id")
+      .select("id, parent_user_id, manager_id, assigned_agentlink_link_id")
       .eq("id", userId)
       .maybeSingle();
 
@@ -2282,6 +2404,7 @@ export const getOnboardingContext = createServerFn({ method: "POST" })
       if (!name) return null;
       const { data: rr } = await admin.from("user_roles").select("role").eq("user_id", id);
       return {
+        id,
         name,
         role: primaryRole(((rr ?? []) as { role: string }[]).map((x) => x.role)),
       };
@@ -2290,7 +2413,7 @@ export const getOnboardingContext = createServerFn({ method: "POST" })
     // Whoever they signed up under, in order of confidence: recruiter on the
     // applicant record, referring agent, assigned manager, then the reporting
     // hierarchy. Never leaves the step blank when any name is known.
-    let upline: { name: string; role: string | null } | null =
+    let upline: { id: string; name: string; role: string | null } | null =
       (await profileUpline(app?.assigned_recruiter_id as string | null)) ??
       (await profileUpline(app?.original_recruiter_id as string | null)) ??
       (await profileUpline(app?.referred_by_profile_id as string | null)) ??
@@ -2303,8 +2426,15 @@ export const getOnboardingContext = createServerFn({ method: "POST" })
         ((app?.referred_by_name_snapshot as string | null) ||
           (app?.referred_by_name as string | null) ||
           "").trim() || null;
-      if (snapshot) upline = { name: snapshot, role: null };
+      if (snapshot) upline = { id: "", name: snapshot, role: null };
     }
+
+    const { data: assignedLink } = await admin
+      .from("agentlink_links")
+      .select("id, label, url")
+      .eq("id", meFull?.assigned_agentlink_link_id ?? "00000000-0000-0000-0000-000000000000")
+      .eq("is_active", true)
+      .maybeSingle();
 
 
     // Resolve the published Agent Playbook out of the Academy library.
@@ -2333,6 +2463,7 @@ export const getOnboardingContext = createServerFn({ method: "POST" })
         npn: (me?.npn as string | null) ?? (app?.npn as string | null) ?? null,
       },
       upline,
+      agentLink: assignedLink ?? null,
       playbook: playbookRow ? { slug: playbookRow.slug, title: playbookRow.title } : null,
       closerCourse: courseRow
         ? { slug: courseRow.slug, title: courseRow.title, published: courseRow.status === "published" }

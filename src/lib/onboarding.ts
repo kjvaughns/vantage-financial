@@ -19,7 +19,7 @@ export const ONBOARDING_STEP_ORDER: OnboardingStepKey[] = [
 ];
 
 export const ONBOARDING_STEP_LABELS: Record<OnboardingStepKey, string> = {
-  agent_cloud_onboarding: "Agent Cloud onboarding",
+  agent_cloud_onboarding: "AgentLink contracting",
   discord_role_update: "Update Discord role",
   read_agent_playbook: "Read the Agent Playbook",
   agent_expectations_schedule: "Agent expectations & schedule",
