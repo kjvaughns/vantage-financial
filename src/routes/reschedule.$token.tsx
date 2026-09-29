@@ -50,7 +50,7 @@ function ReschedulePage() {
         <div className="vantage-eyebrow-pill mb-5 inline-flex">Vantage Financial · 1:1 interview</div>
         {details.isPending ? <p className="text-vantage-muted">Checking your interview…</p> :
         details.isError || !details.data?.found ? <div><h1 className="font-display text-5xl text-vantage-ivory">Link unavailable</h1><p className="mt-4 text-vantage-muted">We couldn't find your interview. Reply to your application email for help.</p></div> :
-        confirmed ? <div aria-live="polite"><h1 className="font-display text-5xl text-vantage-ivory">Your new time is confirmed.</h1><p className="mt-5 text-vantage-muted">See you {new Date(confirmed).toLocaleString("en-US", { timeZone: "America/Chicago", weekday: "long", month: "long", day: "numeric", hour: "numeric", minute: "2-digit" })} CT. A confirmation is on its way to your email.</p><Link className="mt-6 inline-block text-vantage-gold underline" to="/watch">Watch the opportunity video before our call →</Link></div> :
+        confirmed ? <div aria-live="polite"><h1 className="font-display text-5xl text-vantage-ivory">Your new time is confirmed.</h1><p className="mt-5 text-vantage-muted">See you {new Date(confirmed).toLocaleString("en-US", { timeZone: "America/Chicago", weekday: "long", month: "long", day: "numeric", hour: "numeric", minute: "2-digit" })} CT. A confirmation is on its way to your email.</p><Link className="mt-6 inline-block text-vantage-gold underline" to="/watch" search={{ applicant: undefined }}>Watch the opportunity video before our call →</Link></div> :
         <>
           <h1 className="font-display text-[clamp(38px,6vw,64px)] leading-none text-vantage-ivory">Let's find a better time{details.data.firstName ? `, ${details.data.firstName}` : ""}.</h1>
           <p className="mt-4 max-w-[590px] text-vantage-muted">Choose a day and time below. We’ll update your 1:1 interview and email you the details.</p>
@@ -60,7 +60,7 @@ function ReschedulePage() {
           </div>
           {error && <p role="alert" className="mt-5 text-sm text-red-400">{error}</p>}
           <button type="button" onClick={submit} disabled={!selected || saving} className="vantage-btn-primary mt-7 px-7 py-3.5 disabled:cursor-not-allowed disabled:opacity-50">{saving ? "Confirming…" : "Confirm my new time →"}</button>
-          <p className="mt-5 text-sm text-vantage-muted">Before we talk, <Link to="/watch" className="text-vantage-gold underline">watch the opportunity video</Link> so we can focus on you.</p>
+          <p className="mt-5 text-sm text-vantage-muted">Before we talk, <Link to="/watch" search={{ applicant: undefined }} className="text-vantage-gold underline">watch the opportunity video</Link> so we can focus on you.</p>
         </>}
       </main>
     </PublicShell>

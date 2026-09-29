@@ -188,7 +188,7 @@ const applicantTemplates: EmailTemplateDef[] = [
     label: "Interview confirmation — legacy trigger",
     audience: "applicant",
     category: "recruiting",
-    trigger: "An overview slot is confirmed for an unlicensed applicant",
+    trigger: "A 1:1 time is confirmed for an unlicensed applicant",
     subject: "Your Vantage 1:1 interview is confirmed",
     body: {
       title: "Your interview is confirmed",
@@ -209,7 +209,7 @@ const applicantTemplates: EmailTemplateDef[] = [
     label: "Interview reminder (24h) — legacy trigger",
     audience: "applicant",
     category: "recruiting",
-    trigger: "24 hours before a scheduled overview",
+    trigger: "24 hours before a scheduled 1:1 interview",
     subject: "Reminder: your Vantage interview is tomorrow",
     body: {
       title: "Your interview is tomorrow",
@@ -945,12 +945,12 @@ const stageTemplates: EmailTemplateDef[] = [
       intro: GREET,
       lines: [
         "Your course is the only thing standing between you and getting paid, so treat it like a job.",
-        "If you haven't already: join the Vantage Discord, finish the Start Here channel as an unlicensed agent, and post a screenshot of your course confirmation in #unlicensed with the caption \"I've got the course\".",
+        "Start your pre-licensing course at getlicensed.insuracloud.ai and check the state requirements before scheduling your exam. Join the Vantage Discord for support.",
         "Most agents finish in two to three weeks studying an hour or two a day. When you're ready to test, tell your recruiter and we'll get your exam on the calendar.",
       ],
       bullets: [
         "Join the Vantage Discord and complete Start Here as an unlicensed agent",
-        "Post your course confirmation screenshot in #unlicensed with \"I've got the course\"",
+        "Check state requirements for your exam and license application",
         "Work through your course daily — an hour or two beats a weekend cram",
         "Take the practice exams until you're consistently passing",
         "Check your State Requirements, then apply for your license on nipr.com",
