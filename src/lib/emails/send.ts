@@ -75,6 +75,7 @@ export type AgentApplicantAlert = {
   applicantPhone?: string;
   state?: string;
   licensed?: boolean;
+  hasDownlines?: boolean;
   instagramHandle?: string;
   whyText?: string;
   /** Pre-formatted schedule line (CT slot, 1:1 request, or not scheduled). */

@@ -11,6 +11,7 @@ interface Props {
   applicantPhone?: string
   state?: string
   licensed?: boolean
+  hasDownlines?: boolean
   instagramHandle?: string
   whyText?: string
   /** Pre-formatted schedule line: a CT date/time, a 1:1 request, or "Not scheduled yet". */
@@ -49,6 +50,7 @@ const Email = ({
   applicantPhone,
   state,
   licensed,
+  hasDownlines,
   instagramHandle,
   whyText,
   scheduleLabel,
@@ -68,7 +70,16 @@ const Email = ({
       </Text>
       <Hr style={{ borderColor: 'rgba(255,255,255,0.08)', margin: '18px 0' }} />
       <Row label="Name" value={applicantName} />
-      <Row label="License status" value={licensed ? 'Licensed' : 'Unlicensed'} />
+      <Row
+        label="License status"
+        value={
+          licensed
+            ? hasDownlines
+              ? 'Licensed — bringing downlines with them'
+              : 'Licensed'
+            : 'Unlicensed'
+        }
+      />
       <Row label="Scheduled" value={scheduleLabel} />
       <Row label="Email" value={applicantEmail} />
       <Row label="Phone" value={applicantPhone} />
