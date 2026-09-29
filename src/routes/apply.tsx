@@ -171,6 +171,7 @@ function ApplyPage() {
           phone: form.phone.trim(),
           state: form.state,
           licensed: form.licensed === true,
+          has_downlines: form.licensed === true && form.has_downlines,
           instagram_handle: form.instagram_handle.trim(),
           why_text: form.why_text.trim(),
           consent_contact: true,

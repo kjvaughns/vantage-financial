@@ -31,6 +31,7 @@ const applicationSchema = z
     phone: z.string().trim().min(7).max(40),
     state: z.string().trim().length(2),
     licensed: z.boolean(),
+    has_downlines: z.boolean().optional(),
     instagram_handle: z.string().trim().max(80).optional().or(z.literal("")),
     why_text: z.string().trim().min(10).max(2000),
     consent_contact: z.literal(true),
