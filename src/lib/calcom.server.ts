@@ -56,6 +56,8 @@ export async function createCalBooking(input: {
   email: string;
   phone?: string | null;
   notes?: string | null;
+  licensed?: boolean;
+  instagram?: string | null;
   timeZone?: string;
 }): Promise<{ ok: true; uid: string | null } | { ok: false; error: string }> {
   const key = process.env["CALCOM_API_KEY"];
@@ -78,7 +80,11 @@ export async function createCalBooking(input: {
           timeZone: input.timeZone || "America/Chicago",
           ...(input.phone ? { phoneNumber: toE164(input.phone) } : {}),
         },
-        ...(input.notes ? { bookingFieldsResponses: { notes: input.notes } } : {}),
+        bookingFieldsResponses: {
+          "Recruit-Status": input.licensed ? "Licensed" : "Unlicensed",
+          ...(input.instagram ? { "Instagram-Handle": input.instagram } : {}),
+          ...(input.notes ? { notes: input.notes } : {}),
+        },
       }),
     });
     const text = await res.text();
