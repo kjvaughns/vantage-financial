@@ -135,7 +135,6 @@ export const EMAIL_VAR_KEYS: EmailVarKey[] = [
   "recruiter_email",
   "recruiter_phone",
   "reschedule_link",
-  "vsl_link",
   "exam_date",
   "exam_time",
   "exam_when",
