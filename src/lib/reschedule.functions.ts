@@ -9,10 +9,10 @@ export const getRescheduleDetails = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row } = await supabaseAdmin.from("applicants")
-      .select("id, first_name, scheduled_event_start, requested_overview_at, scheduling_status")
+      .select("id, first_name, scheduled_event_id, scheduled_event_start, requested_overview_at, scheduling_status")
       .eq("confirmation_token", data.token).is("archived_at", null).maybeSingle();
     if (!row) return { found: false as const };
-    return { found: true as const, firstName: row.first_name, currentTime: row.scheduled_event_start ?? row.requested_overview_at, status: row.scheduling_status };
+    return { found: true as const, firstName: row.first_name, currentTime: row.scheduled_event_start ?? row.requested_overview_at, legacyBooking: !!row.scheduled_event_start && !row.scheduled_event_id, status: row.scheduling_status };
   });
 
 export const chooseNewInterviewTime = createServerFn({ method: "POST" })
