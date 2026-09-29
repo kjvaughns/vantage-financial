@@ -13,7 +13,6 @@ import {
   NIPR_URL,
   STATE_REQUIREMENTS_URL,
   XCEL_COURSE_URL,
-  XCEL_PARTNER_CODE,
 } from "@/lib/next-steps";
 import { SCHEDULE_SUMMARY } from "@/lib/schedule";
 

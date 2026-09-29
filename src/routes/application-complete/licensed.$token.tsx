@@ -39,7 +39,6 @@ function LicensedComplete() {
   const resolveBooking = useServerFn(getOverviewBooking);
   const [firstName, setFirstName] = useState(ctx.first_name || "there");
   const [booked, setBooked] = useState(false);
-  const [copied, setCopied] = useState(false);
   const flagged = useRef(false);
 
   // Licensed applicants can also grab a 1:1 call with the nearest leader above
