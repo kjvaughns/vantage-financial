@@ -11,7 +11,6 @@ import {
   NIPR_URL,
   STATE_REQUIREMENTS_URL,
   XCEL_COURSE_URL,
-  XCEL_PARTNER_CODE,
 } from "@/lib/next-steps";
 import {
   getOverviewBooking,
@@ -46,7 +45,6 @@ function UnlicensedComplete() {
   const resolveBooking = useServerFn(getOverviewBooking);
   const [firstName, setFirstName] = useState(ctx.first_name || "there");
   const [booked, setBooked] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   // Deep-link the exact Monday slot they chose on the application, pre-filled
   const bookingQuery = useQuery({
@@ -86,15 +84,6 @@ function UnlicensedComplete() {
     );
   }
 
-  async function copyCode() {
-    try {
-      await navigator.clipboard.writeText(XCEL_PARTNER_CODE);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1600);
-    } catch {
-      /* noop */
-    }
-  }
 
   return (
     <PublicShell>
