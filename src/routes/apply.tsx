@@ -48,6 +48,7 @@ type Form = {
   phone: string;
   state: string;
   licensed: boolean | null;
+  has_downlines: boolean;
   overview_slot: string;
   instagram_handle: string;
   why_text: string;
@@ -295,7 +296,10 @@ function ApplyPage() {
                     key={opt.label}
                     type="button"
                     aria-pressed={active}
-                    onClick={() => set("licensed", opt.value)}
+                    onClick={() => {
+                      set("licensed", opt.value);
+                      if (opt.value === false) set("has_downlines", false);
+                    }}
                     className={cn(
                       "vantage-input flex min-h-[54px] cursor-pointer touch-manipulation items-center justify-center gap-2 text-center font-semibold transition-colors select-none",
                       active
@@ -309,6 +313,43 @@ function ApplyPage() {
                 );
               })}
             </div>
+
+            {/* Licensed producers bringing a team get a different conversation. */}
+            {form.licensed === true && (
+              <button
+                type="button"
+                role="checkbox"
+                aria-checked={form.has_downlines}
+                onClick={() => set("has_downlines", !form.has_downlines)}
+                className={cn(
+                  "mt-3 flex w-full cursor-pointer items-start gap-3 rounded-[12px] border px-4 py-3.5 text-left transition-colors",
+                  form.has_downlines
+                    ? "border-vantage-gold bg-vantage-gold/[0.1]"
+                    : "border-white/10 bg-white/[0.03] hover:border-vantage-gold/50",
+                )}
+              >
+                <span
+                  aria-hidden
+                  className={cn(
+                    "mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-[5px] border text-[12px] font-bold transition-colors",
+                    form.has_downlines
+                      ? "border-vantage-gold bg-vantage-gold text-vantage-card"
+                      : "border-vantage-gold/40 text-transparent",
+                  )}
+                >
+                  ✓
+                </span>
+                <span>
+                  <span className="block text-[14px] font-semibold text-vantage-ivory">
+                    I have downlines coming with me
+                  </span>
+                  <span className="mt-0.5 block text-[12.5px] leading-relaxed text-vantage-muted">
+                    Check this if you have agents on your team joining Vantage with you — we'll cover
+                    team contracting and your override structure on the call.
+                  </span>
+                </span>
+              </button>
+            )}
           </Field>
 
           {!slotsQuery.isLoading && slots.length > 0 && (
