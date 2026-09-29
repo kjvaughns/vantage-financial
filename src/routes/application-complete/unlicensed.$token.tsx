@@ -25,7 +25,7 @@ export const Route = createFileRoute("/application-complete/unlicensed/$token")(
       { property: "og:title", content: "You're in — here's your next step" },
       {
         property: "og:description",
-        content: "Book your overview and get a head start on licensing.",
+        content: "Book your 1:1 interview and get a head start on licensing.",
       },
       { name: "robots", content: "noindex" },
     ],
@@ -287,7 +287,7 @@ const NEXT_STEPS = [
   {
     n: "1",
     t: "Lock in your call",
-    d: "Confirm your Monday overview seat — or your 1:1 call — using the button above.",
+    d: "Confirm your 1:1 interview call using the button above.",
   },
   {
     n: "2",
@@ -302,7 +302,7 @@ const NEXT_STEPS = [
 ];
 
 const LICENSING_CHECKLIST = [
-  "Attend the Monday overview (or your 1:1 call)",
+  "Attend your 1:1 interview call",
   "Join the Vantage Discord",
   `Life Insurance Pre Licensing — Xcel course, partner code ${XCEL_PARTNER_CODE}`,
   "Complete the required education",
