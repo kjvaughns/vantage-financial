@@ -114,6 +114,10 @@ export const submitApplication = createServerFn({ method: "POST" })
               scheduled_event_url: b.rescheduleUrl || `https://cal.com/reschedule/${encodeURIComponent(b.uid)}`,
             }).eq("id", res.id);
             if (saveError) console.error("Saving Cal.com booking failed", saveError.message);
+            else {
+              const { startSequence } = await import("@/lib/recruiting/stage-engine.server");
+              await startSequence(res.id, "interview_reminders", booked_at);
+            }
           } catch (saveError) { console.error("Saving Cal.com booking failed", saveError); }
         }
       } else {
