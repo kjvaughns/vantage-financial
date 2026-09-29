@@ -589,12 +589,7 @@ function AgentLinkSettingsPanel() {
 
       {links.length > 0 && (
         <div className="mt-5 divide-y" style={{ borderColor: "var(--p-border)" }}>
-          {links.map((link) => (
-            <div key={link.id} className="flex items-center justify-between gap-3 py-3">
-              <div className="min-w-0"><div className="p-body truncate">{link.label}</div><div className="p-muted truncate">{link.url}</div></div>
-              <Button variant="ghost" size="sm" onClick={() => remove.mutate(link.id)}>Remove</Button>
-            </div>
-          ))}
+          {links.map((link) => <AgentLinkEditor key={link.id} link={link} busy={save.isPending || remove.isPending} onSave={(next) => saveFn({ data: next }).then(refresh)} onRemove={() => remove.mutate(link.id)} />)}
         </div>
       )}
 
@@ -613,6 +608,25 @@ function AgentLinkSettingsPanel() {
         </div>
       )}
     </Panel>
+  );
+}
+
+function AgentLinkEditor({ link, busy, onSave, onRemove }: { link: { id: string; label: string; url: string; is_active: boolean }; busy: boolean; onSave: (value: { id: string; label: string; url: string; is_active: boolean }) => Promise<unknown>; onRemove: () => void }) {
+  const [editing, setEditing] = useState(false);
+  const [label, setLabel] = useState(link.label);
+  const [url, setUrl] = useState(link.url);
+  if (editing) return (
+    <div className="space-y-2 py-3">
+      <Input value={label} onChange={(e) => setLabel(e.target.value)} />
+      <Input value={url} onChange={(e) => setUrl(e.target.value)} />
+      <div className="flex gap-2"><Button size="sm" variant="primary" disabled={busy || !label.trim() || !/^https:\/\/\S+$/i.test(url)} onClick={() => onSave({ ...link, label: label.trim(), url: url.trim() }).then(() => setEditing(false))}>Save</Button><Button size="sm" variant="ghost" onClick={() => setEditing(false)}>Cancel</Button></div>
+    </div>
+  );
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 py-3">
+      <div className="min-w-0"><div className="p-body truncate">{link.label}</div><div className="p-muted truncate">{link.url}</div></div>
+      <div className="flex gap-2"><Button variant="ghost" size="sm" onClick={() => onSave({ ...link, is_active: !link.is_active })}>{link.is_active ? "Deactivate" : "Activate"}</Button><Button variant="ghost" size="sm" onClick={() => setEditing(true)}>Edit</Button><Button variant="ghost" size="sm" onClick={onRemove}>Remove</Button></div>
+    </div>
   );
 }
 

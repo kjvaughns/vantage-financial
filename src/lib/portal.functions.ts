@@ -254,14 +254,19 @@ export const assignAgentLink = createServerFn({ method: "POST" })
         throw new Error("You can only assign links to agents in your organization.");
       }
     }
+    const { data: agent } = await admin
+      .from("profiles")
+      .select("parent_user_id")
+      .eq("id", data.agent_id)
+      .maybeSingle();
     if (data.link_id) {
       const { data: link } = await admin
         .from("agentlink_links")
         .select("id, owner_id, is_active")
         .eq("id", data.link_id)
         .maybeSingle();
-      if (!link?.is_active || (!access.isAdmin && link.owner_id !== userId)) {
-        throw new Error("Choose one of your active AgentLink links.");
+      if (!link?.is_active || link.owner_id !== agent?.parent_user_id) {
+        throw new Error("The assigned link must belong to this agent's upline.");
       }
     }
     const { error } = await admin.from("profiles").update({ assigned_agentlink_link_id: data.link_id }).eq("id", data.agent_id);
@@ -857,7 +862,8 @@ export const updateApplicant = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
-    const { id, ...rest } = data;
+    const { id, ...input } = data;
+    const rest: Record<string, unknown> = { ...input };
     const patch: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(rest)) {
       if (v !== undefined) patch[k] = v;
@@ -1235,6 +1241,9 @@ export const adminUpdateProfile = createServerFn({ method: "POST" })
       if (((descendants ?? []) as { id: string }[]).some((row) => row.id === data.parent_user_id)) {
         throw new Error("That assignment would create a reporting loop.");
       }
+    }
+    if (data.parent_user_id !== undefined && data.assigned_agentlink_link_id === undefined) {
+      rest.assigned_agentlink_link_id = null;
     }
     if (data.assigned_agentlink_link_id) {
       const { data: link } = await supabase

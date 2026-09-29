@@ -92,7 +92,16 @@ export const getInvitableContext = createServerFn({ method: "GET" })
         profQ = profQ.in("id", ids);
       }
       const { data: profs } = await profQ;
-      parents = ((profs ?? []) as any[]).map((p) => ({
+      const ids = ((profs ?? []) as any[]).map((p) => p.id);
+      const { data: parentRoles } = ids.length
+        ? await supabase.from("user_roles").select("user_id, role").in("user_id", ids)
+        : { data: [] };
+      const eligibleIds = new Set(
+        ((parentRoles ?? []) as { user_id: string; role: string }[])
+          .filter((row) => ["leader", "manager", "admin", "super_admin"].includes(row.role))
+          .map((row) => row.user_id),
+      );
+      parents = ((profs ?? []) as any[]).filter((p) => eligibleIds.has(p.id)).map((p) => ({
         id: p.id,
         name: [p.first_name, p.last_name].filter(Boolean).join(" ") || p.email || "Unnamed",
       }));
@@ -126,6 +135,7 @@ export const createInvitation = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => inviteSchema.parse(d))
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
+    if (data.parent_user_id) await assertEligibleUpline(data.parent_user_id);
     const { data: res, error } = await (supabase as any).rpc("create_invitation", {
       payload: data,
     });
@@ -285,6 +295,7 @@ export const promoteApplicantToAgent = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => promoteSchema.parse(d))
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
+    if (data.parent_user_id) await assertEligibleUpline(data.parent_user_id);
     const { data: res, error } = await (supabase as any).rpc("promote_applicant_to_agent", {
       payload: data,
     });
@@ -299,3 +310,12 @@ export const promoteApplicantToAgent = createServerFn({ method: "POST" })
   });
 
 export { ROLE_RANK };
+
+async function assertEligibleUpline(profileId: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin.from("user_roles").select("role").eq("user_id", profileId);
+  const eligible = ((data ?? []) as { role: string }[]).some((row) =>
+    ["leader", "manager", "admin", "super_admin"].includes(row.role),
+  );
+  if (!eligible) throw new Error("Choose an active leader or manager as the upline.");
+}
