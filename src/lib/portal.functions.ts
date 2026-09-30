@@ -1203,7 +1203,7 @@ export const adminListUsers = createServerFn({ method: "GET" })
       supabase.from("profiles").select("*").order("created_at", { ascending: false }),
       supabase.from("user_roles").select("user_id, role"),
       supabase.from("teams").select("*").order("name"),
-      supabase.from("agentlink_links").select("id, owner_id, label, url, is_active").eq("is_active", true).order("label"),
+      supabase.from("agentlink_links").select("id, owner_id, label, url, is_active").order("label"),
     ]);
     const roleMap: Record<string, string[]> = {};
     for (const r of rolesRes.data ?? []) {
