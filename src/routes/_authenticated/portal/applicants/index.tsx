@@ -7,6 +7,7 @@ import { ChevronRight, Plus } from "lucide-react";
 import { PortalShell } from "@/components/vantage/portal-shell";
 import { ApplicantRecord } from "@/components/vantage/applicant-record";
 import { listApplicants, updateApplicantStage } from "@/lib/portal.functions";
+import { AssignContractingLinkModal } from "@/components/vantage/assign-contracting-link-modal";
 import { AddApplicantModal } from "@/components/vantage/add-applicant-modal";
 import { PossibleDuplicatesPanel } from "@/components/vantage/possible-duplicates";
 
@@ -130,18 +131,31 @@ function ApplicantsPage() {
     if (i < 0 || i >= stages.length - 1) return null;
     return stages[i + 1];
   }
-  async function moveNext(applicantId: string, currentId: string | null) {
-    const next = nextStageOf(currentId);
-    if (!next) return;
-    await changeStage({ data: { id: applicantId, stage_id: next.id } });
-    qc.invalidateQueries({ queryKey: ["applicants"] });
-    qc.invalidateQueries({ queryKey: ["dashboard"] });
+  const [linkPrompt, setLinkPrompt] = useState<{ id: string; name: string } | null>(null);
+
+  function maybePromptLink(a: any, targetStageId: string) {
+    if (onboardingStageIds.has(targetStageId) && !a.assigned_agentlink_link_id) {
+      setLinkPrompt({
+        id: a.id,
+        name: [a.first_name, a.last_name].filter(Boolean).join(" ") || a.email,
+      });
+    }
   }
-  async function moveToStage(applicantId: string, stageId: string) {
-    if (!stageId) return;
-    await changeStage({ data: { id: applicantId, stage_id: stageId } });
+
+  async function moveNext(a: any) {
+    const next = nextStageOf(a.current_stage_id);
+    if (!next) return;
+    await changeStage({ data: { id: a.id, stage_id: next.id } });
     qc.invalidateQueries({ queryKey: ["applicants"] });
     qc.invalidateQueries({ queryKey: ["dashboard"] });
+    maybePromptLink(a, next.id);
+  }
+  async function moveToStage(a: any, stageId: string) {
+    if (!stageId) return;
+    await changeStage({ data: { id: a.id, stage_id: stageId } });
+    qc.invalidateQueries({ queryKey: ["applicants"] });
+    qc.invalidateQueries({ queryKey: ["dashboard"] });
+    maybePromptLink(a, stageId);
   }
 
   function setTab(t: "list" | "pipeline") {
