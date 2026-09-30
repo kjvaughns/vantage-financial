@@ -2,12 +2,15 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { PortalShell } from "@/components/vantage/portal-shell";
-import { adminListUsers, adminSetUserRole, adminUpdateProfile } from "@/lib/portal.functions";
+import { adminListUsers, adminSetUserRole, adminUpdateProfile, saveAgentLink, deleteAgentLink } from "@/lib/portal.functions";
 import { useState } from "react";
 import {
   PageHeader, PageBody, Toolbar, SearchField, TableWrap, Table, THead, TH, TR, TD,
   Badge, Select, Input, TableSkeleton, ErrorState, EmptyState, notify, Panel,
+  Modal, Button, Field, Divider,
 } from "@/components/portal/ui";
+
+type LinkRow = { id: string; owner_id: string; label: string; url: string; is_active: boolean };
 
 export const Route = createFileRoute("/_authenticated/portal/admin/users")({
   head: () => ({ meta: [{ title: "Users — Vantage Admin" }, { name: "robots", content: "noindex" }] }),
