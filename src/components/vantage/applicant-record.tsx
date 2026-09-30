@@ -169,11 +169,16 @@ export function ApplicantRecord({
   const [promoteOpen, setPromoteOpen] = useState(false);
   const [logOpen, setLogOpen] = useState(false);
   const [emailOpen, setEmailOpen] = useState(false);
+  const [linkPromptOpen, setLinkPromptOpen] = useState(false);
 
   async function onStage(stageId: string) {
     try {
       await changeStage({ data: { id: applicantId, stage_id: stageId } });
       invalidate();
+      const target = data?.stages.find((s) => s.id === stageId);
+      if (target?.slug === "onboarding" && !a?.assigned_agentlink_link_id) {
+        setLinkPromptOpen(true);
+      }
     } catch (e) {
       notify.error("Couldn't move them to that stage", "Please try again in a moment.");
     }
@@ -390,6 +395,19 @@ export function ApplicantRecord({
         <StateExamCard applicant={a} onDone={invalidate} />
 
         {/* Onboarding progress */}
+        {currentStage?.slug === "onboarding" && !a.assigned_agentlink_link_id && (
+          <Panel title="Contracting link needed">
+            <p className="p-secondary">
+              This recruit is in Onboarding but doesn&apos;t have an AgentLink contracting link yet.
+              Assign one so step 1 of their checklist works.
+            </p>
+            <div className="mt-3">
+              <Button size="sm" variant="primary" onClick={() => setLinkPromptOpen(true)}>
+                Assign contracting link
+              </Button>
+            </div>
+          </Panel>
+        )}
         {currentStage?.slug === "onboarding" && (
           <OnboardingProgressCard steps={a.onboarding_steps} applicantId={a.id} />
         )}
