@@ -43,6 +43,13 @@
       "when": 1790798246401,
       "tag": "0005_applicant_agentlink_link",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790798277691,
+      "tag": "0006_carry_agentlink_link_on_invite_accept",
+      "breakpoints": true
     }
   ]
 }
