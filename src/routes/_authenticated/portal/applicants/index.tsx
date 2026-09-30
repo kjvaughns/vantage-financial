@@ -448,7 +448,7 @@ function ListView({
                       size="sm"
                       variant="ghost"
                       className="min-h-11"
-                      onClick={() => moveNext(a.id, a.current_stage_id)}
+                      onClick={() => moveNext(a)}
                     >
                       {next.name} <ChevronRight size={14} aria-hidden />
                     </Button>
@@ -530,7 +530,7 @@ function ListView({
                       <Select
                         aria-label={`Stage for ${a.first_name} ${a.last_name}`}
                         value={a.current_stage_id ?? ""}
-                        onChange={(e) => moveToStage(a.id, e.target.value)}
+                        onChange={(e) => moveToStage(a, e.target.value)}
                         className="h-8 w-auto max-w-[180px] py-0 text-[12.5px]"
                       >
                         {!a.current_stage_id && <option value="">—</option>}
@@ -553,6 +553,13 @@ function ListView({
                               );
                             })()
                           : null}
+                        {a.current_stage_id &&
+                        onboardingStageIds.has(a.current_stage_id) &&
+                        !a.assigned_agentlink_link_id ? (
+                          <button type="button" onClick={() => onAssignLink(a)}>
+                            <Badge tone="red">No contracting link — assign</Badge>
+                          </button>
+                        ) : null}
                         <Badge tone={licensed ? "green" : "amber"}>
                           {licensed ? "Licensed" : "Unlicensed"}
                         </Badge>
@@ -586,7 +593,7 @@ function ListView({
                           <IconButton
                             size="sm"
                             label={`Move to ${next.name}`}
-                            onClick={() => moveNext(a.id, a.current_stage_id)}
+                            onClick={() => moveNext(a)}
                           >
                             <ChevronRight size={15} aria-hidden />
                           </IconButton>
