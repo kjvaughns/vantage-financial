@@ -47,6 +47,7 @@ type Form = {
   email: string;
   phone: string;
   state: string;
+  us_citizen: boolean | null;
   licensed: boolean | null;
   has_downlines: boolean;
   overview_slot: string;
@@ -61,6 +62,7 @@ const initial: Form = {
   email: "",
   phone: "",
   state: "",
+  us_citizen: null,
   licensed: null,
   has_downlines: false,
   overview_slot: "",
@@ -142,6 +144,7 @@ function ApplyPage() {
       errs.push("a valid email");
     if (!isValidUsPhone(form.phone)) errs.push("phone");
     if (!form.state) errs.push("your state");
+    if (form.us_citizen === null) errs.push("your citizenship status");
     if (form.licensed === null) errs.push("your licensing status");
     if (!slotsQuery.isLoading && slots.length > 0 && !form.overview_slot) errs.push("a time for your 1:1 call");
     if (!recruiter) errs.push("who referred you");
@@ -149,6 +152,11 @@ function ApplyPage() {
     if (!form.why_text.trim() || form.why_text.trim().length < 10)
       errs.push("a short reason (min 10 chars)");
     if (!form.consent_contact) errs.push("consent to be contacted");
+    // Non-citizens are ineligible for insurance licensing — hard-stop before submit.
+    if (form.us_citizen === false) {
+      setErrors(["this opportunity requires US citizenship or work authorization"]);
+      return;
+    }
     if (errs.length) {
       setErrors(errs);
       return;
@@ -286,6 +294,42 @@ function ApplyPage() {
           </Field>
           <Field label="State *">
             <StateCombobox value={form.state} onChange={(v) => set("state", v)} />
+          </Field>
+          <Field label="Are you a US citizen? *">
+            <div className="grid grid-cols-2 gap-3">
+              {(
+                [
+                  { value: true, label: "Yes" },
+                  { value: false, label: "No" },
+                ] as const
+              ).map((opt) => {
+                const active = form.us_citizen === opt.value;
+                return (
+                  <button
+                    key={opt.label}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => set("us_citizen", opt.value)}
+                    className={cn(
+                      "vantage-input flex min-h-[54px] cursor-pointer touch-manipulation items-center justify-center gap-2 text-center font-semibold transition-colors select-none",
+                      active
+                        ? "border-vantage-gold bg-vantage-gold text-vantage-card shadow-[0_0_24px_rgba(201,168,76,0.25)]"
+                        : "text-vantage-muted hover:border-vantage-gold/50 hover:text-vantage-ivory active:border-vantage-gold",
+                    )}
+                  >
+                    {active && <span aria-hidden>✓</span>}
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+            {form.us_citizen === false && (
+              <div className="mt-3 rounded-[10px] border border-red-500/30 bg-red-500/10 p-3.5 text-[13.5px] leading-relaxed text-red-200">
+                Thanks for your interest — unfortunately, a US citizenship or permanent
+                work-authorization status is required for insurance licensing, so we're unable to
+                move forward with your application at this time.
+              </div>
+            )}
           </Field>
           <Field label="Are you currently licensed? *">
             <div className="grid grid-cols-2 gap-3">
@@ -427,7 +471,7 @@ function ApplyPage() {
 
           <button
             onClick={onSubmit}
-            disabled={submitting}
+            disabled={submitting || form.us_citizen === false}
             className="vantage-btn-primary mt-2 w-full px-6 py-4 text-[16px] disabled:opacity-60"
           >
             {submitting ? (
