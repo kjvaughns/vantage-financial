@@ -471,7 +471,7 @@ function ApplyPage() {
 
           <button
             onClick={onSubmit}
-            disabled={submitting}
+            disabled={submitting || form.us_citizen === false}
             className="vantage-btn-primary mt-2 w-full px-6 py-4 text-[16px] disabled:opacity-60"
           >
             {submitting ? (
