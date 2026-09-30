@@ -25,6 +25,7 @@ import { composerTemplates } from "@/lib/email/catalog";
 import { listEmailHistory } from "@/lib/email.functions";
 import { sendApplicantEmail as sendBrandedApplicantEmail } from "@/lib/email.functions";
 import { getInvitableContext, promoteApplicantToAgent } from "@/lib/invitations.functions";
+import { AssignContractingLinkModal } from "@/components/vantage/assign-contracting-link-modal";
 import {
   getOnboardingContent,
   setAgentOnboardingStep,
