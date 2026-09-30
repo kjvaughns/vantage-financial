@@ -321,6 +321,119 @@ export const assignAgentLink = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/** Resolve an applicant's upline: assigned recruiter, then original recruiter, then referrer. */
+function applicantUplineId(a: {
+  assigned_recruiter_id: string | null;
+  original_recruiter_id: string | null;
+  referred_by_profile_id: string | null;
+}): string | null {
+  return a.assigned_recruiter_id ?? a.original_recruiter_id ?? a.referred_by_profile_id ?? null;
+}
+
+/** Links available for an applicant's upline, for the onboarding assign popup. */
+export const getApplicantAgentLinkOptions = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ applicant_id: z.string().uuid() }).parse(input))
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    const access = await agentLinkAccess(supabase, userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const admin = supabaseAdmin as any;
+    const { data: applicant } = await admin
+      .from("applicants")
+      .select("id, assigned_recruiter_id, original_recruiter_id, referred_by_profile_id, assigned_agentlink_link_id")
+      .eq("id", data.applicant_id)
+      .maybeSingle();
+    if (!applicant) throw new Error("Applicant not found");
+    if (!access.isAdmin) {
+      const { data: descendants } = await admin.rpc("descendant_ids", { _root: userId });
+      const ids = [userId, ...((descendants ?? []) as { id: string }[]).map((row) => row.id)];
+      const recruiters = [
+        applicant.assigned_recruiter_id,
+        applicant.original_recruiter_id,
+        applicant.referred_by_profile_id,
+      ].filter(Boolean) as string[];
+      if (!recruiters.some((id) => ids.includes(id))) {
+        throw new Error("You do not have access to this applicant");
+      }
+    }
+    const uplineId = applicantUplineId(applicant);
+    let uplineName: string | null = null;
+    let links: AgentLinkRow[] = [];
+    if (uplineId) {
+      const [{ data: profile }, { data: linkRows }] = await Promise.all([
+        admin.from("profiles").select("first_name, last_name, email").eq("id", uplineId).maybeSingle(),
+        admin
+          .from("agentlink_links")
+          .select("*")
+          .eq("owner_id", uplineId)
+          .eq("is_active", true)
+          .order("created_at"),
+      ]);
+      uplineName = profile
+        ? [profile.first_name, profile.last_name].filter(Boolean).join(" ") || profile.email
+        : null;
+      links = (linkRows ?? []) as AgentLinkRow[];
+    }
+    return {
+      uplineId,
+      uplineName,
+      links,
+      assignedLinkId: applicant.assigned_agentlink_link_id as string | null,
+      canAddLink: access.isAdmin || uplineId === userId,
+    };
+  });
+
+/** Assign (or clear) the pending contracting link on an applicant. */
+export const assignApplicantAgentLink = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({ applicant_id: z.string().uuid(), link_id: z.string().uuid().nullable() })
+      .parse(input),
+  )
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    const access = await agentLinkAccess(supabase, userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const admin = supabaseAdmin as any;
+    const { data: applicant } = await admin
+      .from("applicants")
+      .select("id, assigned_recruiter_id, original_recruiter_id, referred_by_profile_id")
+      .eq("id", data.applicant_id)
+      .maybeSingle();
+    if (!applicant) throw new Error("Applicant not found");
+    if (!access.isAdmin) {
+      const { data: descendants } = await admin.rpc("descendant_ids", { _root: userId });
+      const ids = [userId, ...((descendants ?? []) as { id: string }[]).map((row) => row.id)];
+      const recruiters = [
+        applicant.assigned_recruiter_id,
+        applicant.original_recruiter_id,
+        applicant.referred_by_profile_id,
+      ].filter(Boolean) as string[];
+      if (!recruiters.some((id) => ids.includes(id))) {
+        throw new Error("You do not have access to this applicant");
+      }
+    }
+    if (data.link_id) {
+      const uplineId = applicantUplineId(applicant);
+      const { data: link } = await admin
+        .from("agentlink_links")
+        .select("id, owner_id, is_active")
+        .eq("id", data.link_id)
+        .maybeSingle();
+      if (!link?.is_active || !uplineId || link.owner_id !== uplineId) {
+        throw new Error("The assigned link must belong to this applicant's upline.");
+      }
+    }
+    const { error } = await admin
+      .from("applicants")
+      .update({ assigned_agentlink_link_id: data.link_id, updated_at: new Date().toISOString() })
+      .eq("id", data.applicant_id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 /** Dashboard KPIs + activity feed for the signed-in user. */
 export const getDashboard = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
