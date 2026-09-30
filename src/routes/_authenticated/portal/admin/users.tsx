@@ -327,8 +327,199 @@ function UsersPage() {
           </TableWrap>
           </>
         )}
+
+        {manageOwnerId && (
+          <AgentLinkManagerModal
+            ownerId={manageOwnerId}
+            ownerName={displayName(manageOwnerId)}
+            links={agentLinks.filter((link) => link.owner_id === manageOwnerId)}
+            onClose={() => setManageOwnerId(null)}
+            onChanged={invalidate}
+          />
+        )}
       </PageBody>
     </PortalShell>
+  );
+}
+
+/** Assignment select for an agent, plus a shortcut into their upline's links. */
+function AgentLinkCell({
+  user,
+  links,
+  uplineName,
+  canManageSelf,
+  onAssign,
+  onManage,
+}: {
+  user: any;
+  links: LinkRow[];
+  uplineName: string;
+  canManageSelf: boolean;
+  onAssign: (linkId: string | null) => void;
+  onManage: (ownerId: string) => void;
+}) {
+  const parentLinks = links.filter((link) => link.owner_id === user.parent_user_id && link.is_active);
+  const ownLinks = links.filter((link) => link.owner_id === user.id);
+  return (
+    <div className="space-y-1.5">
+      <Select
+        className="h-9 w-full text-[13px]"
+        value={user.assigned_agentlink_link_id ?? ""}
+        onChange={(e) => onAssign(e.target.value || null)}
+        disabled={!user.parent_user_id}
+      >
+        <option value="">{user.parent_user_id ? "— not assigned —" : "No upline set"}</option>
+        {parentLinks.map((link) => (
+          <option key={link.id} value={link.id}>{link.label}</option>
+        ))}
+      </Select>
+      <div className="flex flex-wrap gap-2">
+        {user.parent_user_id && (
+          <button
+            type="button"
+            onClick={() => onManage(user.parent_user_id)}
+            className="p-focus text-left text-[12px] font-semibold"
+            style={{ color: "var(--p-gold)" }}
+          >
+            {parentLinks.length ? `Manage ${uplineName}'s links` : `+ Add link for ${uplineName}`}
+          </button>
+        )}
+        {canManageSelf && (
+          <button
+            type="button"
+            onClick={() => onManage(user.id)}
+            className="p-focus text-left text-[12px] font-semibold"
+            style={{ color: "var(--p-text-2)" }}
+          >
+            Their own links ({ownLinks.length})
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** Create, edit, and remove contracting links owned by one upline. */
+function AgentLinkManagerModal({
+  ownerId,
+  ownerName,
+  links,
+  onClose,
+  onChanged,
+}: {
+  ownerId: string;
+  ownerName: string;
+  links: LinkRow[];
+  onClose: () => void;
+  onChanged: () => void;
+}) {
+  const save = useServerFn(saveAgentLink);
+  const remove = useServerFn(deleteAgentLink);
+  const [label, setLabel] = useState("");
+  const [url, setUrl] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const run = async (fn: () => Promise<unknown>, okMsg: string) => {
+    setBusy(true);
+    try {
+      await fn();
+      onChanged();
+      notify.success(okMsg);
+    } catch {
+      notify.error("That didn't save.", "Check the link starts with https:// and try again.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Modal
+      title={`Contracting links — ${ownerName}`}
+      description="Links you add here belong to this upline. Their downlines can then be assigned one."
+      onClose={onClose}
+    >
+      <div className="space-y-3">
+        {links.length === 0 && <p className="p-secondary">No links yet for {ownerName}.</p>}
+        {links.map((link) => (
+          <LinkEditorRow
+            key={link.id}
+            link={link}
+            busy={busy}
+            onSave={(next) => run(() => save({ data: { ...next, owner_id: ownerId } }), "Link saved.")}
+            onRemove={() => run(() => remove({ data: { id: link.id, owner_id: ownerId } }), "Link removed.")}
+          />
+        ))}
+
+        <Divider />
+        <Field label="Label"><Input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Standard contracting" /></Field>
+        <Field label="AgentLink URL"><Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://..." /></Field>
+        <Button
+          disabled={busy || !label.trim() || !url.trim()}
+          onClick={() =>
+            run(
+              () => save({ data: { owner_id: ownerId, label: label.trim(), url: url.trim(), is_active: true } }),
+              "Link added.",
+            ).then(() => {
+              setLabel("");
+              setUrl("");
+            })
+          }
+        >
+          Add link
+        </Button>
+      </div>
+    </Modal>
+  );
+}
+
+function LinkEditorRow({
+  link,
+  busy,
+  onSave,
+  onRemove,
+}: {
+  link: LinkRow;
+  busy: boolean;
+  onSave: (next: { id: string; label: string; url: string; is_active: boolean }) => void;
+  onRemove: () => void;
+}) {
+  const [label, setLabel] = useState(link.label);
+  const [url, setUrl] = useState(link.url);
+  const dirty = label.trim() !== link.label || url.trim() !== link.url;
+  return (
+    <div className="rounded-lg border p-3" style={{ borderColor: "var(--p-border)" }}>
+      <div className="grid gap-2 sm:grid-cols-2">
+        <Input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Label" />
+        <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://..." />
+      </div>
+      <div className="mt-2 flex flex-wrap items-center gap-3">
+        <PermToggle
+          label={link.is_active ? "Active" : "Inactive"}
+          checked={link.is_active}
+          onChange={(v) => onSave({ id: link.id, label: label.trim(), url: url.trim(), is_active: v })}
+        />
+        {dirty && (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => onSave({ id: link.id, label: label.trim(), url: url.trim(), is_active: link.is_active })}
+            className="p-focus text-[12px] font-semibold disabled:opacity-50"
+            style={{ color: "var(--p-gold)" }}
+          >
+            Save
+          </button>
+        )}
+        <button
+          type="button"
+          disabled={busy}
+          onClick={onRemove}
+          className="p-focus ml-auto text-[12px] font-semibold disabled:opacity-50"
+          style={{ color: "var(--p-danger, #ef4444)" }}
+        >
+          Remove
+        </button>
+      </div>
+    </div>
   );
 }
 
