@@ -43,7 +43,7 @@ function UsersPage() {
   });
 
   const allUsers = data?.users ?? [];
-  const agentLinks = data?.agentLinks ?? [];
+  const agentLinks: LinkRow[] = (data?.agentLinks ?? []) as LinkRow[];
   const uplineUsers = allUsers.filter((candidate: any) =>
     candidate.is_active !== false && candidate.roles.some((role: string) => ["leader", "manager", "admin", "super_admin"].includes(role)),
   );
@@ -52,6 +52,26 @@ function UsersPage() {
     const n = `${u.first_name ?? ""} ${u.last_name ?? ""} ${u.email ?? ""}`.toLowerCase();
     return n.includes(q.toLowerCase());
   });
+
+  const [manageOwnerId, setManageOwnerId] = useState<string | null>(null);
+  const displayName = (id: string | null | undefined) => {
+    const p = allUsers.find((row: any) => row.id === id);
+    if (!p) return "this upline";
+    return [p.first_name, p.last_name].filter(Boolean).join(" ") || p.email || "this upline";
+  };
+  const isUpline = (u: any) =>
+    u.roles.some((role: string) => ["leader", "manager", "admin", "super_admin"].includes(role));
+
+  const linkCell = (u: any) => (
+    <AgentLinkCell
+      user={u}
+      links={agentLinks}
+      uplineName={displayName(u.parent_user_id)}
+      canManageSelf={isUpline(u)}
+      onAssign={(linkId) => profileMut.mutate({ id: u.id, assigned_agentlink_link_id: linkId })}
+      onManage={(ownerId) => setManageOwnerId(ownerId)}
+    />
+  );
 
   return (
     <PortalShell>
