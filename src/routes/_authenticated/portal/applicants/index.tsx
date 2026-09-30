@@ -298,6 +298,7 @@ function ListView({
   nextStageOf,
   moveNext,
   moveToStage,
+  onAssignLink,
   onOpen,
   onAdd,
 }: any) {
@@ -408,6 +409,13 @@ function ListView({
                         );
                       })()
                     : null}
+                  {a.current_stage_id &&
+                  onboardingStageIds.has(a.current_stage_id) &&
+                  !a.assigned_agentlink_link_id ? (
+                    <button type="button" onClick={() => onAssignLink(a)}>
+                      <Badge tone="red">No contracting link — assign</Badge>
+                    </button>
+                  ) : null}
                   <Badge tone={licensed ? "green" : "amber"}>{licensed ? "Licensed" : "Unlicensed"}</Badge>
                   {a.hired_at && <Badge tone="green">Hired</Badge>}
                   {!a.hired_at && a.evaluation_completed_at && <Badge>Evaluated</Badge>}
