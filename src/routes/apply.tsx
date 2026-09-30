@@ -152,6 +152,11 @@ function ApplyPage() {
     if (!form.why_text.trim() || form.why_text.trim().length < 10)
       errs.push("a short reason (min 10 chars)");
     if (!form.consent_contact) errs.push("consent to be contacted");
+    // Non-citizens are ineligible for insurance licensing — hard-stop before submit.
+    if (form.us_citizen === false) {
+      setErrors(["this opportunity requires US citizenship or work authorization"]);
+      return;
+    }
     if (errs.length) {
       setErrors(errs);
       return;
