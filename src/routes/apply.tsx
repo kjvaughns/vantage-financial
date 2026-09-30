@@ -47,6 +47,7 @@ type Form = {
   email: string;
   phone: string;
   state: string;
+  us_citizen: boolean | null;
   licensed: boolean | null;
   has_downlines: boolean;
   overview_slot: string;
@@ -61,6 +62,7 @@ const initial: Form = {
   email: "",
   phone: "",
   state: "",
+  us_citizen: null,
   licensed: null,
   has_downlines: false,
   overview_slot: "",
