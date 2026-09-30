@@ -7,6 +7,7 @@ import { ChevronRight, Plus } from "lucide-react";
 import { PortalShell } from "@/components/vantage/portal-shell";
 import { ApplicantRecord } from "@/components/vantage/applicant-record";
 import { listApplicants, updateApplicantStage } from "@/lib/portal.functions";
+import { AssignContractingLinkModal } from "@/components/vantage/assign-contracting-link-modal";
 import { AddApplicantModal } from "@/components/vantage/add-applicant-modal";
 import { PossibleDuplicatesPanel } from "@/components/vantage/possible-duplicates";
 
@@ -130,18 +131,31 @@ function ApplicantsPage() {
     if (i < 0 || i >= stages.length - 1) return null;
     return stages[i + 1];
   }
-  async function moveNext(applicantId: string, currentId: string | null) {
-    const next = nextStageOf(currentId);
-    if (!next) return;
-    await changeStage({ data: { id: applicantId, stage_id: next.id } });
-    qc.invalidateQueries({ queryKey: ["applicants"] });
-    qc.invalidateQueries({ queryKey: ["dashboard"] });
+  const [linkPrompt, setLinkPrompt] = useState<{ id: string; name: string } | null>(null);
+
+  function maybePromptLink(a: any, targetStageId: string) {
+    if (onboardingStageIds.has(targetStageId) && !a.assigned_agentlink_link_id) {
+      setLinkPrompt({
+        id: a.id,
+        name: [a.first_name, a.last_name].filter(Boolean).join(" ") || a.email,
+      });
+    }
   }
-  async function moveToStage(applicantId: string, stageId: string) {
-    if (!stageId) return;
-    await changeStage({ data: { id: applicantId, stage_id: stageId } });
+
+  async function moveNext(a: any) {
+    const next = nextStageOf(a.current_stage_id);
+    if (!next) return;
+    await changeStage({ data: { id: a.id, stage_id: next.id } });
     qc.invalidateQueries({ queryKey: ["applicants"] });
     qc.invalidateQueries({ queryKey: ["dashboard"] });
+    maybePromptLink(a, next.id);
+  }
+  async function moveToStage(a: any, stageId: string) {
+    if (!stageId) return;
+    await changeStage({ data: { id: a.id, stage_id: stageId } });
+    qc.invalidateQueries({ queryKey: ["applicants"] });
+    qc.invalidateQueries({ queryKey: ["dashboard"] });
+    maybePromptLink(a, stageId);
   }
 
   function setTab(t: "list" | "pipeline") {
@@ -215,6 +229,12 @@ function ApplicantsPage() {
             nextStageOf={nextStageOf}
             moveNext={moveNext}
             moveToStage={moveToStage}
+            onAssignLink={(a: any) =>
+              setLinkPrompt({
+                id: a.id,
+                name: [a.first_name, a.last_name].filter(Boolean).join(" ") || a.email,
+              })
+            }
             onOpen={setOpenId}
             onAdd={() => setAddOpen(true)}
           />
@@ -235,6 +255,14 @@ function ApplicantsPage() {
       </PageBody>
 
       {openId && <ApplicantRecord applicantId={openId} variant="drawer" onClose={closeDrawer} />}
+
+      {linkPrompt && (
+        <AssignContractingLinkModal
+          applicantId={linkPrompt.id}
+          applicantName={linkPrompt.name}
+          onClose={() => setLinkPrompt(null)}
+        />
+      )}
 
       {addOpen && (
         <AddApplicantModal
@@ -270,6 +298,7 @@ function ListView({
   nextStageOf,
   moveNext,
   moveToStage,
+  onAssignLink,
   onOpen,
   onAdd,
 }: any) {
@@ -380,6 +409,13 @@ function ListView({
                         );
                       })()
                     : null}
+                  {a.current_stage_id &&
+                  onboardingStageIds.has(a.current_stage_id) &&
+                  !a.assigned_agentlink_link_id ? (
+                    <button type="button" onClick={() => onAssignLink(a)}>
+                      <Badge tone="red">No contracting link — assign</Badge>
+                    </button>
+                  ) : null}
                   <Badge tone={licensed ? "green" : "amber"}>{licensed ? "Licensed" : "Unlicensed"}</Badge>
                   {a.hired_at && <Badge tone="green">Hired</Badge>}
                   {!a.hired_at && a.evaluation_completed_at && <Badge>Evaluated</Badge>}
@@ -412,7 +448,7 @@ function ListView({
                       size="sm"
                       variant="ghost"
                       className="min-h-11"
-                      onClick={() => moveNext(a.id, a.current_stage_id)}
+                      onClick={() => moveNext(a)}
                     >
                       {next.name} <ChevronRight size={14} aria-hidden />
                     </Button>
@@ -494,7 +530,7 @@ function ListView({
                       <Select
                         aria-label={`Stage for ${a.first_name} ${a.last_name}`}
                         value={a.current_stage_id ?? ""}
-                        onChange={(e) => moveToStage(a.id, e.target.value)}
+                        onChange={(e) => moveToStage(a, e.target.value)}
                         className="h-8 w-auto max-w-[180px] py-0 text-[12.5px]"
                       >
                         {!a.current_stage_id && <option value="">—</option>}
@@ -517,6 +553,13 @@ function ListView({
                               );
                             })()
                           : null}
+                        {a.current_stage_id &&
+                        onboardingStageIds.has(a.current_stage_id) &&
+                        !a.assigned_agentlink_link_id ? (
+                          <button type="button" onClick={() => onAssignLink(a)}>
+                            <Badge tone="red">No contracting link — assign</Badge>
+                          </button>
+                        ) : null}
                         <Badge tone={licensed ? "green" : "amber"}>
                           {licensed ? "Licensed" : "Unlicensed"}
                         </Badge>
@@ -550,7 +593,7 @@ function ListView({
                           <IconButton
                             size="sm"
                             label={`Move to ${next.name}`}
-                            onClick={() => moveNext(a.id, a.current_stage_id)}
+                            onClick={() => moveNext(a)}
                           >
                             <ChevronRight size={15} aria-hidden />
                           </IconButton>

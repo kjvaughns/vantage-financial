@@ -316,6 +316,7 @@ export type Database = {
         Row: {
           address: string | null
           archived_at: string | null
+          assigned_agentlink_link_id: string | null
           assigned_manager_id: string | null
           assigned_recruiter_id: string | null
           calendly_scheduled_at: string | null
@@ -395,6 +396,7 @@ export type Database = {
         Insert: {
           address?: string | null
           archived_at?: string | null
+          assigned_agentlink_link_id?: string | null
           assigned_manager_id?: string | null
           assigned_recruiter_id?: string | null
           calendly_scheduled_at?: string | null
@@ -474,6 +476,7 @@ export type Database = {
         Update: {
           address?: string | null
           archived_at?: string | null
+          assigned_agentlink_link_id?: string | null
           assigned_manager_id?: string | null
           assigned_recruiter_id?: string | null
           calendly_scheduled_at?: string | null
@@ -551,6 +554,13 @@ export type Database = {
           zip?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "applicants_assigned_agentlink_link_id_fkey"
+            columns: ["assigned_agentlink_link_id"]
+            isOneToOne: false
+            referencedRelation: "agentlink_links"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "applicants_assigned_manager_id_fkey"
             columns: ["assigned_manager_id"]
