@@ -268,14 +268,7 @@ function UsersPage() {
                             </option>
                           ))}
                       </Select>
-                      <Select
-                        className="mt-2 h-9 w-44 text-[13px]"
-                        value={u.assigned_agentlink_link_id ?? ""}
-                        onChange={(e) => profileMut.mutate({ id: u.id, assigned_agentlink_link_id: e.target.value || null })}
-                      >
-                        <option value="">No AgentLink</option>
-                        {agentLinks.filter((link: any) => link.owner_id === u.parent_user_id).map((link: any) => <option key={link.id} value={link.id}>{link.label}</option>)}
-                      </Select>
+                      <div className="mt-2 w-44">{linkCell(u)}</div>
                     </TD>
                     <TD>
                       <div className="flex flex-col gap-1.5">
