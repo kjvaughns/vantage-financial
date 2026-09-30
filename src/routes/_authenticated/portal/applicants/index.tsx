@@ -229,6 +229,12 @@ function ApplicantsPage() {
             nextStageOf={nextStageOf}
             moveNext={moveNext}
             moveToStage={moveToStage}
+            onAssignLink={(a: any) =>
+              setLinkPrompt({
+                id: a.id,
+                name: [a.first_name, a.last_name].filter(Boolean).join(" ") || a.email,
+              })
+            }
             onOpen={setOpenId}
             onAdd={() => setAddOpen(true)}
           />
@@ -249,6 +255,14 @@ function ApplicantsPage() {
       </PageBody>
 
       {openId && <ApplicantRecord applicantId={openId} variant="drawer" onClose={closeDrawer} />}
+
+      {linkPrompt && (
+        <AssignContractingLinkModal
+          applicantId={linkPrompt.id}
+          applicantName={linkPrompt.name}
+          onClose={() => setLinkPrompt(null)}
+        />
+      )}
 
       {addOpen && (
         <AddApplicantModal
