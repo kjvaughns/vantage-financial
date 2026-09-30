@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { formatPhoneInput } from "@/lib/phone";
+import { formatPhoneInput, isValidUsPhone } from "@/lib/phone";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -140,7 +140,7 @@ function ApplyPage() {
     if (!form.last_name.trim()) errs.push("last name");
     if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()))
       errs.push("a valid email");
-    if (!form.phone.trim() || form.phone.replace(/\D/g, "").length < 7) errs.push("phone");
+    if (!isValidUsPhone(form.phone)) errs.push("phone");
     if (!form.state) errs.push("your state");
     if (form.licensed === null) errs.push("your licensing status");
     if (!slotsQuery.isLoading && slots.length > 0 && !form.overview_slot) errs.push("a time for your 1:1 call");
@@ -280,6 +280,9 @@ function ApplyPage() {
               value={form.phone}
               onChange={(e) => set("phone", formatPhoneInput(e.target.value))}
             />
+            {form.phone && !isValidUsPhone(form.phone) && (
+              <p className="mt-1.5 text-[12px] text-destructive">Enter a valid 10-digit US mobile number.</p>
+            )}
           </Field>
           <Field label="State *">
             <StateCombobox value={form.state} onChange={(v) => set("state", v)} />
