@@ -280,6 +280,9 @@ function ApplyPage() {
               value={form.phone}
               onChange={(e) => set("phone", formatPhoneInput(e.target.value))}
             />
+            {form.phone && !isValidUsPhone(form.phone) && (
+              <p className="mt-1.5 text-[12px] text-destructive">Enter a valid 10-digit US mobile number.</p>
+            )}
           </Field>
           <Field label="State *">
             <StateCombobox value={form.state} onChange={(v) => set("state", v)} />
