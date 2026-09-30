@@ -545,6 +545,14 @@ export function ApplicantRecord({
       {promoteOpen && (
         <PromoteModal applicant={a} onClose={() => setPromoteOpen(false)} onDone={invalidate} />
       )}
+      {linkPromptOpen && (
+        <AssignContractingLinkModal
+          applicantId={applicantId}
+          applicantName={[a?.first_name, a?.last_name].filter(Boolean).join(" ") || a?.email}
+          onClose={() => setLinkPromptOpen(false)}
+          onDone={invalidate}
+        />
+      )}
       {logOpen && (
         <LogActivityModal
           applicantId={applicantId}
