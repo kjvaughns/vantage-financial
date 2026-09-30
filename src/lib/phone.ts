@@ -40,3 +40,9 @@ export function phoneHref(raw?: string | null): string | undefined {
   if (!local) return undefined;
   return local.length === 10 ? `+1${local}` : local;
 }
+
+/** True for a real-looking US number: 10 digits, area code and exchange not starting with 0/1. */
+export function isValidUsPhone(raw: string): boolean {
+  const { local } = digits(raw.trim());
+  return /^[2-9]\d{2}[2-9]\d{6}$/.test(local);
+}
