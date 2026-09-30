@@ -211,30 +211,77 @@ export const getAgentLinkSettings = createServerFn({ method: "GET" })
     };
   });
 
+/** Admins may manage links on behalf of an upline (leader/manager/admin). */
+async function resolveAgentLinkOwner(
+  supabase: any,
+  userId: string,
+  requestedOwner: string | undefined,
+): Promise<string> {
+  const access = await agentLinkAccess(supabase, userId);
+  if (!requestedOwner || requestedOwner === userId) {
+    if (!access.isUpline) throw new Error("Only uplines can manage AgentLink links.");
+    return userId;
+  }
+  if (!access.isAdmin) throw new Error("Only admins can manage links for another upline.");
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const admin = supabaseAdmin as any;
+  const { data: roleRows } = await admin.from("user_roles").select("role").eq("user_id", requestedOwner);
+  const ownerRoles = ((roleRows ?? []) as { role: string }[]).map((row) => row.role);
+  const ownerIsUpline = ownerRoles.some((role) =>
+    role === "leader" || role === "manager" || role === "admin" || role === "super_admin",
+  );
+  if (!ownerIsUpline) throw new Error("Contracting links can only belong to a leader, manager, or admin.");
+  return requestedOwner;
+}
+
 export const saveAgentLink = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
-    z.object({ id: z.string().uuid().optional(), label: z.string().trim().min(1).max(100), url: agentLinkUrlSchema, is_active: z.boolean() }).parse(input),
+    z
+      .object({
+        id: z.string().uuid().optional(),
+        owner_id: z.string().uuid().optional(),
+        label: z.string().trim().min(1).max(100),
+        url: agentLinkUrlSchema,
+        is_active: z.boolean(),
+      })
+      .parse(input),
   )
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
-    const access = await agentLinkAccess(supabase, userId);
-    if (!access.isUpline) throw new Error("Only uplines can manage AgentLink links.");
+    const ownerId = await resolveAgentLinkOwner(supabase, userId, data.owner_id);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const db: any = ownerId === userId ? supabase : (supabaseAdmin as any);
     const payload = { label: data.label, url: data.url, is_active: data.is_active };
-    const query = data.id
-      ? supabase.from("agentlink_links").update(payload).eq("id", data.id).eq("owner_id", userId)
-      : supabase.from("agentlink_links").insert({ ...payload, owner_id: userId });
-    const { error } = await query;
+    if (data.id) {
+      const { error } = await db
+        .from("agentlink_links")
+        .update(payload)
+        .eq("id", data.id)
+        .eq("owner_id", ownerId);
+      if (error) throw new Error(error.message);
+      return { ok: true };
+    }
+    const { data: created, error } = await db
+      .from("agentlink_links")
+      .insert({ ...payload, owner_id: ownerId })
+      .select("id")
+      .single();
     if (error) throw new Error(error.message);
-    return { ok: true };
+    return { ok: true, id: created?.id as string | undefined };
   });
 
 export const deleteAgentLink = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .inputValidator((input: unknown) =>
+    z.object({ id: z.string().uuid(), owner_id: z.string().uuid().optional() }).parse(input),
+  )
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
-    const { error } = await supabase.from("agentlink_links").delete().eq("id", data.id).eq("owner_id", userId);
+    const ownerId = await resolveAgentLinkOwner(supabase, userId, data.owner_id);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const db: any = ownerId === userId ? supabase : (supabaseAdmin as any);
+    const { error } = await db.from("agentlink_links").delete().eq("id", data.id).eq("owner_id", ownerId);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
