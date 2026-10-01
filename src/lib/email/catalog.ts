@@ -60,6 +60,8 @@ export interface EmailTemplateDef {
   prefKey?: PrefKey;
   /** Never auto-send — recruiter picks it from the Send Email composer. */
   manualOnly?: boolean;
+  /** Hide shared footer links when the email must have one focused action. */
+  hideSupplementalLinks?: boolean;
   subject: string;
   body: EmailBody;
 }
@@ -413,12 +415,13 @@ const applicantTemplates: EmailTemplateDef[] = [
     audience: "applicant",
     category: "onboarding",
     trigger: "Portal account is created for a new agent",
+    hideSupplementalLinks: true,
     subject: "Set up your Vantage agent portal",
     body: {
       title: "Your portal account is ready",
       intro: GREET,
       lines: [
-        "Set your password and you'll land in your onboarding checklist: AgentLink contracting, Discord Licensed role, Agent Playbook, expectations and schedule, Vantage Closer Course, then live training.",
+        "Create your account and set your password to open your onboarding checklist. Everything else you need will be waiting for you inside the portal.",
       ],
       ctaLabel: "Set up your account",
       ctaUrl: "{{invitation_link}}",
@@ -488,23 +491,14 @@ const applicantTemplates: EmailTemplateDef[] = [
     category: "onboarding",
     trigger: "Onboarding checklist is created",
     prefKey: "onboarding_updates",
+    hideSupplementalLinks: true,
     subject: "Welcome to Vantage — your onboarding checklist",
     body: {
       title: "Welcome to the team",
       intro: GREET,
       lines: [
         "You're licensed and officially a Vantage agent. First, create your portal account and password using the secure registration button below. Your name, email, phone, and state will already be filled in; you'll only need to confirm your NPN and choose a password.",
-        "After registration, follow these onboarding steps in order before live training.",
-        "1) AgentLink contracting — use the link assigned by your upline in the portal, create your account directly under them, and complete your entire AgentLink profile to 100%, including E&O.",
-        "2) Discord Licensed role — in the Vantage Discord, go to Start Here and select Licensed so the licensed agent channels unlock.",
-        "3) Read the Vantage Financial Agent Playbook in the Academy Library.",
-        `4) Agent expectations and schedule — ${SCHEDULE_SUMMARY}`,
-        "5) Complete the Vantage Closer Course before live training starts.",
-      ],
-      details: [
-        { label: "AgentLink", value: "Assigned in your portal checklist" },
-        { label: "Discord", value: "{{discord_link}}" },
-        { label: "Academy", value: "{{academy_link}}" },
+        "Once you're in, open your onboarding checklist in the portal. Your assigned links, instructions, and training steps will all be available there.",
       ],
       ctaLabel: "Create my agent account",
       ctaUrl: "{{onboarding_link}}",
