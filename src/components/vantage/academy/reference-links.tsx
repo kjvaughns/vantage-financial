@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { ArrowDown, ArrowUp, ExternalLink, LayoutGrid, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { Button, Field, Input, Select } from "@/components/portal/ui";
+import { Button, Input, Select } from "@/components/portal/ui";
 
 export type RefLink = { label: string; kind: "external" | "internal"; url: string; note?: string | null };
 
@@ -123,4 +123,3 @@ export function ReferenceLinksCard({ links }: { links: RefLink[] | null | undefi
   );
 }
 
-export { Field };

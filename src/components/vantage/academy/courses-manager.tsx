@@ -300,11 +300,6 @@ function CourseMetaModal({ courseId, onClose, onSaved }: { courseId?: string; on
 
   async function save() {
     if (!f.title.trim()) return;
-    const links = f.reference_links.filter((l) => l.label.trim() || l.url.trim());
-    if (links.some((l) => !l.label.trim() || !l.url.trim() || l.url.trim() === "/portal/")) {
-      notify.error("Each reference link needs a label and a destination.");
-      return;
-    }
     setBusy(true);
     try {
       const res = await saveFn({
@@ -562,6 +557,11 @@ function LessonDrawer({
   async function save() {
     if (!f.title.trim()) {
       notify.error("Add a lesson title.");
+      return;
+    }
+    const links = f.reference_links.filter((l) => l.label.trim() || l.url.trim());
+    if (links.some((l) => !l.label.trim() || !l.url.trim() || l.url.trim() === "/portal/")) {
+      notify.error("Each reference link needs a label and a destination.");
       return;
     }
     setBusy(true);
