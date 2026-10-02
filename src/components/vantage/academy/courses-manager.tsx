@@ -38,6 +38,7 @@ import {
   notify,
 } from "@/components/portal/ui";
 import { MediaSourceField, TranscriptPanel } from "./media-fields";
+import { ReferenceLinksEditor, type RefLink } from "./reference-links";
 import {
   adminListCourses,
   adminGetCourse,
@@ -299,6 +300,11 @@ function CourseMetaModal({ courseId, onClose, onSaved }: { courseId?: string; on
 
   async function save() {
     if (!f.title.trim()) return;
+    const links = f.reference_links.filter((l) => l.label.trim() || l.url.trim());
+    if (links.some((l) => !l.label.trim() || !l.url.trim() || l.url.trim() === "/portal/")) {
+      notify.error("Each reference link needs a label and a destination.");
+      return;
+    }
     setBusy(true);
     try {
       const res = await saveFn({
@@ -317,8 +323,8 @@ function CourseMetaModal({ courseId, onClose, onSaved }: { courseId?: string; on
       });
       notify.success("Course saved.");
       onSaved(res.id);
-    } catch {
-      notify.error("Couldn't save. Please try again.");
+    } catch (e: any) {
+      notify.error(e?.message?.includes("link") ? e.message : "Couldn't save. Please try again.");
       setBusy(false);
     }
   }
@@ -547,6 +553,7 @@ function LessonDrawer({
     blurb: lesson?.blurb ?? "",
     is_published: lesson?.is_published !== false,
     quiz_pass_threshold: lesson?.quiz_pass_threshold ?? 0.75,
+    reference_links: (Array.isArray(lesson?.reference_links) ? lesson.reference_links : []) as RefLink[],
   });
   const [busy, setBusy] = useState(false);
   const set = (patch: Partial<typeof f>) => setF((p) => ({ ...p, ...patch }));
@@ -573,6 +580,7 @@ function LessonDrawer({
           blurb: f.blurb,
           is_published: f.is_published,
           quiz_pass_threshold: Number(f.quiz_pass_threshold) || 0.75,
+          reference_links: links.map((l) => ({ ...l, note: l.note ?? "" })),
         },
       });
       notify.success("Lesson saved.");
@@ -652,6 +660,7 @@ function LessonDrawer({
         )}
 
         <Field label="Summary shown to agents"><Textarea rows={3} value={f.blurb} onChange={(e) => set({ blurb: e.target.value })} /></Field>
+        <ReferenceLinksEditor value={f.reference_links} onChange={(v) => set({ reference_links: v })} />
         <Toggle checked={f.is_published} onChange={(v) => set({ is_published: v })} label="Visible to agents" />
 
         {f.kind === "quiz" &&
