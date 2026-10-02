@@ -711,6 +711,7 @@ export type Database = {
           module_id: string
           position: number
           quiz_pass_threshold: number
+          reference_links: Json
           resource_label: string | null
           resource_path: string | null
           resource_url: string | null
@@ -729,6 +730,7 @@ export type Database = {
           module_id: string
           position?: number
           quiz_pass_threshold?: number
+          reference_links?: Json
           resource_label?: string | null
           resource_path?: string | null
           resource_url?: string | null
@@ -747,6 +749,7 @@ export type Database = {
           module_id?: string
           position?: number
           quiz_pass_threshold?: number
+          reference_links?: Json
           resource_label?: string | null
           resource_path?: string | null
           resource_url?: string | null
