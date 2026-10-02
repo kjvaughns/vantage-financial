@@ -24,6 +24,7 @@ const lessonPayload = z.object({
   body: z.string().max(20000).optional().nullable(),
   duration: z.string().max(40).optional().nullable(),
   resource_label: z.string().max(200).optional().nullable(),
+  reference_links: z.array(z.any()).max(20).optional().nullable(),
   quiz_pass_threshold: z.number().min(0).max(100).optional().nullable(),
   questions: z.array(questionPayload).max(30).optional(),
 });
@@ -244,6 +245,7 @@ async function insertCourseTree(s: any, tree: z.infer<typeof coursePayload>, tit
           body: l.body ?? null,
           duration: l.duration ?? null,
           resource_label: l.resource_label ?? null,
+          reference_links: Array.isArray(l.reference_links) ? l.reference_links : [],
           media_type: l.kind === "video" ? "video" : l.kind === "audio" ? "audio" : null,
           quiz_pass_threshold: l.quiz_pass_threshold ?? 80,
           is_published: false,
@@ -388,6 +390,7 @@ export const adminSaveCourseAsTemplate = createServerFn({ method: "POST" })
             body: l.body,
             duration: l.duration,
             resource_label: l.resource_label,
+            reference_links: Array.isArray(l.reference_links) ? l.reference_links : [],
             quiz_pass_threshold: l.quiz_pass_threshold ? Number(l.quiz_pass_threshold) : 80,
             questions: (questions ?? [])
               .filter((q: any) => q.lesson_id === l.id)
