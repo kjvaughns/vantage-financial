@@ -18,6 +18,7 @@ import {
 } from "@/components/portal/ui";
 import { getCourseLearner, markLessonComplete, submitQuiz } from "@/lib/academy.functions";
 import { resolveMedia, isPreviewableDocument } from "@/lib/academy/media";
+import { ReferenceLinksCard } from "@/components/vantage/academy/reference-links";
 import { DocPreview } from "@/components/vantage/academy/doc-preview";
 
 import { AudioBlock } from "@/components/vantage/academy/audio-block";
@@ -307,6 +308,8 @@ function LessonView({
             </a>
           </div>
         )}
+
+        <ReferenceLinksCard links={lesson.reference_links as any} />
 
         <div className="mt-4">
           <Button variant="primary" size="sm" onClick={() => mut.mutate()} disabled={completed} loading={mut.isPending}>

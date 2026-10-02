@@ -172,6 +172,17 @@ export const adminUpsertLesson = createServerFn({ method: "POST" })
         resource_url: z.string().trim().max(2000).optional().or(z.literal("")),
         resource_label: z.string().trim().max(200).optional().or(z.literal("")),
         file_path: z.string().trim().max(500).optional().or(z.literal("")),
+        reference_links: z
+          .array(
+            z.object({
+              label: z.string().trim().min(1).max(200),
+              kind: z.enum(["external", "internal"]),
+              url: z.string().trim().min(1).max(2000),
+              note: z.string().trim().max(300).optional().or(z.literal("")),
+            }),
+          )
+          .max(20)
+          .optional(),
         is_published: z.boolean().optional(),
         quiz_pass_threshold: z.number().min(0).max(1).optional(),
       })
@@ -193,6 +204,7 @@ export const adminUpsertLesson = createServerFn({ method: "POST" })
       resource_url: data.kind === "resource" || data.kind === "link" ? data.resource_url || null : null,
       resource_label: data.resource_label || null,
       file_path: data.file_path || null,
+      ...(data.reference_links ? { reference_links: normalizeRefLinks(data.reference_links) } : {}),
       is_published: data.is_published ?? true,
       quiz_pass_threshold: data.quiz_pass_threshold ?? 0.75,
     };
@@ -759,3 +771,22 @@ export const submitQuiz = createServerFn({ method: "POST" })
     return { passed, score, threshold: info.threshold, results };
   });
 
+
+function normalizeRefLinks(links: { label: string; kind: "external" | "internal"; url: string; note?: string }[]) {
+  return links.map((l) => {
+    let url = l.url.trim();
+    if (l.kind === "internal") {
+      if (!url.startsWith("/")) url = "/" + url;
+      if (!url.startsWith("/portal")) throw new Error("Portal links must start with /portal");
+    } else {
+      if (!/^https?:\/\//i.test(url)) url = "https://" + url;
+      try {
+        const u = new URL(url);
+        if (u.protocol !== "http:" && u.protocol !== "https:") throw new Error();
+      } catch {
+        throw new Error(`Invalid link: ${l.url}`);
+      }
+    }
+    return { label: l.label, kind: l.kind, url, note: l.note || null };
+  });
+}
