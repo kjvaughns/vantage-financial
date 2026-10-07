@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AgencyRouteImport } from './routes/agency'
 import { Route as ApplicationCompleteRouteImport } from './routes/application-complete'
 import { Route as ApplyRouteImport } from './routes/apply'
 import { Route as EvaluationRouteImport } from './routes/evaluation'
@@ -19,6 +20,8 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ScheduleRouteImport } from './routes/schedule'
 import { Route as WatchRouteImport } from './routes/watch'
 import { Route as AuthenticatedPortalRouteRouteImport } from './routes/_authenticated/portal/route'
+import { Route as AgencyIndexRouteImport } from './routes/agency.index'
+import { Route as AgencyApplyRouteImport } from './routes/agency.apply'
 import { Route as ApplicationCompleteIndexRouteImport } from './routes/application-complete/index'
 import { Route as CoursePurchasedTokenRouteImport } from './routes/course-purchased.$token'
 import { Route as JoinSlugRouteImport } from './routes/join.$slug'
@@ -75,6 +78,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AgencyRoute = AgencyRouteImport.update({
+  id: '/agency',
+  path: '/agency',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApplicationCompleteRoute = ApplicationCompleteRouteImport.update({
   id: '/application-complete',
   path: '/application-complete',
@@ -116,6 +124,16 @@ const AuthenticatedPortalRouteRoute =
     path: '/portal',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AgencyIndexRoute = AgencyIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AgencyRoute,
+} as any)
+const AgencyApplyRoute = AgencyApplyRouteImport.update({
+  id: '/apply',
+  path: '/apply',
+  getParentRoute: () => AgencyRoute,
+} as any)
 const ApplicationCompleteIndexRoute =
   ApplicationCompleteIndexRouteImport.update({
     id: '/',
@@ -389,6 +407,7 @@ const AuthenticatedPortalAdminUsersUserIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/agency': typeof AgencyRouteWithChildren
   '/application-complete': typeof ApplicationCompleteRouteWithChildren
   '/apply': typeof ApplyRoute
   '/evaluation': typeof EvaluationRoute
@@ -397,10 +416,12 @@ export interface FileRoutesByFullPath {
   '/schedule': typeof ScheduleRoute
   '/watch': typeof WatchRoute
   '/portal': typeof AuthenticatedPortalRouteRouteWithChildren
+  '/agency/apply': typeof AgencyApplyRoute
   '/course-purchased/$token': typeof CoursePurchasedTokenRoute
   '/join/$slug': typeof JoinSlugRoute
   '/portal-invite/$token': typeof PortalInviteTokenRoute
   '/reschedule/$token': typeof RescheduleTokenRoute
+  '/agency/': typeof AgencyIndexRoute
   '/application-complete/': typeof ApplicationCompleteIndexRoute
   '/portal/academy': typeof AuthenticatedPortalAcademyRouteRouteWithChildren
   '/portal/admin': typeof AuthenticatedPortalAdminRouteRouteWithChildren
@@ -452,10 +473,12 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/schedule': typeof ScheduleRoute
   '/watch': typeof WatchRoute
+  '/agency/apply': typeof AgencyApplyRoute
   '/course-purchased/$token': typeof CoursePurchasedTokenRoute
   '/join/$slug': typeof JoinSlugRoute
   '/portal-invite/$token': typeof PortalInviteTokenRoute
   '/reschedule/$token': typeof RescheduleTokenRoute
+  '/agency': typeof AgencyIndexRoute
   '/application-complete': typeof ApplicationCompleteIndexRoute
   '/portal/calendar': typeof AuthenticatedPortalCalendarRoute
   '/portal/leaderboard': typeof AuthenticatedPortalLeaderboardRoute
@@ -498,6 +521,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/agency': typeof AgencyRouteWithChildren
   '/application-complete': typeof ApplicationCompleteRouteWithChildren
   '/apply': typeof ApplyRoute
   '/evaluation': typeof EvaluationRoute
@@ -506,10 +530,12 @@ export interface FileRoutesById {
   '/schedule': typeof ScheduleRoute
   '/watch': typeof WatchRoute
   '/_authenticated/portal': typeof AuthenticatedPortalRouteRouteWithChildren
+  '/agency/apply': typeof AgencyApplyRoute
   '/course-purchased/$token': typeof CoursePurchasedTokenRoute
   '/join/$slug': typeof JoinSlugRoute
   '/portal-invite/$token': typeof PortalInviteTokenRoute
   '/reschedule/$token': typeof RescheduleTokenRoute
+  '/agency/': typeof AgencyIndexRoute
   '/application-complete/': typeof ApplicationCompleteIndexRoute
   '/_authenticated/portal/academy': typeof AuthenticatedPortalAcademyRouteRouteWithChildren
   '/_authenticated/portal/admin': typeof AuthenticatedPortalAdminRouteRouteWithChildren
@@ -557,6 +583,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/agency'
     | '/application-complete'
     | '/apply'
     | '/evaluation'
@@ -565,10 +592,12 @@ export interface FileRouteTypes {
     | '/schedule'
     | '/watch'
     | '/portal'
+    | '/agency/apply'
     | '/course-purchased/$token'
     | '/join/$slug'
     | '/portal-invite/$token'
     | '/reschedule/$token'
+    | '/agency/'
     | '/application-complete/'
     | '/portal/academy'
     | '/portal/admin'
@@ -620,10 +649,12 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/schedule'
     | '/watch'
+    | '/agency/apply'
     | '/course-purchased/$token'
     | '/join/$slug'
     | '/portal-invite/$token'
     | '/reschedule/$token'
+    | '/agency'
     | '/application-complete'
     | '/portal/calendar'
     | '/portal/leaderboard'
@@ -665,6 +696,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/agency'
     | '/application-complete'
     | '/apply'
     | '/evaluation'
@@ -673,10 +705,12 @@ export interface FileRouteTypes {
     | '/schedule'
     | '/watch'
     | '/_authenticated/portal'
+    | '/agency/apply'
     | '/course-purchased/$token'
     | '/join/$slug'
     | '/portal-invite/$token'
     | '/reschedule/$token'
+    | '/agency/'
     | '/application-complete/'
     | '/_authenticated/portal/academy'
     | '/_authenticated/portal/admin'
@@ -724,6 +758,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AgencyRoute: typeof AgencyRouteWithChildren
   ApplicationCompleteRoute: typeof ApplicationCompleteRouteWithChildren
   ApplyRoute: typeof ApplyRoute
   EvaluationRoute: typeof EvaluationRoute
@@ -756,6 +791,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/agency': {
+      id: '/agency'
+      path: '/agency'
+      fullPath: '/agency'
+      preLoaderRoute: typeof AgencyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/application-complete': {
@@ -813,6 +855,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/portal'
       preLoaderRoute: typeof AuthenticatedPortalRouteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/agency/': {
+      id: '/agency/'
+      path: '/'
+      fullPath: '/agency/'
+      preLoaderRoute: typeof AgencyIndexRouteImport
+      parentRoute: typeof AgencyRoute
+    }
+    '/agency/apply': {
+      id: '/agency/apply'
+      path: '/apply'
+      fullPath: '/agency/apply'
+      preLoaderRoute: typeof AgencyApplyRouteImport
+      parentRoute: typeof AgencyRoute
     }
     '/application-complete/': {
       id: '/application-complete/'
@@ -1321,6 +1377,19 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface AgencyRouteChildren {
+  AgencyApplyRoute: typeof AgencyApplyRoute
+  AgencyIndexRoute: typeof AgencyIndexRoute
+}
+
+const AgencyRouteChildren: AgencyRouteChildren = {
+  AgencyApplyRoute: AgencyApplyRoute,
+  AgencyIndexRoute: AgencyIndexRoute,
+}
+
+const AgencyRouteWithChildren =
+  AgencyRoute._addFileChildren(AgencyRouteChildren)
+
 interface ApplicationCompleteRouteChildren {
   ApplicationCompleteIndexRoute: typeof ApplicationCompleteIndexRoute
   ApplicationCompleteLicensedTokenRoute: typeof ApplicationCompleteLicensedTokenRoute
@@ -1340,6 +1409,7 @@ const ApplicationCompleteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AgencyRoute: AgencyRouteWithChildren,
   ApplicationCompleteRoute: ApplicationCompleteRouteWithChildren,
   ApplyRoute: ApplyRoute,
   EvaluationRoute: EvaluationRoute,
