@@ -2,15 +2,15 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 export const PATH_QUESTIONS = [
-  { id: "role", q: "Which best describes you today?", options: ["New to insurance / not licensed", "Licensed solo producer", "Team leader with downlines", "Agency owner with my own brand"] },
-  { id: "team", q: "How many agents currently write under you?", options: ["None", "1–3", "4–10", "11–25", "25+"] },
-  { id: "production", q: "Current monthly team production?", options: ["Under $10K", "$10K–$25K", "$25K–$50K", "$50K–$100K", "$100K+"] },
-  { id: "pain", q: "What's holding you back most right now?", options: ["Lead cost and consistency", "Training and retaining agents", "Tech, dialer, and systems", "Carrier contracts and backend", "Leadership and mentorship", "Learning to sell myself"] },
-  { id: "brand", q: "How do you feel about branding?", options: ["I want to grow under an established brand", "I want to keep or build my own agency brand", "Not sure yet"] },
-  { id: "goal", q: "Where do you want to be in 12 months?", options: ["Consistent personal income", "A bigger, productive team", "Running my own IMO with multiple agencies"] },
+  { id: "role", multi: false, q: "Which best describes you today?", options: ["New to insurance / not licensed", "Licensed solo producer", "Team leader with downlines", "Agency owner with my own brand"] },
+  { id: "team", multi: false, q: "How many agents currently write under you?", options: ["None", "1–3", "4–10", "11–25", "25+"] },
+  { id: "production", multi: false, q: "Current monthly team production?", options: ["Under $10K", "$10K–$25K", "$25K–$50K", "$50K–$100K", "$100K+"] },
+  { id: "pain", multi: true, q: "What's holding you back most right now? (select all that apply)", options: ["Lead cost and consistency", "Training and retaining agents", "Tech, dialer, and systems", "Carrier contracts and backend", "Leadership and mentorship", "Learning to sell myself"] },
+  { id: "brand", multi: false, q: "How do you feel about branding?", options: ["I want to grow under an established brand", "I want to keep or build my own agency brand", "Not sure yet"] },
+  { id: "goal", multi: false, q: "Where do you want to be in 12 months?", options: ["Consistent personal income", "A bigger, productive team", "Running my own IMO with multiple agencies"] },
 ] as const;
 
-const answersSchema = z.record(z.string(), z.string().max(200));
+const answersSchema = z.record(z.string(), z.string().max(500));
 export type PathResult = {
   recommendation: "agent" | "builder" | "owner";
   headline: string;
@@ -47,7 +47,7 @@ export const recommendAgencyPath = createServerFn({ method: "POST" })
           store: false,
           reasoning: { effort: "low" },
           instructions:
-            "You place life-insurance professionals into one of three Vantage Financial paths. agent: solo or unlicensed people with no downlines (join as an individual agent). builder: has at least one downline, wants to grow under the Vantage brand with covered leads forever, AI dialer, FEX/Veteran/Mortgage Protection leads, training, culture and leadership. owner: established agency with its own brand, training and recruiting already in place, wants InsuraCloud infrastructure (one-link contracting, 20+ carriers, leaderboards, finance and book tracking, growing into an IMO). Never recommend builder or owner for someone with no downlines. Write a short headline (under 10 words), 2-3 reasons addressed to the person (each under 25 words), and 1-3 concise pain points.",
+            "You place life-insurance professionals into one of three Vantage Financial paths. agent: solo or unlicensed people with no downlines (join as an individual agent). builder: has at least one downline, wants to grow under the Vantage brand with covered leads forever, AI dialer, FEX/Veteran/Mortgage Protection leads, training, culture and leadership. owner: established agency with its own brand, training and recruiting already in place, wants InsuraCloud infrastructure (one-link contracting, 20+ carriers, leaderboards, finance and book tracking, growing into an IMO). Never recommend builder or owner for someone with no downlines. The pain-point answer may list several struggles separated by semicolons — reflect them all. Write a short headline (under 10 words), 2-3 reasons addressed to the person (each under 25 words), and 1-3 concise pain points.",
           input: summary,
           text: {
             format: {
