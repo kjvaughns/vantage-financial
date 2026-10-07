@@ -25,14 +25,18 @@ function PathFinder() {
   const recommend = useServerFn(recommendAgencyPath);
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [multiSel, setMultiSel] = useState<string[]>([]);
   const [result, setResult] = useState<PathResult | null>(null);
   const [busy, setBusy] = useState(false);
   const q = PATH_QUESTIONS[step];
 
-  async function pick(opt: string) {
-    const next = { ...answers, [q.id]: opt };
-    setAnswers(next);
-    if (step < PATH_QUESTIONS.length - 1) return setStep(step + 1);
+  async function advance(next: Record<string, string>) {
+    if (step < PATH_QUESTIONS.length - 1) {
+      const nextQ = PATH_QUESTIONS[step + 1];
+      setMultiSel(nextQ.multi ? (next[nextQ.id]?.split("; ") ?? []) : []);
+      setStep(step + 1);
+      return;
+    }
     setBusy(true);
     try {
       const r = await recommend({ data: { answers: next } });
@@ -41,6 +45,26 @@ function PathFinder() {
     } finally {
       setBusy(false);
     }
+  }
+
+  async function pick(opt: string) {
+    await advance({ ...answers, [q.id]: opt });
+  }
+
+  function toggleMulti(opt: string) {
+    setMultiSel((s) => (s.includes(opt) ? s.filter((o) => o !== opt) : [...s, opt]));
+  }
+
+  async function commitMulti() {
+    if (multiSel.length === 0) return;
+    await advance({ ...answers, [q.id]: multiSel.join("; ") });
+  }
+
+  function goBack() {
+    const prev = step - 1;
+    const prevQ = PATH_QUESTIONS[prev];
+    setMultiSel(prevQ.multi ? (answers[prevQ.id]?.split("; ") ?? []) : []);
+    setStep(prev);
   }
 
   return (
