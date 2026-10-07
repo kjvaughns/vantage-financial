@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
 import { PublicShell } from "@/components/vantage/brand";
@@ -227,10 +227,7 @@ function AgencyApply() {
             <div className="mt-6 space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <input className={input} type="number" min={1} placeholder="Current downlines *" value={f.team_size} onChange={(e) => set("team_size", e.target.value)} />
-                <select className={input} value={f.production} onChange={(e) => set("production", e.target.value)}>
-                  <option value="">Current monthly team production *</option>
-                  {PRODUCTION.map((p) => <option key={p} value={p}>{p}</option>)}
-                </select>
+                <ProductionSelect value={f.production} onChange={(v) => set("production", v)} />
               </div>
               <div>
                 <Label>What matters most to you? Select all that apply. *</Label>
@@ -275,6 +272,49 @@ function AgencyApply() {
         </button>
       </div>
     </PublicShell>
+  );
+}
+
+function ProductionSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative">
+      <button type="button" onClick={() => setOpen((o) => !o)}
+        aria-haspopup="listbox" aria-expanded={open}
+        className={cn("w-full rounded-[10px] border border-white/10 bg-white/[0.03] px-4 py-3 text-[15px] text-vantage-ivory outline-none focus:border-vantage-gold/60 flex items-center justify-between gap-2 text-left", value ? "text-vantage-ivory" : "text-vantage-dim/70", open && "border-vantage-gold/60")}>
+        <span className={cn(!value && "text-vantage-dim/70")}>{value || "Current monthly team production *"}</span>
+        <svg viewBox="0 0 16 16" className={cn("h-4 w-4 shrink-0 text-vantage-gold transition-transform duration-200", open && "rotate-180")} fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M3.5 6l4.5 4.5L12.5 6" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+      {open && (
+        <ul role="listbox" className="absolute z-40 mt-2 w-full overflow-hidden rounded-[10px] border border-vantage-gold/30 bg-[#0b0b0b] py-1 shadow-[0_16px_40px_rgba(0,0,0,0.7)]">
+          <li role="option" aria-selected={value === ""}
+            onClick={() => { onChange(""); setOpen(false); }}
+            className={cn("cursor-pointer px-4 py-2.5 text-[14px] transition-colors hover:bg-vantage-gold/10 hover:text-vantage-gold", value === "" ? "text-vantage-gold" : "text-vantage-dim")}>
+            Select production range
+          </li>
+          {PRODUCTION.map((p) => (
+            <li key={p} role="option" aria-selected={value === p}
+              onClick={() => { onChange(p); setOpen(false); }}
+              className={cn("flex cursor-pointer items-center justify-between gap-2 px-4 py-2.5 text-[14px] transition-colors hover:bg-vantage-gold/10 hover:text-vantage-gold", value === p ? "bg-vantage-gold/10 text-vantage-gold" : "text-vantage-fog")}>
+              {p}
+              {value === p && <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 8.5l3 3 7-7" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 
