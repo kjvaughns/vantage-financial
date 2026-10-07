@@ -45,6 +45,17 @@ const applicationSchema = z
     invalid_referral_slug: z.string().trim().max(120).optional().or(z.literal("")),
     // Monday overview slot the applicant picked on the form (ISO-8601 UTC).
     requested_overview_at: z.string().trim().max(40).optional().or(z.literal("")),
+    // Agency Owners & Builders track (from /agency/apply).
+    agency: z
+      .object({
+        track: z.enum(["launch_pad", "builder", "owner"]),
+        team_size: z.number().int().min(0).max(100000),
+        monthly_production: z.string().trim().max(60),
+        current_imo: z.string().trim().max(160).optional().or(z.literal("")),
+        npn: z.string().trim().max(20).optional().or(z.literal("")),
+        goals: z.string().trim().max(2000).optional().or(z.literal("")),
+      })
+      .optional(),
 
   })
   .refine(
@@ -59,8 +70,9 @@ export const submitApplication = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => applicationSchema.parse(data))
   .handler(async ({ data }) => {
     const supabase = serverClient();
+    const { agency, ...payload } = data;
     const { data: result, error } = await supabase.rpc("submit_application", {
-      payload: data as never,
+      payload: payload as never,
     });
     if (error) throw new Error(error.message);
     const res = result as {
@@ -69,6 +81,22 @@ export const submitApplication = createServerFn({ method: "POST" })
       success_page_type: "licensed" | "unlicensed";
       recruiter_id: string | null;
     };
+    const AGENCY_LABEL = { launch_pad: "Launch Pad", builder: "Builder", owner: "Owner" } as const;
+    if (agency) {
+      try {
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { error: aErr } = await supabaseAdmin.from("applicants").update({
+          applicant_type: "agency",
+          agency_track: agency.track,
+          team_size: agency.team_size,
+          monthly_production: agency.monthly_production,
+          current_imo: agency.current_imo || null,
+          agency_goals: agency.goals || null,
+          npn: agency.npn || null,
+        }).eq("id", res.id);
+        if (aErr) console.error("Saving agency fields failed", aErr.message);
+      } catch (e) { console.error("Saving agency fields failed", e); }
+    }
 
     // Persist the overview slot they picked on the form so the pipeline shows an
     // intended date even before Calendly confirms it. "none" means they couldn't
@@ -94,6 +122,7 @@ export const submitApplication = createServerFn({ method: "POST" })
         licensed: data.licensed,
         instagram: data.instagram_handle || null,
         notes: [
+          agency ? `AGENCY STRATEGY CALL — ${AGENCY_LABEL[agency.track]} · team ${agency.team_size} · ${agency.monthly_production}` : null,
           data.referred_by_name ? `Referred by ${data.referred_by_name}` : null,
           data.licensed ? "Licensed" : "Not licensed",
           data.state ? `State: ${data.state}` : null,

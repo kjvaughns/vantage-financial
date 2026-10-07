@@ -67,6 +67,12 @@ export function PublicNav() {
             FAQ
           </a>
           <Link
+            to="/agency"
+            className="hidden text-[13.5px] font-semibold text-vantage-gold transition hover:text-vantage-ivory sm:inline"
+          >
+            Agency Owners
+          </Link>
+          <Link
             to="/login"
             className="text-[13.5px] font-semibold text-vantage-dim transition hover:text-vantage-ivory"
           >

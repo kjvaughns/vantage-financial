@@ -300,6 +300,17 @@ export function ApplicantRecord({
 
         {tab === "overview" && (
         <div className="space-y-4">
+        {(a as any).applicant_type === "agency" && (
+          <Panel title="Agency application">
+            <div className="grid gap-3 text-[13.5px] sm:grid-cols-2">
+              <div><div className="p-label mb-1">Track</div>{({ launch_pad: "Launch Pad", builder: "Builder", owner: "Owner" } as Record<string, string>)[(a as any).agency_track] ?? "—"}</div>
+              <div><div className="p-label mb-1">Team size</div>{(a as any).team_size ?? "—"}</div>
+              <div><div className="p-label mb-1">Monthly production</div>{(a as any).monthly_production ?? "—"}</div>
+              <div><div className="p-label mb-1">Current agency / IMO</div>{(a as any).current_imo ?? "—"}</div>
+              <div className="sm:col-span-2"><div className="p-label mb-1">Goals</div>{(a as any).agency_goals ?? "—"}</div>
+            </div>
+          </Panel>
+        )}
         {/* Editable contact + licensing */}
         <Panel title="Contact & licensing">
           <div key={a.updated_at} className="grid gap-3 sm:grid-cols-2">

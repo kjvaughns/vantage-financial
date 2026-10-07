@@ -1,0 +1,208 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
+import { PublicShell } from "@/components/vantage/brand";
+
+export const Route = createFileRoute("/agency/")({
+  head: () => ({
+    meta: [
+      { title: "Agency Owners & Builders — Vantage Financial" },
+      {
+        name: "description",
+        content:
+          "Launch, build, or bring your life insurance agency to Vantage. Carrier access, leads, technology, training, and back office support for agency owners.",
+      },
+      { property: "og:title", content: "Build or bring your agency to Vantage" },
+      {
+        property: "og:description",
+        content: "Launch Pad, Builder, and Owner tracks for producers ready to run their own agency.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+  component: AgencyPage,
+});
+
+export const TRACKS = [
+  {
+    id: "launch_pad",
+    name: "Launch Pad",
+    tag: "Start your first agency",
+    fit: "Producers ready to stop building someone else's brand and launch their own agency.",
+    gets: [
+      "Agency setup and contracting guidance",
+      "Carrier access through Vantage",
+      "Starter lead systems and dialing tech",
+      "Recruiting playbook and onboarding templates",
+    ],
+  },
+  {
+    id: "builder",
+    name: "Builder",
+    tag: "Grow a real team",
+    fit: "Producers already recruiting who want systems to scale a downline.",
+    gets: [
+      "Your own AgentLink contracting links for your team",
+      "Recruiting site, CRM, and applicant pipeline",
+      "Academy training your agents can plug into",
+      "Leadership coaching and promotion path",
+    ],
+  },
+  {
+    id: "owner",
+    name: "Owner",
+    tag: "Bring your agency",
+    fit: "Established agencies looking for better contracts, technology, and back office.",
+    gets: [
+      "Contract-level review for you and your team",
+      "Full portal: CRM, onboarding, academy, leaderboard",
+      "Lead programs and inbound opportunities",
+      "Transition support for your agents",
+    ],
+  },
+] as const;
+
+const benefits = [
+  { t: "Carrier access", d: "20+ carriers so your agents can place more business." },
+  { t: "Technology stack", d: "Power dialing, e-apps, CRM, and retention automation." },
+  { t: "Lead systems", d: "Internal lead pools, campaigns, and inbound opportunities." },
+  { t: "Training", d: "A customizable Academy and onboarding flow for your team." },
+  { t: "Recruiting tools", d: "Your own recruiting link, application, and pipeline." },
+  { t: "Back office", d: "Contracting links, tracking, and reporting in one portal." },
+];
+
+const faqs = [
+  { q: "Do I need to be licensed?", a: "Owner and Builder tracks are for licensed producers. Launch Pad candidates should be licensed or actively getting licensed." },
+  { q: "Do I keep my agency brand?", a: "We cover branding and structure on your strategy call, based on your goals and current setup." },
+  { q: "What are the contract levels?", a: "Contract levels depend on production, team size, and experience. We review them 1-on-1." },
+  { q: "Is income guaranteed?", a: "No. This is a performance-based opportunity. Results depend on your production and your team's." },
+];
+
+function AgencyPage() {
+  const [team, setTeam] = useState(5);
+  const [premium, setPremium] = useState(5000);
+  const [override, setOverride] = useState(20);
+  const [openFaq, setOpenFaq] = useState(0);
+  const est = Math.round(team * premium * (override / 100));
+
+  return (
+    <PublicShell>
+      <div className="mx-auto max-w-[920px] px-6 pt-[60px] pb-10 text-center md:px-8">
+        <div className="vantage-eyebrow-pill mx-auto mb-5 w-fit">Agency Owners & Builders</div>
+        <h1 className="font-display text-[clamp(44px,7vw,90px)] leading-[0.92] text-vantage-ivory">
+          Build or bring your <span className="vantage-gold-text">agency</span> to Vantage
+        </h1>
+        <p className="mx-auto mt-6 max-w-[600px] text-[17px] leading-relaxed text-vantage-muted">
+          Whether you're launching your first agency, growing a team, or moving an established
+          organization, pick the track that fits and book a 1-on-1 strategy call.
+        </p>
+        <Link to="/agency/apply" className="vantage-btn-primary mt-7 inline-flex px-7 py-4 text-[16px]">
+          Apply as an Agency Owner <span>→</span>
+        </Link>
+      </div>
+
+      <div className="mx-auto max-w-[1240px] px-6 pt-14 md:px-8">
+        <div className="mb-3 vantage-kicker">Choose your track</div>
+        <div className="grid gap-4 md:grid-cols-3">
+          {TRACKS.map((t) => (
+            <div key={t.id} className="vantage-card flex flex-col gap-4 p-7">
+              <div className="text-[12px] font-semibold uppercase tracking-[0.14em] text-vantage-faint">{t.tag}</div>
+              <div className="font-display text-[34px] leading-none text-vantage-gold">{t.name}</div>
+              <p className="text-[14.5px] leading-relaxed text-vantage-muted">{t.fit}</p>
+              <div className="flex flex-col gap-2">
+                {t.gets.map((g) => (
+                  <div key={g} className="flex items-start gap-3 text-[14.5px] text-vantage-fog">
+                    <span className="mt-0.5 text-vantage-gold">✦</span>
+                    {g}
+                  </div>
+                ))}
+              </div>
+              <Link
+                to="/agency/apply"
+                search={{ track: t.id }}
+                className="vantage-btn-primary mt-auto w-full px-5 py-3 text-[14px]"
+              >
+                Apply for {t.name} <span>→</span>
+              </Link>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-[1240px] px-6 pt-24 md:px-8">
+        <div className="mb-3 vantage-kicker">What you get</div>
+        <h2 className="mb-10 font-display text-[clamp(34px,5vw,58px)] leading-none">Everything your agency runs on</h2>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {benefits.map((b) => (
+            <div key={b.t} className="vantage-card p-6">
+              <div className="font-display text-[22px] text-vantage-ivory">{b.t}</div>
+              <div className="mt-2 text-[14px] leading-relaxed text-vantage-dim">{b.d}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-[1240px] px-6 pt-24 md:px-8">
+        <div className="vantage-card vantage-card-gold grid gap-8 p-8 md:grid-cols-2 md:p-12">
+          <div>
+            <div className="mb-3 vantage-kicker">Override estimator</div>
+            <h2 className="font-display text-[clamp(32px,4.5vw,52px)] leading-none">See what a team could look like</h2>
+            <div className="mt-6 flex flex-col gap-5">
+              <Slider label="Agents on your team" value={team} min={1} max={100} step={1} onChange={setTeam} fmt={(v) => `${v}`} />
+              <Slider label="Avg. monthly premium per agent" value={premium} min={1000} max={30000} step={500} onChange={setPremium} fmt={(v) => `$${v.toLocaleString()}`} />
+              <Slider label="Your override %" value={override} min={5} max={50} step={1} onChange={setOverride} fmt={(v) => `${v}%`} />
+            </div>
+          </div>
+          <div className="flex flex-col justify-center rounded-[16px] border border-vantage-gold/30 bg-black/30 p-8 text-center">
+            <div className="vantage-kicker justify-center">Estimated monthly override</div>
+            <div className="mt-3 font-display text-[clamp(44px,6vw,72px)] leading-none text-vantage-gold">
+              ${est.toLocaleString()}
+            </div>
+            <p className="mt-4 text-[12.5px] leading-relaxed text-vantage-faint">
+              Estimate only, not a guarantee. Actual results depend on contract levels, carrier,
+              placement, persistency, and chargebacks.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-[900px] px-6 pt-24 md:px-8">
+        <div className="mb-3 vantage-kicker">FAQ</div>
+        <div className="flex flex-col gap-3">
+          {faqs.map((f, i) => (
+            <div key={f.q} className="overflow-hidden rounded-[14px] border border-white/[0.08] bg-white/[0.02]">
+              <button
+                onClick={() => setOpenFaq(openFaq === i ? -1 : i)}
+                className="flex w-full items-center justify-between gap-4 p-5 text-left text-vantage-ivory"
+              >
+                <span className="text-[16px] font-semibold">{f.q}</span>
+                <span className="text-[20px] text-vantage-gold">{openFaq === i ? "−" : "+"}</span>
+              </button>
+              {openFaq === i && <div className="px-5 pb-5 text-[15px] leading-relaxed text-vantage-dim">{f.a}</div>}
+            </div>
+          ))}
+        </div>
+        <div className="mt-10 text-center">
+          <Link to="/agency/apply" className="vantage-btn-primary inline-flex px-8 py-5 text-[17px]">
+            Book your strategy call <span>→</span>
+          </Link>
+        </div>
+      </div>
+    </PublicShell>
+  );
+}
+
+function Slider({ label, value, min, max, step, onChange, fmt }: {
+  label: string; value: number; min: number; max: number; step: number;
+  onChange: (v: number) => void; fmt: (v: number) => string;
+}) {
+  return (
+    <label className="flex flex-col gap-2">
+      <span className="flex justify-between text-[14px] text-vantage-fog">
+        {label} <span className="font-semibold text-vantage-gold">{fmt(value)}</span>
+      </span>
+      <input type="range" min={min} max={max} step={step} value={value}
+        onChange={(e) => onChange(Number(e.target.value))} className="accent-vantage-gold" />
+    </label>
+  );
+}

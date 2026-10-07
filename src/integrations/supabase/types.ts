@@ -315,6 +315,9 @@ export type Database = {
       applicants: {
         Row: {
           address: string | null
+          agency_goals: string | null
+          agency_track: string | null
+          applicant_type: string
           archived_at: string | null
           assigned_agentlink_link_id: string | null
           assigned_manager_id: string | null
@@ -326,6 +329,7 @@ export type Database = {
           consent_contact: boolean
           course_confirmed_at: string | null
           created_at: string
+          current_imo: string | null
           current_stage_id: string | null
           date_of_birth: string | null
           discord_confirmed: boolean
@@ -348,6 +352,7 @@ export type Database = {
           licensed: boolean
           licensing_at: string | null
           licensing_status: string | null
+          monthly_production: string | null
           next_follow_up_at: string | null
           npn: string | null
           onboarding_completed_at: string | null
@@ -386,6 +391,7 @@ export type Database = {
           status: string
           success_page_type: string | null
           team_id: string | null
+          team_size: number | null
           training_started_at: string | null
           updated_at: string
           vsl_watched_at: string | null
@@ -395,6 +401,9 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          agency_goals?: string | null
+          agency_track?: string | null
+          applicant_type?: string
           archived_at?: string | null
           assigned_agentlink_link_id?: string | null
           assigned_manager_id?: string | null
@@ -406,6 +415,7 @@ export type Database = {
           consent_contact?: boolean
           course_confirmed_at?: string | null
           created_at?: string
+          current_imo?: string | null
           current_stage_id?: string | null
           date_of_birth?: string | null
           discord_confirmed?: boolean
@@ -428,6 +438,7 @@ export type Database = {
           licensed?: boolean
           licensing_at?: string | null
           licensing_status?: string | null
+          monthly_production?: string | null
           next_follow_up_at?: string | null
           npn?: string | null
           onboarding_completed_at?: string | null
@@ -466,6 +477,7 @@ export type Database = {
           status?: string
           success_page_type?: string | null
           team_id?: string | null
+          team_size?: number | null
           training_started_at?: string | null
           updated_at?: string
           vsl_watched_at?: string | null
@@ -475,6 +487,9 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          agency_goals?: string | null
+          agency_track?: string | null
+          applicant_type?: string
           archived_at?: string | null
           assigned_agentlink_link_id?: string | null
           assigned_manager_id?: string | null
@@ -486,6 +501,7 @@ export type Database = {
           consent_contact?: boolean
           course_confirmed_at?: string | null
           created_at?: string
+          current_imo?: string | null
           current_stage_id?: string | null
           date_of_birth?: string | null
           discord_confirmed?: boolean
@@ -508,6 +524,7 @@ export type Database = {
           licensed?: boolean
           licensing_at?: string | null
           licensing_status?: string | null
+          monthly_production?: string | null
           next_follow_up_at?: string | null
           npn?: string | null
           onboarding_completed_at?: string | null
@@ -546,6 +563,7 @@ export type Database = {
           status?: string
           success_page_type?: string | null
           team_id?: string | null
+          team_size?: number | null
           training_started_at?: string | null
           updated_at?: string
           vsl_watched_at?: string | null

@@ -381,6 +381,11 @@ function ListView({
                   <button onClick={() => onOpen(a.id)} className="min-w-0 text-left">
                     <div className="p-body font-semibold truncate">
                       {a.first_name} {a.last_name}
+                      {(a as any).applicant_type === "agency" && (
+                        <span className="ml-2 rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                          Agency{(a as any).agency_track ? ` – ${({ launch_pad: "Launch Pad", builder: "Builder", owner: "Owner" } as Record<string, string>)[(a as any).agency_track]}` : ""}
+                        </span>
+                      )}
                     </div>
                     <div className="p-muted truncate">
                       {a.city || "—"}
