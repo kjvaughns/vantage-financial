@@ -291,7 +291,7 @@ function ProductionSelect({ value, onChange }: { value: string; onChange: (v: st
     <div ref={ref} className="relative">
       <button type="button" onClick={() => setOpen((o) => !o)}
         aria-haspopup="listbox" aria-expanded={open}
-        className={cn(input, "flex items-center justify-between gap-2 text-left", value ? "text-vantage-ivory" : "text-vantage-dim/70", open && "border-vantage-gold/60")}>
+        className={cn("w-full rounded-[10px] border border-white/10 bg-white/[0.03] px-4 py-3 text-[15px] text-vantage-ivory outline-none focus:border-vantage-gold/60 flex items-center justify-between gap-2 text-left", value ? "text-vantage-ivory" : "text-vantage-dim/70", open && "border-vantage-gold/60")}>
         <span className={cn(!value && "text-vantage-dim/70")}>{value || "Current monthly team production *"}</span>
         <svg viewBox="0 0 16 16" className={cn("h-4 w-4 shrink-0 text-vantage-gold transition-transform duration-200", open && "rotate-180")} fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M3.5 6l4.5 4.5L12.5 6" strokeLinecap="round" strokeLinejoin="round" />
