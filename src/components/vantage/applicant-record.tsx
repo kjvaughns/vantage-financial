@@ -303,7 +303,7 @@ export function ApplicantRecord({
         {(a as any).applicant_type === "agency" && (
           <Panel title="Agency application">
             <div className="grid gap-3 text-[13.5px] sm:grid-cols-2">
-              <div><div className="p-label mb-1">Track</div>{({ launch_pad: "Launch Pad", builder: "Builder", owner: "Owner" } as Record<string, string>)[(a as any).agency_track] ?? "—"}</div>
+              <div><div className="p-label mb-1">Track</div>{({ launch_pad: "Legacy Launch Pad", builder: "Builder", owner: "Owner" } as Record<string, string>)[(a as any).agency_track] ?? "—"}</div>
               <div><div className="p-label mb-1">Team size</div>{(a as any).team_size ?? "—"}</div>
               <div><div className="p-label mb-1">Monthly production</div>{(a as any).monthly_production ?? "—"}</div>
               <div><div className="p-label mb-1">Current agency / IMO</div>{(a as any).current_imo ?? "—"}</div>

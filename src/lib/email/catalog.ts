@@ -78,6 +78,32 @@ function def(d: EmailTemplateDef): EmailTemplateDef {
 
 const applicantTemplates: EmailTemplateDef[] = [
   def({
+    name: "application-agency",
+    label: "Agency application received",
+    audience: "applicant",
+    category: "recruiting",
+    trigger: "A Builder or Owner applicant submits the agency application",
+    subject: "Your Vantage agency strategy call is next",
+    body: {
+      title: "Your agency application is in",
+      intro: GREET,
+      lines: [
+        "Thanks for applying for the {{agency_track}} path. Your next step is a focused agency strategy call with Vantage.",
+        "If your time was confirmed on the application, the call is already booked. Use the link below if you need to review or move it, and watch the opportunity video before we talk.",
+      ],
+      details: [
+        { label: "Agency path", value: "{{agency_track}}" },
+        { label: "Booked date", value: "{{interview_date}}" },
+        { label: "Booked time", value: "{{interview_time}}" },
+      ],
+      ctaLabel: "View or move your strategy call",
+      ctaUrl: "{{reschedule_link}}",
+      secondaryCtaLabel: "Watch before your call",
+      secondaryCtaUrl: "{{vsl_link}}",
+      note: "Powered by InsuraCloud. Questions before the call? Reply to this email.",
+    },
+  }),
+  def({
     name: "application-licensed",
     label: "Application received — licensed",
     audience: "applicant",

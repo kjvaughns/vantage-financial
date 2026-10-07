@@ -14,6 +14,7 @@ export type EmailVarKey =
   | "phone"
   | "recruiter_name"
   | "agency_name"
+  | "agency_track"
   | "interview_date"
   | "interview_time"
   | "interview_when"
@@ -88,6 +89,7 @@ export const EMAIL_VAR_KEYS: EmailVarKey[] = [
   "phone",
   "recruiter_name",
   "agency_name",
+  "agency_track",
   "interview_date",
   "interview_time",
   "interview_when",

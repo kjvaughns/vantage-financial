@@ -12,3 +12,4 @@
 - Keep the applicant email catalog in `src/lib/email/catalog.ts` as the live delivery source, because the older JSX email templates are not used by the current dispatcher.
 - Reschedule applicant interviews through a confirmation-token page and Cal.com booking UID, because creating a second booking would leave the original calendar event active.
 - Keep AgentLink contracting URLs upline-owned and assign exactly one active link per agent; never restore a universal contracting URL.
+- Keep agency applications on two active paths (`builder` and `owner`); retain `launch_pad` only as a readable legacy value so historical records remain intact.

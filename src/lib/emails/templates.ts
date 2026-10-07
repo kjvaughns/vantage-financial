@@ -70,6 +70,7 @@ const li = (t: string) =>
 export type TemplateKey =
   | "application_licensed"
   | "application_unlicensed"
+  | "application_agency"
   | "welcome_hired"
   | "followup_checkin"
   | "welcome_onboarding"
@@ -83,6 +84,7 @@ export type TemplateParams = {
   portalLink?: string;
   bookedAt?: string | null;
   confirmationToken?: string;
+  agencyTrack?: "builder" | "owner";
   links?: EmailLinks;
 };
 

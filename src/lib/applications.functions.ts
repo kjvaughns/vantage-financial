@@ -48,7 +48,7 @@ const applicationSchema = z
     // Agency Owners & Builders track (from /agency/apply).
     agency: z
       .object({
-        track: z.enum(["launch_pad", "builder", "owner"]),
+        track: z.enum(["builder", "owner"]),
         team_size: z.number().int().min(0).max(100000),
         monthly_production: z.string().trim().max(60),
         current_imo: z.string().trim().max(160).optional().or(z.literal("")),
@@ -81,7 +81,7 @@ export const submitApplication = createServerFn({ method: "POST" })
       success_page_type: "licensed" | "unlicensed";
       recruiter_id: string | null;
     };
-    const AGENCY_LABEL = { launch_pad: "Launch Pad", builder: "Builder", owner: "Owner" } as const;
+    const AGENCY_LABEL = { builder: "Builder", owner: "Owner" } as const;
     if (agency) {
       try {
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -226,8 +226,18 @@ export const submitApplication = createServerFn({ method: "POST" })
       to: data.email,
       toName: applicantName,
       applicantId: res.id,
-      template: res.success_page_type === "licensed" ? "application_licensed" : "application_unlicensed",
-      params: { firstName: data.first_name, licensed: res.success_page_type === "licensed", bookedAt: booked_at, confirmationToken: res.token },
+      template: agency
+        ? "application_agency"
+        : res.success_page_type === "licensed"
+          ? "application_licensed"
+          : "application_unlicensed",
+      params: {
+        firstName: data.first_name,
+        licensed: res.success_page_type === "licensed",
+        bookedAt: booked_at,
+        confirmationToken: res.token,
+        agencyTrack: agency?.track,
+      },
       copyTo: ctx.recruiter_email
         ? { email: ctx.recruiter_email, name: ctx.recruiter_name }
         : null,
@@ -255,6 +265,7 @@ export const submitApplication = createServerFn({ method: "POST" })
         scheduleLabel: scheduled,
         referredByName: recruiterName ?? undefined,
         applicantUrl: `${(process.env.VANTAGE_APP_URL || "https://vantage-financial.net").replace(/\/$/, "")}/portal/crm/${res.id}`,
+        agencyTrack: agency?.track,
       });
     }
 
@@ -270,6 +281,7 @@ export const submitApplication = createServerFn({ method: "POST" })
       requestedOverviewAt: ctx.requested_overview_at ?? null,
       wantsOneOnOne: !!ctx.wants_one_on_one,
       state: data.state,
+      agencyTrack: agency?.track ?? null,
     });
     // Record the outcome on the applicant timeline so a silent Discord failure
     // is visible in the CRM instead of vanishing into server logs.
