@@ -18,6 +18,7 @@ interface Props {
   scheduleLabel?: string
   referredByName?: string
   applicantUrl?: string
+  agencyTrack?: 'builder' | 'owner'
 }
 
 const rowLabel: React.CSSProperties = {
@@ -56,12 +57,13 @@ const Email = ({
   scheduleLabel,
   referredByName,
   applicantUrl,
+  agencyTrack,
 }: Props) => {
-  const title = `New applicant — ${applicantName || 'someone just applied'}`
+  const title = `${agencyTrack ? 'New agency lead' : 'New applicant'} — ${applicantName || 'someone just applied'}`
   return (
     <Shell
       preview={title}
-      title="You have a new applicant"
+      title={agencyTrack ? "You have a new agency lead" : "You have a new applicant"}
       footerNote="You're receiving this because you're the recruiting agent on this applicant."
     >
       <Text style={paragraph}>
@@ -70,6 +72,7 @@ const Email = ({
       </Text>
       <Hr style={{ borderColor: 'rgba(255,255,255,0.08)', margin: '18px 0' }} />
       <Row label="Name" value={applicantName} />
+      <Row label="Agency path" value={agencyTrack === 'owner' ? 'Owner' : agencyTrack === 'builder' ? 'Builder' : undefined} />
       <Row
         label="License status"
         value={
@@ -100,7 +103,7 @@ const Email = ({
 export const template = {
   component: Email,
   subject: (d: Record<string, any>) =>
-    `New applicant: ${d?.applicantName || 'someone just applied'}${
+    `${d?.agencyTrack ? 'New agency lead' : 'New applicant'}: ${d?.applicantName || 'someone just applied'}${
       d?.licensed ? ' (licensed)' : ''
     }`,
   displayName: 'New applicant — agent alert',
