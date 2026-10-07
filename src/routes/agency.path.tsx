@@ -1,3 +1,4 @@
+import { seoMeta, seoLinks } from "@/lib/seo";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
@@ -7,7 +8,9 @@ import { PATH_QUESTIONS, recommendAgencyPath, type PathResult } from "@/lib/agen
 
 export const Route = createFileRoute("/agency/path")({
   head: () => ({
+    links: seoLinks("/agency/path"),
     meta: [
+      ...seoMeta("/agency/path"),
       { title: "Find Your Agency Path — Vantage Financial" },
       { name: "description", content: "Answer six quick questions and get a personalized recommendation: individual agent, Builder, or Owner." },
       { property: "og:title", content: "Find Your Agency Path — Vantage Financial" },

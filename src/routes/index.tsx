@@ -1,3 +1,4 @@
+import { seoMeta, seoLinks } from "@/lib/seo";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
@@ -11,7 +12,11 @@ const searchSchema = z.object({ ref: z.string().optional() });
 export const Route = createFileRoute("/")({
   validateSearch: (search) => searchSchema.parse(search),
   head: () => ({
+    links: seoLinks("/"),
     meta: [
+      ...seoMeta("/"),
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Vantage Financial — Build a real career in life insurance" },
       {
         name: "description",
@@ -24,12 +29,6 @@ export const Route = createFileRoute("/")({
         content:
           "Uncapped commission, daily pay opportunities, unlimited leads, and a real path into leadership. Watch the opportunity video and book your 1-on-1 interview.",
       },
-
-      { property: "og:image", content: "https://vantagefinancial.lovable.app/vantage-og.png" },
-      { property: "og:image:width", content: "1200" },
-      { property: "og:image:height", content: "630" },
-      { property: "og:image:type", content: "image/png" },
-      { name: "twitter:image", content: "https://vantagefinancial.lovable.app/vantage-og.png" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
