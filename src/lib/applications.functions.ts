@@ -46,7 +46,7 @@ const applicationSchema = z
     // Monday overview slot the applicant picked on the form (ISO-8601 UTC).
     requested_overview_at: z.string().trim().max(40).optional().or(z.literal("")),
     // Agency Owners & Builders track (from /agency/apply).
-    agency: z.discriminatedUnion("track", [
+    agency: z.union([
       z.object({
         track: z.literal("builder"),
         team_size: z.number().int().min(1).max(100000),
