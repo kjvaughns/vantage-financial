@@ -2,15 +2,15 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 export const PATH_QUESTIONS = [
-  { id: "role", q: "Which best describes you today?", options: ["New to insurance / not licensed", "Licensed solo producer", "Team leader with downlines", "Agency owner with my own brand"] },
-  { id: "team", q: "How many agents currently write under you?", options: ["None", "1–3", "4–10", "11–25", "25+"] },
-  { id: "production", q: "Current monthly team production?", options: ["Under $10K", "$10K–$25K", "$25K–$50K", "$50K–$100K", "$100K+"] },
-  { id: "pain", q: "What's holding you back most right now?", options: ["Lead cost and consistency", "Training and retaining agents", "Tech, dialer, and systems", "Carrier contracts and backend", "Leadership and mentorship", "Learning to sell myself"] },
-  { id: "brand", q: "How do you feel about branding?", options: ["I want to grow under an established brand", "I want to keep or build my own agency brand", "Not sure yet"] },
-  { id: "goal", q: "Where do you want to be in 12 months?", options: ["Consistent personal income", "A bigger, productive team", "Running my own IMO with multiple agencies"] },
+  { id: "role", multi: false, q: "Which best describes you today?", options: ["New to insurance / not licensed", "Licensed solo producer", "Team leader with downlines", "Agency owner with my own brand"] },
+  { id: "team", multi: false, q: "How many agents currently write under you?", options: ["None", "1–3", "4–10", "11–25", "25+"] },
+  { id: "production", multi: false, q: "Current monthly team production?", options: ["Under $10K", "$10K–$25K", "$25K–$50K", "$50K–$100K", "$100K+"] },
+  { id: "pain", multi: true, q: "What's holding you back most right now? (select all that apply)", options: ["Lead cost and consistency", "Training and retaining agents", "Tech, dialer, and systems", "Carrier contracts and backend", "Leadership and mentorship", "Learning to sell myself"] },
+  { id: "brand", multi: false, q: "How do you feel about branding?", options: ["I want to grow under an established brand", "I want to keep or build my own agency brand", "Not sure yet"] },
+  { id: "goal", multi: false, q: "Where do you want to be in 12 months?", options: ["Consistent personal income", "A bigger, productive team", "Running my own IMO with multiple agencies"] },
 ] as const;
 
-const answersSchema = z.record(z.string(), z.string().max(200));
+const answersSchema = z.record(z.string(), z.string().max(500));
 export type PathResult = {
   recommendation: "agent" | "builder" | "owner";
   headline: string;
