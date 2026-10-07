@@ -227,10 +227,7 @@ function AgencyApply() {
             <div className="mt-6 space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <input className={input} type="number" min={1} placeholder="Current downlines *" value={f.team_size} onChange={(e) => set("team_size", e.target.value)} />
-                <select className={input} value={f.production} onChange={(e) => set("production", e.target.value)}>
-                  <option value="">Current monthly team production *</option>
-                  {PRODUCTION.map((p) => <option key={p} value={p}>{p}</option>)}
-                </select>
+                <ProductionSelect value={f.production} onChange={(v) => set("production", v)} />
               </div>
               <div>
                 <Label>What matters most to you? Select all that apply. *</Label>
