@@ -236,7 +236,7 @@ function AgencyApply() {
                 <Label>What matters most to you? Select all that apply. *</Label>
                 <div className="grid gap-2 sm:grid-cols-3">
                   {BUILDER_PRIORITIES.map((priority) => (
-                    <label key={priority} className={cn("flex items-center gap-2 rounded-[8px] border px-3 py-3 text-[14px]", f.builder_priorities.includes(priority) ? "border-vantage-gold bg-vantage-gold/10 text-vantage-gold" : "border-white/10 text-vantage-fog")}>
+                    <label key={priority} className={cn("flex cursor-pointer items-center gap-2 rounded-[8px] border px-3 py-3 text-[14px]", f.builder_priorities.includes(priority) ? "border-vantage-gold bg-vantage-gold/10 text-vantage-gold" : "border-white/10 text-vantage-fog")}>
                       <GoldCheck checked={f.builder_priorities.includes(priority)} onChange={() => togglePriority(priority)} />
                       {PRIORITY_LABELS[priority]}
                     </label>
@@ -265,7 +265,7 @@ function AgencyApply() {
           </Section>
         )}
 
-        <label className="mt-8 flex items-start gap-3 text-[13.5px] text-vantage-muted">
+        <label className="mt-8 flex cursor-pointer items-start gap-3 text-[13.5px] text-vantage-muted">
           <GoldCheck className="mt-0.5" checked={f.consent} onChange={() => set("consent", !f.consent)} />
           I agree to be contacted by Vantage Financial by phone, text, and email about this opportunity.
         </label>
