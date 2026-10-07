@@ -64,6 +64,13 @@
       "when": 1791390591591,
       "tag": "0008_agency_applicants",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791392003691,
+      "tag": "0009_agency_path_qualification_fields",
+      "breakpoints": true
     }
   ]
 }
