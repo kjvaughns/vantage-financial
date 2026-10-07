@@ -134,7 +134,7 @@ function PathFinder() {
                 Continue my {NAMES[result.recommendation]} application →
               </Link>
             )}
-            <button className="mt-4 w-full text-[13px] text-vantage-muted" onClick={() => { setResult(null); setStep(0); setAnswers({}); }}>Retake</button>
+            <button className="mt-4 w-full text-[13px] text-vantage-muted" onClick={() => { setResult(null); setStep(0); setAnswers({}); setMultiSel([]); }}>Retake</button>
           </div>
         )}
       </div>
