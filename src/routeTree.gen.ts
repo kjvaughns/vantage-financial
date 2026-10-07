@@ -22,6 +22,7 @@ import { Route as WatchRouteImport } from './routes/watch'
 import { Route as AuthenticatedPortalRouteRouteImport } from './routes/_authenticated/portal/route'
 import { Route as AgencyIndexRouteImport } from './routes/agency.index'
 import { Route as AgencyApplyRouteImport } from './routes/agency.apply'
+import { Route as AgencyPathRouteImport } from './routes/agency.path'
 import { Route as ApplicationCompleteIndexRouteImport } from './routes/application-complete/index'
 import { Route as CoursePurchasedTokenRouteImport } from './routes/course-purchased.$token'
 import { Route as JoinSlugRouteImport } from './routes/join.$slug'
@@ -132,6 +133,11 @@ const AgencyIndexRoute = AgencyIndexRouteImport.update({
 const AgencyApplyRoute = AgencyApplyRouteImport.update({
   id: '/apply',
   path: '/apply',
+  getParentRoute: () => AgencyRoute,
+} as any)
+const AgencyPathRoute = AgencyPathRouteImport.update({
+  id: '/path',
+  path: '/path',
   getParentRoute: () => AgencyRoute,
 } as any)
 const ApplicationCompleteIndexRoute =
@@ -417,6 +423,7 @@ export interface FileRoutesByFullPath {
   '/watch': typeof WatchRoute
   '/portal': typeof AuthenticatedPortalRouteRouteWithChildren
   '/agency/apply': typeof AgencyApplyRoute
+  '/agency/path': typeof AgencyPathRoute
   '/course-purchased/$token': typeof CoursePurchasedTokenRoute
   '/join/$slug': typeof JoinSlugRoute
   '/portal-invite/$token': typeof PortalInviteTokenRoute
@@ -474,6 +481,7 @@ export interface FileRoutesByTo {
   '/schedule': typeof ScheduleRoute
   '/watch': typeof WatchRoute
   '/agency/apply': typeof AgencyApplyRoute
+  '/agency/path': typeof AgencyPathRoute
   '/course-purchased/$token': typeof CoursePurchasedTokenRoute
   '/join/$slug': typeof JoinSlugRoute
   '/portal-invite/$token': typeof PortalInviteTokenRoute
@@ -531,6 +539,7 @@ export interface FileRoutesById {
   '/watch': typeof WatchRoute
   '/_authenticated/portal': typeof AuthenticatedPortalRouteRouteWithChildren
   '/agency/apply': typeof AgencyApplyRoute
+  '/agency/path': typeof AgencyPathRoute
   '/course-purchased/$token': typeof CoursePurchasedTokenRoute
   '/join/$slug': typeof JoinSlugRoute
   '/portal-invite/$token': typeof PortalInviteTokenRoute
@@ -593,6 +602,7 @@ export interface FileRouteTypes {
     | '/watch'
     | '/portal'
     | '/agency/apply'
+    | '/agency/path'
     | '/course-purchased/$token'
     | '/join/$slug'
     | '/portal-invite/$token'
@@ -650,6 +660,7 @@ export interface FileRouteTypes {
     | '/schedule'
     | '/watch'
     | '/agency/apply'
+    | '/agency/path'
     | '/course-purchased/$token'
     | '/join/$slug'
     | '/portal-invite/$token'
@@ -706,6 +717,7 @@ export interface FileRouteTypes {
     | '/watch'
     | '/_authenticated/portal'
     | '/agency/apply'
+    | '/agency/path'
     | '/course-purchased/$token'
     | '/join/$slug'
     | '/portal-invite/$token'
@@ -868,6 +880,13 @@ declare module '@tanstack/react-router' {
       path: '/apply'
       fullPath: '/agency/apply'
       preLoaderRoute: typeof AgencyApplyRouteImport
+      parentRoute: typeof AgencyRoute
+    }
+    '/agency/path': {
+      id: '/agency/path'
+      path: '/path'
+      fullPath: '/agency/path'
+      preLoaderRoute: typeof AgencyPathRouteImport
       parentRoute: typeof AgencyRoute
     }
     '/application-complete/': {
@@ -1379,11 +1398,13 @@ const AuthenticatedRouteRouteWithChildren =
 
 interface AgencyRouteChildren {
   AgencyApplyRoute: typeof AgencyApplyRoute
+  AgencyPathRoute: typeof AgencyPathRoute
   AgencyIndexRoute: typeof AgencyIndexRoute
 }
 
 const AgencyRouteChildren: AgencyRouteChildren = {
   AgencyApplyRoute: AgencyApplyRoute,
+  AgencyPathRoute: AgencyPathRoute,
   AgencyIndexRoute: AgencyIndexRoute,
 }
 
