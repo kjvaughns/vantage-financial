@@ -81,15 +81,37 @@ function PathFinder() {
             <div className="text-[13px] text-vantage-faint">Question {step + 1} of {PATH_QUESTIONS.length}</div>
             <h2 className="mt-2 font-display text-[32px] leading-none">{q.q}</h2>
             <div className="mt-6 grid gap-3">
-              {q.options.map((o) => (
-                <button key={o} type="button" onClick={() => pick(o)}
-                  className={cn("vantage-card p-4 text-left text-[15px] transition-all hover:border-vantage-gold/60",
-                    answers[q.id] === o && "border-vantage-gold bg-vantage-gold/10 text-vantage-gold")}>
-                  {o}
-                </button>
-              ))}
+              {q.options.map((o) => {
+                const selected = q.multi ? multiSel.includes(o) : answers[q.id] === o;
+                return (
+                  <button key={o} type="button"
+                    onClick={() => (q.multi ? toggleMulti(o) : pick(o))}
+                    className={cn("vantage-card p-4 text-left text-[15px] transition-all hover:border-vantage-gold/60",
+                      selected && "border-vantage-gold bg-vantage-gold/10 text-vantage-gold")}>
+                    <span className="flex items-center gap-3">
+                      {q.multi && (
+                        <span className={cn("flex h-5 w-5 shrink-0 items-center justify-center rounded-[5px] border transition-colors",
+                          selected ? "border-vantage-gold bg-vantage-gold" : "border-white/25 bg-transparent")}>
+                          {selected && (
+                            <svg viewBox="0 0 12 12" className="h-3 w-3 text-black" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M2 6.2 4.8 9 10 3.2" />
+                            </svg>
+                          )}
+                        </span>
+                      )}
+                      <span>{o}</span>
+                    </span>
+                  </button>
+                );
+              })}
             </div>
-            {step > 0 && <button className="mt-5 text-[13px] text-vantage-muted" onClick={() => setStep(step - 1)}>← Back</button>}
+            {q.multi ? (
+              <button type="button" disabled={multiSel.length === 0} onClick={commitMulti}
+                className={cn("vantage-btn-primary mt-6 w-full px-6 py-4", multiSel.length === 0 && "cursor-not-allowed opacity-40")}>
+                {multiSel.length === 0 ? "Select at least one to continue" : `Continue with ${multiSel.length} selected →`}
+              </button>
+            ) : null}
+            {step > 0 && <button className="mt-5 text-[13px] text-vantage-muted" onClick={goBack}>← Back</button>}
           </div>
         )}
 
