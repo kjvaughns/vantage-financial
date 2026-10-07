@@ -46,16 +46,30 @@ const applicationSchema = z
     // Monday overview slot the applicant picked on the form (ISO-8601 UTC).
     requested_overview_at: z.string().trim().max(40).optional().or(z.literal("")),
     // Agency Owners & Builders track (from /agency/apply).
-    agency: z
-      .object({
-        track: z.enum(["builder", "owner"]),
-        team_size: z.number().int().min(0).max(100000),
-        monthly_production: z.string().trim().max(60),
-        current_imo: z.string().trim().max(160).optional().or(z.literal("")),
-        npn: z.string().trim().max(20).optional().or(z.literal("")),
-        goals: z.string().trim().max(2000).optional().or(z.literal("")),
-      })
-      .optional(),
+    agency: z.union([
+      z.object({
+        track: z.literal("builder"),
+        team_size: z.number().int().min(1).max(100000),
+        monthly_production: z.string().trim().min(1).max(60),
+        agency_name: z.literal("").optional(),
+        builder_priorities: z.array(z.enum(["leads", "systems", "training", "leadership", "compensation", "other"])).min(1).max(6),
+        builder_priority_other: z.string().trim().max(300).optional().or(z.literal("")),
+        bottleneck: z.literal("").optional(),
+        help_needed: z.literal("").optional(),
+      }).refine((value) => !value.builder_priorities.includes("other") || !!value.builder_priority_other, {
+        message: "Describe what else you are looking for", path: ["builder_priority_other"],
+      }),
+      z.object({
+        track: z.literal("owner"),
+        team_size: z.number().int().min(1).max(100000),
+        monthly_production: z.literal("").optional(),
+        agency_name: z.string().trim().min(1).max(160),
+        builder_priorities: z.array(z.never()).max(0).optional(),
+        builder_priority_other: z.literal("").optional(),
+        bottleneck: z.string().trim().min(1).max(1000),
+        help_needed: z.string().trim().min(1).max(1000),
+      }),
+    ]).optional(),
 
   })
   .refine(
@@ -90,9 +104,11 @@ export const submitApplication = createServerFn({ method: "POST" })
           agency_track: agency.track,
           team_size: agency.team_size,
           monthly_production: agency.monthly_production,
-          current_imo: agency.current_imo || null,
-          agency_goals: agency.goals || null,
-          npn: agency.npn || null,
+          agency_name: agency.agency_name || null,
+          builder_priorities: agency.track === "builder" ? agency.builder_priorities : [],
+          builder_priority_other: agency.builder_priority_other || null,
+          agency_bottleneck: agency.bottleneck || null,
+          agency_help_needed: agency.help_needed || null,
         }).eq("id", res.id);
         if (aErr) console.error("Saving agency fields failed", aErr.message);
       } catch (e) { console.error("Saving agency fields failed", e); }
@@ -122,7 +138,8 @@ export const submitApplication = createServerFn({ method: "POST" })
         licensed: data.licensed,
         instagram: data.instagram_handle || null,
         notes: [
-          agency ? `AGENCY STRATEGY CALL — ${AGENCY_LABEL[agency.track]} · team ${agency.team_size} · ${agency.monthly_production}` : null,
+          agency?.track === "builder" ? `AGENCY STRATEGY CALL — Builder · ${agency.team_size} downlines · ${agency.monthly_production} · priorities: ${agency.builder_priorities.join(", ")}${agency.builder_priority_other ? ` (${agency.builder_priority_other})` : ""}` : null,
+          agency?.track === "owner" ? `AGENCY STRATEGY CALL — Owner · ${agency.agency_name} · ${agency.team_size} active writers · bottleneck: ${agency.bottleneck} · needs: ${agency.help_needed}` : null,
           data.referred_by_name ? `Referred by ${data.referred_by_name}` : null,
           data.licensed ? "Licensed" : "Not licensed",
           data.state ? `State: ${data.state}` : null,
@@ -266,6 +283,11 @@ export const submitApplication = createServerFn({ method: "POST" })
         referredByName: recruiterName ?? undefined,
         applicantUrl: `${(process.env.VANTAGE_APP_URL || "https://vantage-financial.net").replace(/\/$/, "")}/portal/crm/${res.id}`,
         agencyTrack: agency?.track,
+        agencySummary: agency?.track === "builder"
+          ? `${agency.team_size} downlines · ${agency.monthly_production} monthly · ${agency.builder_priorities.join(", ")}${agency.builder_priority_other ? ` (${agency.builder_priority_other})` : ""}`
+          : agency?.track === "owner"
+            ? `${agency.agency_name} · ${agency.team_size} active writers · Bottleneck: ${agency.bottleneck} · Needs: ${agency.help_needed}`
+            : undefined,
       });
     }
 
@@ -282,6 +304,11 @@ export const submitApplication = createServerFn({ method: "POST" })
       wantsOneOnOne: !!ctx.wants_one_on_one,
       state: data.state,
       agencyTrack: agency?.track ?? null,
+      agencySummary: agency?.track === "builder"
+        ? `${agency.team_size} downlines · ${agency.monthly_production} monthly · Priorities: ${agency.builder_priorities.join(", ")}${agency.builder_priority_other ? ` (${agency.builder_priority_other})` : ""}`
+        : agency?.track === "owner"
+          ? `${agency.agency_name} · ${agency.team_size} active writers · Bottleneck: ${agency.bottleneck} · Needs: ${agency.help_needed}`
+          : null,
     });
     // Record the outcome on the applicant timeline so a silent Discord failure
     // is visible in the CRM instead of vanishing into server logs.

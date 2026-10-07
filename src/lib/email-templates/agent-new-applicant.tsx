@@ -19,6 +19,7 @@ interface Props {
   referredByName?: string
   applicantUrl?: string
   agencyTrack?: 'builder' | 'owner'
+  agencySummary?: string
 }
 
 const rowLabel: React.CSSProperties = {
@@ -58,6 +59,7 @@ const Email = ({
   referredByName,
   applicantUrl,
   agencyTrack,
+  agencySummary,
 }: Props) => {
   const title = `${agencyTrack ? 'New agency lead' : 'New applicant'} — ${applicantName || 'someone just applied'}`
   return (
@@ -73,6 +75,7 @@ const Email = ({
       <Hr style={{ borderColor: 'rgba(255,255,255,0.08)', margin: '18px 0' }} />
       <Row label="Name" value={applicantName} />
       <Row label="Agency path" value={agencyTrack === 'owner' ? 'Owner' : agencyTrack === 'builder' ? 'Builder' : undefined} />
+      <Row label="Agency details" value={agencySummary} />
       <Row
         label="License status"
         value={

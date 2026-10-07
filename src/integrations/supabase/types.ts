@@ -315,13 +315,18 @@ export type Database = {
       applicants: {
         Row: {
           address: string | null
+          agency_bottleneck: string | null
           agency_goals: string | null
+          agency_help_needed: string | null
+          agency_name: string | null
           agency_track: string | null
           applicant_type: string
           archived_at: string | null
           assigned_agentlink_link_id: string | null
           assigned_manager_id: string | null
           assigned_recruiter_id: string | null
+          builder_priorities: string[]
+          builder_priority_other: string | null
           calendly_scheduled_at: string | null
           calendly_url_used: string | null
           city: string | null
@@ -401,13 +406,18 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          agency_bottleneck?: string | null
           agency_goals?: string | null
+          agency_help_needed?: string | null
+          agency_name?: string | null
           agency_track?: string | null
           applicant_type?: string
           archived_at?: string | null
           assigned_agentlink_link_id?: string | null
           assigned_manager_id?: string | null
           assigned_recruiter_id?: string | null
+          builder_priorities?: string[]
+          builder_priority_other?: string | null
           calendly_scheduled_at?: string | null
           calendly_url_used?: string | null
           city?: string | null
@@ -487,13 +497,18 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          agency_bottleneck?: string | null
           agency_goals?: string | null
+          agency_help_needed?: string | null
+          agency_name?: string | null
           agency_track?: string | null
           applicant_type?: string
           archived_at?: string | null
           assigned_agentlink_link_id?: string | null
           assigned_manager_id?: string | null
           assigned_recruiter_id?: string | null
+          builder_priorities?: string[]
+          builder_priority_other?: string | null
           calendly_scheduled_at?: string | null
           calendly_url_used?: string | null
           city?: string | null
