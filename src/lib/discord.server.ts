@@ -67,6 +67,7 @@ function buildPayload(a: RecruitAlert) {
           ...(a.agencyTrack
             ? [{ name: "Agency path", value: a.agencyTrack === "owner" ? "Owner" : "Builder", inline: true }]
             : []),
+          ...(a.agencySummary ? [{ name: "Agency details", value: a.agencySummary.slice(0, 1024), inline: false }] : []),
           { name: "Recruited by", value: a.recruiterName?.trim() || "Unassigned", inline: true },
           {
             name: "License",

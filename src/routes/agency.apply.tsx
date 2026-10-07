@@ -32,6 +32,11 @@ export const Route = createFileRoute("/agency/apply")({
 
 type Track = "builder" | "owner";
 const PRODUCTION = ["Under $10K", "$10K–$25K", "$25K–$50K", "$50K–$100K", "$100K+"];
+const BUILDER_PRIORITIES = ["leads", "systems", "training", "leadership", "compensation", "other"] as const;
+const PRIORITY_LABELS: Record<(typeof BUILDER_PRIORITIES)[number], string> = {
+  leads: "Leads", systems: "Systems", training: "Training", leadership: "Leadership",
+  compensation: "Compensation", other: "Something else",
+};
 
 function AgencyApply() {
   const { track: initialTrack } = Route.useSearch();
@@ -45,7 +50,8 @@ function AgencyApply() {
   const [f, setF] = useState({
     first_name: "", last_name: "", email: "", phone: "", state: "",
     us_citizen: null as boolean | null, licensed: null as boolean | null,
-    npn: "", current_imo: "", team_size: "", production: "", goals: "", slot: "", consent: false,
+    team_size: "", production: "", builder_priorities: [] as string[], builder_other: "",
+    agency_name: "", bottleneck: "", help_needed: "", slot: "", consent: false,
   });
   const [ref, setRef] = useState<ReturnType<typeof getReferral>>(null);
   const [errors, setErrors] = useState<string[]>([]);
@@ -63,8 +69,18 @@ function AgencyApply() {
     if (!f.state) e.push("your state");
     if (f.us_citizen === null) e.push("citizenship status");
     if (f.licensed === null) e.push("licensing status");
-    if (f.team_size === "" || Number(f.team_size) < 0) e.push("team size");
-    if (!f.production) e.push("monthly production");
+    if (track === "builder") {
+      if (f.team_size === "" || Number(f.team_size) < 1) e.push("at least one current downline");
+      if (!f.production) e.push("monthly team production");
+      if (f.builder_priorities.length === 0) e.push("at least one priority");
+      if (f.builder_priorities.includes("other") && !f.builder_other.trim()) e.push("what else you are looking for");
+    }
+    if (track === "owner") {
+      if (!f.agency_name.trim()) e.push("agency name");
+      if (f.team_size === "" || Number(f.team_size) < 1) e.push("at least one active writer");
+      if (!f.bottleneck.trim()) e.push("current bottleneck");
+      if (!f.help_needed.trim()) e.push("what you need help with");
+    }
     if (slots.length > 0 && !f.slot) e.push("a strategy call time");
     if (!f.consent) e.push("consent to be contacted");
     if (f.us_citizen === false) return setErrors(["this opportunity requires US citizenship or work authorization"]);
@@ -80,7 +96,9 @@ function AgencyApply() {
           first_name: f.first_name.trim(), last_name: f.last_name.trim(), email: f.email.trim(),
           phone: f.phone.trim(), state: f.state, licensed: f.licensed === true,
           has_downlines: Number(f.team_size) > 0,
-          why_text: `[Agency – ${label}] ${f.goals.trim() || "Interested in the agency track."}`.padEnd(10, "."),
+          why_text: track === "builder"
+            ? `[Agency – ${label}] Looking for: ${f.builder_priorities.map((p) => PRIORITY_LABELS[p as keyof typeof PRIORITY_LABELS] ?? p).join(", ")}${f.builder_other.trim() ? ` — ${f.builder_other.trim()}` : ""}`
+            : `[Agency – ${label}] ${f.help_needed.trim()}`,
           consent_contact: true,
           referred_by_profile_id: ref?.recruiter?.id ?? "",
           referred_by_name: ref?.recruiter ? "" : "Agency Owners page",
@@ -91,8 +109,14 @@ function AgencyApply() {
           invalid_referral_slug: "",
           requested_overview_at: f.slot,
           agency: {
-            track, team_size: Number(f.team_size), monthly_production: f.production,
-            current_imo: f.current_imo.trim(), npn: f.npn.trim(), goals: f.goals.trim(),
+            track,
+            team_size: Number(f.team_size),
+            monthly_production: track === "builder" ? f.production : "",
+            agency_name: track === "owner" ? f.agency_name.trim() : "",
+            builder_priorities: track === "builder" ? f.builder_priorities : [],
+            builder_priority_other: track === "builder" ? f.builder_other.trim() : "",
+            bottleneck: track === "owner" ? f.bottleneck.trim() : "",
+            help_needed: track === "owner" ? f.help_needed.trim() : "",
           },
         },
       });
@@ -110,6 +134,21 @@ function AgencyApply() {
   }
 
   const input = "w-full rounded-[10px] border border-white/10 bg-white/[0.03] px-4 py-3 text-[15px] text-vantage-ivory outline-none focus:border-vantage-gold/60";
+  const chooseTrack = (next: Track) => {
+    setTrack(next);
+    setF((prev) => ({
+      ...prev,
+      team_size: "", production: "", builder_priorities: [], builder_other: "",
+      agency_name: "", bottleneck: "", help_needed: "",
+    }));
+  };
+  const togglePriority = (priority: string) => setF((prev) => ({
+    ...prev,
+    builder_priorities: prev.builder_priorities.includes(priority)
+      ? prev.builder_priorities.filter((item) => item !== priority)
+      : [...prev.builder_priorities, priority],
+    builder_other: priority === "other" && prev.builder_priorities.includes("other") ? "" : prev.builder_other,
+  }));
   const Toggle = ({ v, onChange }: { v: boolean | null; onChange: (b: boolean) => void }) => (
     <div className="flex gap-2">
       {[true, false].map((b) => (
@@ -131,7 +170,7 @@ function AgencyApply() {
         <Section n="1" title="Pick your track">
           <div className="grid gap-3 sm:grid-cols-2">
             {TRACKS.map((t) => (
-              <button key={t.id} type="button" onClick={() => setTrack(t.id)}
+              <button key={t.id} type="button" onClick={() => chooseTrack(t.id)}
                 className={cn("vantage-card p-4 text-left", track === t.id && "border-vantage-gold bg-vantage-gold/10")}>
                 <div className="font-display text-[24px] text-vantage-gold">{t.name}</div>
                 <div className="text-[12.5px] text-vantage-dim">{t.tag}</div>
@@ -156,16 +195,39 @@ function AgencyApply() {
             <div><Label>Currently licensed? *</Label><Toggle v={f.licensed} onChange={(b) => set("licensed", b)} /></div>
           </div>
           {f.us_citizen === false && <p className="mt-2 text-[13px] text-destructive">This opportunity requires US citizenship or work authorization.</p>}
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <input className={input} placeholder="NPN (optional)" value={f.npn} onChange={(e) => set("npn", e.target.value)} />
-            <input className={input} placeholder="Current agency / IMO" value={f.current_imo} onChange={(e) => set("current_imo", e.target.value)} />
-            <input className={input} type="number" min={0} placeholder="Agents on your team *" value={f.team_size} onChange={(e) => set("team_size", e.target.value)} />
-            <select className={input} value={f.production} onChange={(e) => set("production", e.target.value)}>
-              <option value="">Monthly team production *</option>
-              {PRODUCTION.map((p) => <option key={p} value={p}>{p}</option>)}
-            </select>
-          </div>
-          <textarea className={cn(input, "mt-4 min-h-[110px]")} placeholder="What are your agency goals for the next 12 months?" value={f.goals} onChange={(e) => set("goals", e.target.value)} />
+          {track === "builder" && (
+            <div className="mt-6 space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <input className={input} type="number" min={1} placeholder="Current downlines *" value={f.team_size} onChange={(e) => set("team_size", e.target.value)} />
+                <select className={input} value={f.production} onChange={(e) => set("production", e.target.value)}>
+                  <option value="">Current monthly team production *</option>
+                  {PRODUCTION.map((p) => <option key={p} value={p}>{p}</option>)}
+                </select>
+              </div>
+              <div>
+                <Label>What matters most to you? Select all that apply. *</Label>
+                <div className="grid gap-2 sm:grid-cols-3">
+                  {BUILDER_PRIORITIES.map((priority) => (
+                    <label key={priority} className={cn("flex items-center gap-2 rounded-[8px] border px-3 py-3 text-[14px]", f.builder_priorities.includes(priority) ? "border-vantage-gold bg-vantage-gold/10 text-vantage-gold" : "border-white/10 text-vantage-fog")}>
+                      <input type="checkbox" checked={f.builder_priorities.includes(priority)} onChange={() => togglePriority(priority)} />
+                      {PRIORITY_LABELS[priority]}
+                    </label>
+                  ))}
+                </div>
+              </div>
+              {f.builder_priorities.includes("other") && <input className={input} maxLength={300} placeholder="What else are you looking for? *" value={f.builder_other} onChange={(e) => set("builder_other", e.target.value)} />}
+            </div>
+          )}
+          {track === "owner" && (
+            <div className="mt-6 space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <input className={input} maxLength={160} placeholder="Agency name *" value={f.agency_name} onChange={(e) => set("agency_name", e.target.value)} />
+                <input className={input} type="number" min={1} placeholder="Active writers *" value={f.team_size} onChange={(e) => set("team_size", e.target.value)} />
+              </div>
+              <textarea className={cn(input, "min-h-[100px]")} maxLength={1000} placeholder="What is your agency's biggest bottleneck right now? *" value={f.bottleneck} onChange={(e) => set("bottleneck", e.target.value)} />
+              <textarea className={cn(input, "min-h-[100px]")} maxLength={1000} placeholder="What do you need the most help with? *" value={f.help_needed} onChange={(e) => set("help_needed", e.target.value)} />
+            </div>
+          )}
         </Section>
 
         {slots.length > 0 && (

@@ -28,7 +28,7 @@ export const TRACKS = [
     id: "builder",
     name: "Builder",
     tag: "Build under Vantage",
-    fit: "For producers, teams, and early agencies that want better systems and leadership without needing separate branding yet.",
+    fit: "For leaders who already have downlines and want to grow that team under Vantage with stronger systems, leads, training, and leadership.",
     gets: [
       "Lead costs covered for you and your agents",
       "AI dialer for your entire team",
@@ -60,7 +60,7 @@ const benefits = [
 ];
 
 const faqs = [
-  { q: "Which path is right for me?", a: "Choose Builder if you want to grow your team under Vantage with our leads, training, culture, and leadership. Choose Owner if you already operate your own branded agency and want stronger infrastructure, contracts, and backend support." },
+  { q: "Which path is right for me?", a: "Choose Builder only if you already have downlines and want to grow that team under Vantage with our leads, training, culture, and leadership. Choose Owner if you already operate your own branded agency and want stronger infrastructure, contracts, and backend support." },
   { q: "Do I keep my agency brand?", a: "Yes on the Owner path. InsuraCloud gives established owners the infrastructure to operate and scale under their own agency brand." },
   { q: "What does Vantage cover for Builders?", a: "Vantage covers lead costs for you and your agents, provides an AI dialer, supplies FEX, Veteran, and Mortgage Protection leads, and trains your team inside our culture and systems." },
   { q: "What are the contract levels?", a: "Contract levels depend on production, team size, and experience. We review them 1-on-1." },

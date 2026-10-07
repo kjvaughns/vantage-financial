@@ -93,6 +93,7 @@ export type AgentApplicantAlert = {
   referredByName?: string;
   applicantUrl?: string;
   agencyTrack?: "builder" | "owner";
+  agencySummary?: string;
 };
 
 /**
@@ -120,6 +121,7 @@ export async function sendAgentNewApplicant(
     referredByName: alert.referredByName,
     applicantUrl: alert.applicantUrl,
     agencyTrack: alert.agencyTrack,
+    agencySummary: alert.agencySummary,
   };
 
   let status: "sent" | "failed" | "skipped" = "sent";

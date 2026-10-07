@@ -15,6 +15,7 @@ export type RecruitAlert = {
   wantsOneOnOne?: boolean;
   state?: string | null;
   agencyTrack?: "builder" | "owner" | null;
+  agencySummary?: string | null;
 };
 
 /** Monday-overview slot rendered in Central time, the way the team reads it. */

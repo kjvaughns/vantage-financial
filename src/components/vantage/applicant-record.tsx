@@ -304,10 +304,21 @@ export function ApplicantRecord({
           <Panel title="Agency application">
             <div className="grid gap-3 text-[13.5px] sm:grid-cols-2">
               <div><div className="p-label mb-1">Track</div>{({ launch_pad: "Legacy Launch Pad", builder: "Builder", owner: "Owner" } as Record<string, string>)[(a as any).agency_track] ?? "—"}</div>
-              <div><div className="p-label mb-1">Team size</div>{(a as any).team_size ?? "—"}</div>
-              <div><div className="p-label mb-1">Monthly production</div>{(a as any).monthly_production ?? "—"}</div>
-              <div><div className="p-label mb-1">Current agency / IMO</div>{(a as any).current_imo ?? "—"}</div>
-              <div className="sm:col-span-2"><div className="p-label mb-1">Goals</div>{(a as any).agency_goals ?? "—"}</div>
+              {(a as any).agency_track === "builder" ? <>
+                <div><div className="p-label mb-1">Current downlines</div>{(a as any).team_size ?? "—"}</div>
+                <div><div className="p-label mb-1">Monthly team production</div>{(a as any).monthly_production ?? "—"}</div>
+                <div className="sm:col-span-2"><div className="p-label mb-1">Looking for</div>{[...((a as any).builder_priorities ?? []), (a as any).builder_priority_other].filter(Boolean).join(", ") || "—"}</div>
+              </> : (a as any).agency_track === "owner" ? <>
+                <div><div className="p-label mb-1">Agency name</div>{(a as any).agency_name ?? "—"}</div>
+                <div><div className="p-label mb-1">Active writers</div>{(a as any).team_size ?? "—"}</div>
+                <div className="sm:col-span-2"><div className="p-label mb-1">Current bottleneck</div>{(a as any).agency_bottleneck ?? "—"}</div>
+                <div className="sm:col-span-2"><div className="p-label mb-1">Needs help with</div>{(a as any).agency_help_needed ?? "—"}</div>
+              </> : <>
+                <div><div className="p-label mb-1">Team size</div>{(a as any).team_size ?? "—"}</div>
+                <div><div className="p-label mb-1">Monthly production</div>{(a as any).monthly_production ?? "—"}</div>
+                <div><div className="p-label mb-1">Current agency / IMO</div>{(a as any).current_imo ?? "—"}</div>
+                <div className="sm:col-span-2"><div className="p-label mb-1">Goals</div>{(a as any).agency_goals ?? "—"}</div>
+              </>}
             </div>
           </Panel>
         )}
