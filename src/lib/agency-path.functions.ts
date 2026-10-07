@@ -36,7 +36,10 @@ export const recommendAgencyPath = createServerFn({ method: "POST" })
     const key = process.env.LOVABLE_API_KEY;
     const fb = fallback(data.answers);
     if (!key) return fb;
-    const summary = PATH_QUESTIONS.map((q) => `${q.q} ${data.answers[q.id] ?? "(skipped)"}`).join("\n");
+    const teamAns = data.answers.team ?? "None";
+    const summary =
+      PATH_QUESTIONS.map((q) => `${q.q} ${data.answers[q.id] ?? "(skipped)"}`).join("\n") +
+      `\n\nFACT: This person ${teamAns === "None" ? "has NO downlines" : `HAS ${teamAns} downline agents writing under them`}.`;
     try {
       const res = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
         method: "POST",
@@ -85,7 +88,10 @@ export const recommendAgencyPath = createServerFn({ method: "POST" })
         }
       }
       const parsed = JSON.parse(out) as PathResult;
-      if (data.answers.team === "None") parsed.recommendation = "agent";
+      const hasTeam = !!data.answers.team && data.answers.team !== "None";
+      // Downline count is the hard rule — if the AI contradicts it, use the rule-based result.
+      if (!hasTeam && parsed.recommendation !== "agent") return fb;
+      if (hasTeam && parsed.recommendation === "agent") return fb;
       return parsed;
     } catch {
       return fb;
