@@ -198,7 +198,7 @@ function AgencyApply() {
             {TRACKS.map((t) => (
               <button key={t.id} type="button" onClick={() => chooseTrack(t.id)}
                 className={cn("vantage-card relative p-4 text-left transition-all duration-200 hover:border-vantage-gold/50",
-                  track === t.id && "scale-[1.02] border-vantage-gold bg-vantage-gold/15 shadow-[0_0_32px_rgba(201,168,76,0.3)] ring-1 ring-vantage-gold")}>
+                  track === t.id && "scale-[1.02] !border-vantage-gold !bg-vantage-gold/15 !shadow-[0_0_32px_rgba(201,168,76,0.35)] ring-2 ring-vantage-gold")}>
                 {track === t.id && <span className="absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-vantage-gold text-[13px] font-bold text-vantage-black">✓</span>}
                 <div className="font-display text-[24px] text-vantage-gold">{t.name}</div>
                 <div className="text-[12.5px] text-vantage-dim">{t.tag}</div>
