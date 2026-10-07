@@ -1,3 +1,4 @@
+import { seoMeta, seoLinks } from "@/lib/seo";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { formatPhoneInput, isValidUsPhone } from "@/lib/phone";
 import { useServerFn } from "@tanstack/react-start";
@@ -23,7 +24,11 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/apply")({
   head: () => ({
+    links: seoLinks("/apply"),
     meta: [
+      ...seoMeta("/apply"),
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Apply — Vantage Financial" },
       {
         name: "description",
@@ -34,7 +39,7 @@ export const Route = createFileRoute("/apply")({
         property: "og:description",
         content: "Three minutes. No résumé. A team lead follows up within one business day.",
       },
-      { name: "robots", content: "noindex" },
+      
     ],
   }),
   validateSearch: (search) => searchSchema.parse(search),

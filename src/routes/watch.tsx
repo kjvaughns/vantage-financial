@@ -1,3 +1,4 @@
+import { seoMeta, seoLinks } from "@/lib/seo";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PublicShell } from "@/components/vantage/brand";
 import { VslPlayer } from "@/components/vantage/vsl-player";
@@ -5,7 +6,9 @@ import { VslPlayer } from "@/components/vantage/vsl-player";
 export const Route = createFileRoute("/watch")({
   validateSearch: (s: Record<string, unknown>) => ({ ref: typeof s.ref === "string" ? s.ref : undefined }),
   head: () => ({
+    links: seoLinks("/watch"),
     meta: [
+      ...seoMeta("/watch"),
       { title: "Watch before your call — Vantage Financial" },
       { name: "description", content: "Watch the Vantage Financial opportunity video before your 1:1 interview." },
       { property: "og:title", content: "Watch this before our call — Vantage Financial" },

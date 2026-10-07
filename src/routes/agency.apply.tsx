@@ -1,3 +1,4 @@
+import { seoMeta, seoLinks } from "@/lib/seo";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
@@ -18,7 +19,9 @@ const searchSchema = z.object({ track: z.enum(["builder", "owner"]).optional(), 
 export const Route = createFileRoute("/agency/apply")({
   validateSearch: (s) => searchSchema.parse(s),
   head: () => ({
+    links: seoLinks("/agency/apply"),
     meta: [
+      ...seoMeta("/agency/apply"),
       { title: "Agency Owner Application — Vantage Financial" },
       { name: "description", content: "Apply to build under Vantage or power your established agency with InsuraCloud, then book your strategy call." },
       { property: "og:title", content: "Apply as an Agency Owner — Vantage Financial" },

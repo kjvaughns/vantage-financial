@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /portal
+Disallow: /api/
+
+Sitemap: https://vantage-financial.net/sitemap.xml

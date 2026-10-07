@@ -1,10 +1,13 @@
+import { seoMeta, seoLinks } from "@/lib/seo";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { PublicShell } from "@/components/vantage/brand";
 
 export const Route = createFileRoute("/agency/")({
   head: () => ({
+    links: seoLinks("/agency"),
     meta: [
+      ...seoMeta("/agency"),
       { title: "Build or Power Your Agency — Vantage Financial" },
       {
         name: "description",
