@@ -85,7 +85,7 @@ function AgencyPage() {
           Build a team under Vantage with leads, technology, training, and leadership—or keep your
           own agency brand and use InsuraCloud to power the entire operation.
         </p>
-        <Link to="/agency/apply" className="vantage-btn-primary mt-7 inline-flex px-7 py-4 text-[16px]">
+        <Link to="/agency/path" className="vantage-btn-primary mt-7 inline-flex px-7 py-4 text-[16px]">
           Find Your Agency Path <span>→</span>
         </Link>
       </div>

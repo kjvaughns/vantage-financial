@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -13,7 +13,7 @@ import { getReferral } from "@/lib/referral";
 import { formatPhoneInput, isValidUsPhone } from "@/lib/phone";
 import { TRACKS } from "./agency.index";
 
-const searchSchema = z.object({ track: z.enum(["builder", "owner"]).optional() });
+const searchSchema = z.object({ track: z.enum(["builder", "owner"]).optional(), prefill: z.boolean().optional() });
 
 export const Route = createFileRoute("/agency/apply")({
   validateSearch: (s) => searchSchema.parse(s),
@@ -39,7 +39,7 @@ const PRIORITY_LABELS: Record<(typeof BUILDER_PRIORITIES)[number], string> = {
 };
 
 function AgencyApply() {
-  const { track: initialTrack } = Route.useSearch();
+  const { track: initialTrack, prefill } = Route.useSearch();
   const navigate = useNavigate();
   const submit = useServerFn(submitApplication);
   const fetchSlots = useServerFn(getOverviewSlots);
@@ -56,7 +56,27 @@ function AgencyApply() {
   const [ref, setRef] = useState<ReturnType<typeof getReferral>>(null);
   const [errors, setErrors] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+  const [quiz, setQuiz] = useState<{ answers: Record<string, string>; result: { recommendation: string; headline: string; pain_points: string[] } } | null>(null);
   useEffect(() => setRef(getReferral()), []);
+  useEffect(() => {
+    if (!prefill) return;
+    try {
+      const saved = JSON.parse(sessionStorage.getItem("vantage_agency_path") ?? "null");
+      if (!saved) return;
+      setQuiz(saved);
+      const a = saved.answers as Record<string, string>;
+      const teamMap: Record<string, string> = { "1–3": "2", "4–10": "6", "11–25": "15", "25+": "30" };
+      const painMap: Record<string, string> = { "Lead cost and consistency": "leads", "Training and retaining agents": "training", "Tech, dialer, and systems": "systems", "Leadership and mentorship": "leadership" };
+      setF((p) => ({
+        ...p,
+        team_size: teamMap[a.team] ?? p.team_size,
+        production: PRODUCTION.includes(a.production) ? a.production : p.production,
+        builder_priorities: painMap[a.pain] ? [painMap[a.pain]] : p.builder_priorities,
+        bottleneck: a.pain ?? p.bottleneck,
+        licensed: a.role?.startsWith("New") ? false : true,
+      }));
+    } catch { /* ignore */ }
+  }, [prefill]);
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((p) => ({ ...p, [k]: v }));
 
   async function onSubmit() {
@@ -96,9 +116,10 @@ function AgencyApply() {
           first_name: f.first_name.trim(), last_name: f.last_name.trim(), email: f.email.trim(),
           phone: f.phone.trim(), state: f.state, licensed: f.licensed === true,
           has_downlines: Number(f.team_size) > 0,
-          why_text: track === "builder"
+          why_text: (track === "builder"
             ? `[Agency – ${label}] Looking for: ${f.builder_priorities.map((p) => PRIORITY_LABELS[p as keyof typeof PRIORITY_LABELS] ?? p).join(", ")}${f.builder_other.trim() ? ` — ${f.builder_other.trim()}` : ""}`
-            : `[Agency – ${label}] ${f.help_needed.trim()}`,
+            : `[Agency – ${label}] ${f.help_needed.trim()}`)
+            + (quiz ? `\n\n[Path Finder → ${quiz.result.recommendation}] ${quiz.result.headline}. Pain points: ${quiz.result.pain_points.join("; ")}. Answers: ${Object.values(quiz.answers).join(" | ")}` : ""),
           consent_contact: true,
           referred_by_profile_id: ref?.recruiter?.id ?? "",
           referred_by_name: ref?.recruiter ? "" : "Agency Owners page",
@@ -167,11 +188,18 @@ function AgencyApply() {
         <div className="vantage-kicker mb-3">Powered by InsuraCloud</div>
         <h1 className="font-display text-[clamp(40px,6vw,72px)] leading-[0.95]">Apply & book your strategy call</h1>
 
+        {quiz ? (
+          <p className="mt-4 rounded-[10px] border border-vantage-gold/30 bg-vantage-gold/10 px-4 py-3 text-[13.5px] text-vantage-fog">Pre-filled from your Path Finder answers. Review and adjust anything below.</p>
+        ) : (
+          <Link to="/agency/path" className="mt-4 inline-block text-[13.5px] text-vantage-gold underline-offset-4 hover:underline">Not sure which path? Take the 1-minute Path Finder →</Link>
+        )}
         <Section n="1" title="Pick your track">
           <div className="grid gap-3 sm:grid-cols-2">
             {TRACKS.map((t) => (
               <button key={t.id} type="button" onClick={() => chooseTrack(t.id)}
-                className={cn("vantage-card p-4 text-left", track === t.id && "border-vantage-gold bg-vantage-gold/10")}>
+                className={cn("vantage-card relative p-4 text-left transition-all duration-200 hover:border-vantage-gold/50",
+                  track === t.id && "scale-[1.02] border-vantage-gold bg-vantage-gold/15 shadow-[0_0_32px_rgba(201,168,76,0.3)] ring-1 ring-vantage-gold")}>
+                {track === t.id && <span className="absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-vantage-gold text-[13px] font-bold text-vantage-black">✓</span>}
                 <div className="font-display text-[24px] text-vantage-gold">{t.name}</div>
                 <div className="text-[12.5px] text-vantage-dim">{t.tag}</div>
               </button>
@@ -209,7 +237,7 @@ function AgencyApply() {
                 <div className="grid gap-2 sm:grid-cols-3">
                   {BUILDER_PRIORITIES.map((priority) => (
                     <label key={priority} className={cn("flex items-center gap-2 rounded-[8px] border px-3 py-3 text-[14px]", f.builder_priorities.includes(priority) ? "border-vantage-gold bg-vantage-gold/10 text-vantage-gold" : "border-white/10 text-vantage-fog")}>
-                      <input type="checkbox" checked={f.builder_priorities.includes(priority)} onChange={() => togglePriority(priority)} />
+                      <GoldCheck checked={f.builder_priorities.includes(priority)} onChange={() => togglePriority(priority)} />
                       {PRIORITY_LABELS[priority]}
                     </label>
                   ))}
@@ -238,7 +266,7 @@ function AgencyApply() {
         )}
 
         <label className="mt-8 flex items-start gap-3 text-[13.5px] text-vantage-muted">
-          <input type="checkbox" className="mt-1" checked={f.consent} onChange={(e) => set("consent", e.target.checked)} />
+          <GoldCheck className="mt-0.5" checked={f.consent} onChange={() => set("consent", !f.consent)} />
           I agree to be contacted by Vantage Financial by phone, text, and email about this opportunity.
         </label>
         {errors.length > 0 && <p className="mt-4 text-[13.5px] text-destructive">Please add: {errors.join(", ")}.</p>}
@@ -263,4 +291,16 @@ function Section({ n, title, children }: { n: string; title: string; children: R
 }
 function Label({ children }: { children: React.ReactNode }) {
   return <div className="mb-2 text-[13px] font-semibold text-vantage-fog">{children}</div>;
+}
+
+function GoldCheck({ checked, onChange, className }: { checked: boolean; onChange: () => void; className?: string }) {
+  return (
+    <span className={cn("relative inline-flex shrink-0", className)}>
+      <input type="checkbox" checked={checked} onChange={onChange} className="peer sr-only" />
+      <span aria-hidden className={cn("flex h-5 w-5 items-center justify-center rounded-[5px] border transition-all peer-focus-visible:ring-2 peer-focus-visible:ring-vantage-gold/60",
+        checked ? "border-vantage-gold bg-vantage-gold text-vantage-black shadow-[0_0_12px_rgba(201,168,76,0.45)]" : "border-white/25 bg-black/50 hover:border-vantage-gold/60")}>
+        {checked && <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 8.5l3 3 7-7" /></svg>}
+      </span>
+    </span>
+  );
 }
