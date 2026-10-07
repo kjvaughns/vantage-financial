@@ -27,6 +27,7 @@ export type QueueEmailArgs = {
 const TEMPLATE_NAMES: Record<TemplateKey, string> = {
   application_licensed: "application-licensed",
   application_unlicensed: "application-unlicensed",
+  application_agency: "application-agency",
   welcome_hired: "welcome-hired",
   followup_checkin: "followup-checkin",
   welcome_onboarding: "welcome-onboarding",
@@ -57,6 +58,7 @@ export async function queueEmail(
         first_name: params?.firstName || undefined,
         full_name: toName || undefined,
         email,
+        agency_track: params?.agencyTrack === "owner" ? "Owner" : params?.agencyTrack === "builder" ? "Builder" : undefined,
         portal_link: params?.portalLink || undefined,
         ...(params?.confirmationToken ? {
           reschedule_link: `https://vantage-financial.net/reschedule/${encodeURIComponent(params.confirmationToken)}`,
@@ -90,6 +92,7 @@ export type AgentApplicantAlert = {
   scheduleLabel?: string;
   referredByName?: string;
   applicantUrl?: string;
+  agencyTrack?: "builder" | "owner";
 };
 
 /**
@@ -116,6 +119,7 @@ export async function sendAgentNewApplicant(
     scheduleLabel: alert.scheduleLabel,
     referredByName: alert.referredByName,
     applicantUrl: alert.applicantUrl,
+    agencyTrack: alert.agencyTrack,
   };
 
   let status: "sent" | "failed" | "skipped" = "sent";

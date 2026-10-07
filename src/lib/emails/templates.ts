@@ -70,6 +70,7 @@ const li = (t: string) =>
 export type TemplateKey =
   | "application_licensed"
   | "application_unlicensed"
+  | "application_agency"
   | "welcome_hired"
   | "followup_checkin"
   | "welcome_onboarding"
@@ -83,6 +84,7 @@ export type TemplateParams = {
   portalLink?: string;
   bookedAt?: string | null;
   confirmationToken?: string;
+  agencyTrack?: "builder" | "owner";
   links?: EmailLinks;
 };
 
@@ -124,6 +126,16 @@ export function applicationUnlicensed(params: TemplateParams): RenderedEmail {
       `After the overview, if it's a fit, we'll send you a short form to officially join the team. Let's get to work.`,
     );
   return { subject: "You're in — here's your next step", html: layout(inner) };
+}
+
+// Agency applications use the unified live catalog; this legacy renderer keeps
+// its key exhaustive for older callers that still import this module directly.
+export function applicationAgency(params: TemplateParams): RenderedEmail {
+  const inner =
+    h1("Your agency application is in") +
+    p(`Hey ${greet(params.firstName)}, your next step is a focused agency strategy call with Vantage.`) +
+    p(`Review or move your call using the link in your confirmation email, and watch the opportunity video before we talk.`);
+  return { subject: "Your Vantage agency strategy call is next", html: layout(inner) };
 }
 
 // EMAIL 3 — Evaluation submitted / auto-hire fires. Branches on licensing.
@@ -217,6 +229,8 @@ export function render(key: TemplateKey, params: TemplateParams): RenderedEmail 
       return applicationLicensed(params);
     case "application_unlicensed":
       return applicationUnlicensed(params);
+    case "application_agency":
+      return applicationAgency(params);
     case "welcome_hired":
       return welcomeHired(params);
     case "followup_checkin":

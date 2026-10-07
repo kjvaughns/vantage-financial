@@ -64,7 +64,7 @@ const SCOPE_LABELS: Record<Scope, string> = {
   downline: "Downline",
   all: "All",
 };
-type View = "all" | "pre_licensing";
+type View = "all" | "agency" | "pre_licensing";
 
 function ApplicantsPage() {
   const navigate = useNavigate();
@@ -350,6 +350,7 @@ function ListView({
           onChange={setView}
           options={[
             { value: "all", label: "All applicants" },
+            { value: "agency", label: "Agency" },
             { value: "pre_licensing", label: "Pre-Licensing" },
           ]}
         />
@@ -383,7 +384,7 @@ function ListView({
                       {a.first_name} {a.last_name}
                       {(a as any).applicant_type === "agency" && (
                         <span className="ml-2 rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-semibold text-primary">
-                          Agency{(a as any).agency_track ? ` – ${({ launch_pad: "Launch Pad", builder: "Builder", owner: "Owner" } as Record<string, string>)[(a as any).agency_track]}` : ""}
+                          Agency{(a as any).agency_track ? ` – ${({ launch_pad: "Legacy Launch Pad", builder: "Builder", owner: "Owner" } as Record<string, string>)[(a as any).agency_track]}` : ""}
                         </span>
                       )}
                     </div>
@@ -508,6 +509,11 @@ function ListView({
                         <div className="p-body font-semibold truncate hover:opacity-80">
                           {a.first_name} {a.last_name}
                         </div>
+                        {(a as any).applicant_type === "agency" && (
+                          <Badge tone="gold" className="mt-1">
+                            Agency{(a as any).agency_track ? ` – ${({ launch_pad: "Legacy Launch Pad", builder: "Builder", owner: "Owner" } as Record<string, string>)[(a as any).agency_track]}` : ""}
+                          </Badge>
+                        )}
                         <div className="p-muted truncate">
                           {a.city || "—"}
                           {a.state ? `, ${a.state}` : ""}
@@ -702,6 +708,11 @@ function PipelineView({
                   <div className="p-body font-medium truncate">
                     {a.first_name} {a.last_name}
                   </div>
+                  {(a as any).applicant_type === "agency" && (
+                    <Badge tone="gold" className="mt-1">
+                      Agency{(a as any).agency_track ? ` – ${({ launch_pad: "Legacy Launch Pad", builder: "Builder", owner: "Owner" } as Record<string, string>)[(a as any).agency_track]}` : ""}
+                    </Badge>
+                  )}
                   <div className="p-muted truncate">
                     {a.city ?? ""}
                     {a.state ? `, ${a.state}` : ""}

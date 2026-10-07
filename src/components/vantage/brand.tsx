@@ -70,7 +70,7 @@ export function PublicNav() {
             to="/agency"
             className="hidden text-[13.5px] font-semibold text-vantage-gold transition hover:text-vantage-ivory sm:inline"
           >
-            Agency Owners
+            Build an Agency
           </Link>
           <Link
             to="/login"

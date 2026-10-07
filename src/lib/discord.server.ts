@@ -61,9 +61,12 @@ function buildPayload(a: RecruitAlert) {
     username: "Vantage Recruiting",
     embeds: [
       {
-        title: `New recruit — ${name}`,
+        title: a.agencyTrack ? `New agency lead — ${name}` : `New recruit — ${name}`,
         color: GOLD,
         fields: [
+          ...(a.agencyTrack
+            ? [{ name: "Agency path", value: a.agencyTrack === "owner" ? "Owner" : "Builder", inline: true }]
+            : []),
           { name: "Recruited by", value: a.recruiterName?.trim() || "Unassigned", inline: true },
           {
             name: "License",

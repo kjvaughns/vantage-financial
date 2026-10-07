@@ -529,7 +529,7 @@ const listInput = z.object({
   q: z.string().optional().default(""),
   stage: z.string().optional().default(""),
   scope: z.enum(["mine", "direct", "downline", "all"]).optional().default("mine"),
-  view: z.enum(["all", "pre_licensing"]).optional().default("all"),
+  view: z.enum(["all", "agency", "pre_licensing"]).optional().default("all"),
   limit: z.number().int().min(1).max(200).optional().default(100),
 });
 
@@ -541,7 +541,7 @@ export const listApplicants = createServerFn({ method: "POST" })
     let query = supabase
       .from("applicants")
       .select(
-        "id, first_name, last_name, email, phone, instagram_handle, state, city, priority, status, current_stage_id, assigned_recruiter_id, referred_by_profile_id, original_recruiter_id, referred_by_name_snapshot, licensing_status, evaluation_completed_at, calendly_scheduled_at, overview_scheduled_at, overview_completed_at, licensed, hired_at, discord_confirmed, last_contacted_at, last_follow_up_at, onboarding_steps, created_at, updated_at, stage_entered_at, assigned_agentlink_link_id",
+        "id, first_name, last_name, email, phone, instagram_handle, state, city, priority, status, current_stage_id, assigned_recruiter_id, referred_by_profile_id, original_recruiter_id, referred_by_name_snapshot, licensing_status, evaluation_completed_at, calendly_scheduled_at, overview_scheduled_at, overview_completed_at, licensed, hired_at, discord_confirmed, last_contacted_at, last_follow_up_at, onboarding_steps, created_at, updated_at, stage_entered_at, assigned_agentlink_link_id, applicant_type, agency_track",
       )
       .is("archived_at", null)
       .limit(data.limit);
@@ -554,6 +554,7 @@ export const listApplicants = createServerFn({ method: "POST" })
         .not("hired_at", "is", null)
         .order("last_follow_up_at", { ascending: true, nullsFirst: true });
     } else {
+      if (data.view === "agency") query = query.eq("applicant_type", "agency");
       query = query.order("created_at", { ascending: false });
     }
 

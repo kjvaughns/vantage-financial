@@ -13,14 +13,14 @@ import { getReferral } from "@/lib/referral";
 import { formatPhoneInput, isValidUsPhone } from "@/lib/phone";
 import { TRACKS } from "./agency.index";
 
-const searchSchema = z.object({ track: z.enum(["launch_pad", "builder", "owner"]).optional() });
+const searchSchema = z.object({ track: z.enum(["builder", "owner"]).optional() });
 
 export const Route = createFileRoute("/agency/apply")({
   validateSearch: (s) => searchSchema.parse(s),
   head: () => ({
     meta: [
       { title: "Agency Owner Application — Vantage Financial" },
-      { name: "description", content: "Apply for the Vantage Launch Pad, Builder, or Owner track and book your strategy call." },
+      { name: "description", content: "Apply to build under Vantage or power your established agency with InsuraCloud, then book your strategy call." },
       { property: "og:title", content: "Apply as an Agency Owner — Vantage Financial" },
       { property: "og:description", content: "Pick your track and book a 1-on-1 agency strategy call." },
       { property: "og:type", content: "website" },
@@ -30,7 +30,7 @@ export const Route = createFileRoute("/agency/apply")({
   component: AgencyApply,
 });
 
-type Track = "launch_pad" | "builder" | "owner";
+type Track = "builder" | "owner";
 const PRODUCTION = ["Under $10K", "$10K–$25K", "$25K–$50K", "$50K–$100K", "$100K+"];
 
 function AgencyApply() {
@@ -71,7 +71,9 @@ function AgencyApply() {
     if (e.length) return setErrors(e);
     setErrors([]);
     setBusy(true);
-    const label = TRACKS.find((t) => t.id === track)!.name;
+    const selectedTrack = TRACKS.find((t) => t.id === track);
+    if (!selectedTrack) return setErrors(["a valid agency path"]);
+    const label = selectedTrack.name;
     try {
       const res = await submit({
         data: {
@@ -89,7 +91,7 @@ function AgencyApply() {
           invalid_referral_slug: "",
           requested_overview_at: f.slot,
           agency: {
-            track: track!, team_size: Number(f.team_size), monthly_production: f.production,
+            track, team_size: Number(f.team_size), monthly_production: f.production,
             current_imo: f.current_imo.trim(), npn: f.npn.trim(), goals: f.goals.trim(),
           },
         },
@@ -123,11 +125,11 @@ function AgencyApply() {
   return (
     <PublicShell>
       <div className="mx-auto max-w-[760px] px-6 py-14 md:px-8">
-        <div className="vantage-kicker mb-3">Agency Owners & Builders</div>
+        <div className="vantage-kicker mb-3">Powered by InsuraCloud</div>
         <h1 className="font-display text-[clamp(40px,6vw,72px)] leading-[0.95]">Apply & book your strategy call</h1>
 
         <Section n="1" title="Pick your track">
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             {TRACKS.map((t) => (
               <button key={t.id} type="button" onClick={() => setTrack(t.id)}
                 className={cn("vantage-card p-4 text-left", track === t.id && "border-vantage-gold bg-vantage-gold/10")}>

@@ -264,7 +264,7 @@ function LandingPage() {
               to="/agency"
               className="mt-6 inline-flex items-center gap-2 rounded-full border border-vantage-gold/40 bg-vantage-gold/10 px-5 py-2.5 text-[13.5px] font-semibold text-vantage-gold transition hover:bg-vantage-gold/20"
             >
-              Agency owner or want to build your own agency? See the owner tracks →
+              Build under Vantage or power your own agency with InsuraCloud →
             </Link>
 
             {/* Credibility row */}
@@ -485,11 +485,11 @@ function LandingPage() {
       <div className="mx-auto max-w-[1240px] px-6 pt-24 md:px-8">
         <div className="vantage-card flex flex-col items-start justify-between gap-6 p-8 md:flex-row md:items-center md:p-10">
           <div>
-            <div className="mb-2 vantage-kicker">Agency Owners & Builders</div>
-            <div className="font-display text-[clamp(28px,4vw,44px)] leading-none">Already run a team, or ready to start one?</div>
-            <p className="mt-3 text-[15px] text-vantage-muted">Launch Pad, Builder, and Owner tracks for producers building their own agency.</p>
+            <div className="mb-2 vantage-kicker">Powered by InsuraCloud</div>
+            <div className="font-display text-[clamp(28px,4vw,44px)] leading-none">Build under Vantage or power your own agency</div>
+            <p className="mt-3 text-[15px] text-vantage-muted">Two paths for growing teams and established independent agency owners.</p>
           </div>
-          <Link to="/agency" className="vantage-btn-primary flex-none px-7 py-4 text-[15px]">Explore owner tracks →</Link>
+          <Link to="/agency" className="vantage-btn-primary flex-none px-7 py-4 text-[15px]">Explore agency paths →</Link>
         </div>
       </div>
 
