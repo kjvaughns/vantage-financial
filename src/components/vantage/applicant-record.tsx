@@ -14,6 +14,7 @@ import {
   setOverviewStatus,
   sendFollowUpEmail,
   setDiscordConfirmed,
+  setCourseConfirmed,
   listAssignableUsers,
   sendApplicantEmail,
   setApplicantExam,
@@ -445,6 +446,10 @@ export function ApplicantRecord({
             <OverviewToggle label="Completed" active={!!a.overview_completed_at} onToggle={(v) => onOverview("completed", v)} />
           </div>
         </Panel>
+
+        {!a.licensed && (a.hired_at || a.course_confirmed_at || a.recruiting_status === "hired") && (
+          <CourseEnrollmentCard applicantId={applicantId} confirmedAt={a.course_confirmed_at ?? null} onChange={invalidate} />
+        )}
 
         {!a.licensed && a.hired_at && (
           <DiscordCard applicantId={applicantId} confirmed={!!a.discord_confirmed} onChange={invalidate} />
@@ -1110,6 +1115,35 @@ function PromoteModal({ applicant, onClose, onDone }: { applicant: any; onClose:
         </div>
       )}
     </Modal>
+  );
+}
+
+function CourseEnrollmentCard({ applicantId, confirmedAt, onChange }: { applicantId: string; confirmedAt: string | null; onChange: () => void }) {
+  const setFlag = useServerFn(setCourseConfirmed);
+  const [busy, setBusy] = useState(false);
+  const confirmed = !!confirmedAt;
+  async function toggle() {
+    setBusy(true);
+    try {
+      await setFlag({ data: { id: applicantId, value: !confirmed } });
+      onChange();
+    } catch (e) {
+      notify.error("Couldn't update course status", (e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <Panel title="Course enrollment" description="Confirm once they've purchased their pre-licensing course.">
+      <div className="mb-3 flex items-center gap-2">
+        <Badge tone={confirmed ? "green" : "amber"}>{confirmed ? "Purchase confirmed" : "Pending purchase"}</Badge>
+        {confirmedAt && <span className="p-secondary">{new Date(confirmedAt).toLocaleDateString()}</span>}
+      </div>
+      <Button variant={confirmed ? "secondary" : "primary"} onClick={toggle} loading={busy}>
+        {confirmed && <Check size={14} aria-hidden />}
+        {confirmed ? "Undo course confirmation" : "Mark course purchase confirmed"}
+      </Button>
+    </Panel>
   );
 }
 
