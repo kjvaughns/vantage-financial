@@ -976,6 +976,48 @@ export const setDiscordConfirmed = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/** Manually confirm (or clear) that an applicant purchased their licensing course.
+ *  Confirming a hired, unlicensed applicant moves them into Pre Licensing. */
+export const setCourseConfirmed = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ id: z.string().uuid(), value: z.boolean() }).parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    const { data: cur, error: readErr } = await supabase
+      .from("applicants")
+      .select("id, licensed, current_stage_id, pipeline_stages:current_stage_id(slug)")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (readErr) throw new Error(readErr.message);
+    if (!cur) throw new Error("Applicant not found");
+    const now = new Date().toISOString();
+    const { error } = await supabase
+      .from("applicants")
+      .update({ course_confirmed_at: data.value ? now : null, updated_at: now } as never)
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await supabase.from("applicant_activities").insert({
+      applicant_id: data.id,
+      event_type: data.value ? "course_confirmed" : "course_cleared",
+      summary: data.value ? "Licensing course purchase confirmed" : "Course purchase confirmation cleared",
+      actor_id: userId,
+    } as never);
+    const slug = (cur as any).pipeline_stages?.slug as string | undefined;
+    if (data.value && !(cur as any).licensed && slug === "interview-completed") {
+      const engine = await import("@/lib/recruiting/stage-engine.server");
+      await engine.applyStage({
+        applicantId: data.id,
+        stage: "pre-licensing",
+        actorId: userId,
+        reason: "course_confirmed",
+        sendKey: `pre-licensing:${data.id}`,
+      });
+    }
+    return { ok: true };
+  });
+
 export const addApplicantNote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
