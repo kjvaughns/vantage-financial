@@ -267,6 +267,11 @@ function AgencyApply() {
               <textarea className={cn(input, "min-h-[100px]")} maxLength={1000} placeholder="What do you need the most help with? *" value={f.help_needed} onChange={(e) => set("help_needed", e.target.value)} />
             </div>
           )}
+          <div className="mt-5">
+            <div className="mb-2 text-[13px] font-semibold text-vantage-ivory">Who referred you? *</div>
+            <RecruiterCombobox value={recruiter} onChange={setRecruiter} invalid={errors.includes("who referred you")} />
+            <p className="mt-2 text-[12.5px] text-vantage-muted">Only pick an agent if they personally referred you. Otherwise choose that you found us directly.</p>
+          </div>
         </Section>
 
         {slots.length > 0 && (
