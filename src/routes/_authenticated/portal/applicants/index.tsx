@@ -72,14 +72,7 @@ function ApplicantsPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { tab, open, type, referrer } = Route.useSearch();
-  const setFilter = (patch: { type?: string; referrer?: string }) =>
-    navigate({
-      to: "/portal/applicants",
-      search: (prev: any) => ({ ...prev, ...Object.fromEntries(Object.entries(patch).map(([k, v]) => [k, v || undefined])) }),
-      replace: true,
-    });
-  const referrerFn = useServerFn(listReferrerOptions);
-  const referrersQ = useQuery({ queryKey: ["referrer-options"], queryFn: () => referrerFn(), staleTime: 300000 });
+
   const activeTab: "list" | "pipeline" = tab === "pipeline" ? "pipeline" : "list";
 
   // Applicant record opens in a side drawer (deep-linkable via ?open=<id>).
@@ -312,6 +305,16 @@ function ListView({
   onOpen,
   onAdd,
 }: any) {
+  const { type, referrer } = Route.useSearch();
+  const navigateList = useNavigate();
+  const setFilter = (patch: { type?: string; referrer?: string }) =>
+    navigateList({
+      to: "/portal/applicants",
+      search: (prev: any) => ({ ...prev, ...Object.fromEntries(Object.entries(patch).map(([k, v]) => [k, v || undefined])) }),
+      replace: true,
+    });
+  const referrerFn = useServerFn(listReferrerOptions);
+  const referrersQ = useQuery({ queryKey: ["referrer-options"], queryFn: () => referrerFn(), staleTime: 300000 });
   const emptyState =
     view === "pre_licensing" ? (
       <EmptyState
@@ -414,7 +417,7 @@ function ListView({
                     <div className="p-body font-semibold truncate">
                       {a.first_name} {a.last_name}
                       {(a as any).applicant_type === "agency" && (
-                        <span className="ml-2 rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                        <span className={`ml-2 rounded-full px-2 py-0.5 text-[11px] font-semibold ${(a as any).agency_track === "owner" ? "bg-[color:var(--p-info,#3b82f6)]/15 text-[color:var(--p-info,#60a5fa)]" : "bg-primary/15 text-primary"}`}>
                           Agency{(a as any).agency_track ? ` – ${({ launch_pad: "Legacy Launch Pad", builder: "Builder", owner: "Owner" } as Record<string, string>)[(a as any).agency_track]}` : ""}
                         </span>
                       )}
