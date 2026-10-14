@@ -212,7 +212,9 @@ export const submitApplication = createServerFn({ method: "POST" })
     // (configured in Admin → Settings) gets the alert so the lead isn't lost.
     let alertEmail = ctx.recruiter_email ?? null;
     let alertName = ctx.recruiter_name ?? null;
-    if (!alertEmail) {
+    let houseEmail: string | null = null;
+    let houseName: string | null = null;
+    if (!alertEmail || agency) {
       try {
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { data: setting } = await (supabaseAdmin as any)
@@ -228,8 +230,12 @@ export const submitApplication = createServerFn({ method: "POST" })
             .eq("id", houseId)
             .maybeSingle();
           if (house?.email) {
-            alertEmail = house.email;
-            alertName = house.full_name ?? null;
+            houseEmail = house.email;
+            houseName = house.full_name ?? null;
+            if (!alertEmail) {
+              alertEmail = house.email;
+              alertName = house.full_name ?? null;
+            }
           }
         }
       } catch (e) {
@@ -266,10 +272,26 @@ export const submitApplication = createServerFn({ method: "POST" })
       requestedOverviewAt: ctx.requested_overview_at ?? null,
       wantsOneOnOne: !!ctx.wants_one_on_one,
     });
-    if (alertEmail) {
+    const agencyDetails = agency?.track === "builder"
+      ? [
+          `Path: Builder`,
+          `Current downlines: ${agency.team_size}`,
+          `Monthly team production: ${agency.monthly_production}`,
+          `Looking for: ${agency.builder_priorities.join(", ")}${agency.builder_priority_other ? ` (Other: ${agency.builder_priority_other})` : ""}`,
+        ].join("\n")
+      : agency?.track === "owner"
+        ? [
+            `Path: Owner`,
+            `Agency name: ${agency.agency_name}`,
+            `Active writers: ${agency.team_size}`,
+            `Current bottleneck: ${agency.bottleneck}`,
+            `Needs help with: ${agency.help_needed}`,
+          ].join("\n")
+        : undefined;
+    const sendAlert = async (agentEmail: string, agentName: string | null) => {
       await sendAgentNewApplicant(supabase as never, {
-        agentEmail: alertEmail,
-        agentName: alertName,
+        agentEmail,
+        agentName,
         applicantId: res.id,
         applicantName,
         applicantEmail: data.email,
@@ -289,6 +311,10 @@ export const submitApplication = createServerFn({ method: "POST" })
             ? `${agency.agency_name} · ${agency.team_size} active writers · Bottleneck: ${agency.bottleneck} · Needs: ${agency.help_needed}`
             : undefined,
       });
+    };
+    if (alertEmail) await sendAlert(alertEmail, alertName);
+    if (agency && houseEmail && houseEmail.toLowerCase() !== (alertEmail ?? "").toLowerCase()) {
+      await sendAlert(houseEmail, houseName);
     }
 
     // Trigger: Discord recruiting bot. No-ops when no webhook is configured.
