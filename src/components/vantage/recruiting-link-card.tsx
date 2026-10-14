@@ -108,6 +108,17 @@ export function RecruitingLinkCard({ variant = "full" }: { variant?: "full" | "c
           </>
         )}
       </div>
+      {slug && link && (
+        <div className="flex flex-wrap items-center gap-2.5 px-3 pb-2.5">
+          <span className="p-label shrink-0 uppercase tracking-[0.06em]">Agency link</span>
+          <span className="min-w-[160px] flex-1 truncate font-mono text-[12.5px]" style={{ color: "var(--p-text-2)" }}>
+            {link.replace("/?ref=", "/agency?ref=")}
+          </span>
+          <Button size="sm" variant="ghost" onClick={() => copyText(link.replace("/?ref=", "/agency?ref="), () => {})}>
+            Copy
+          </Button>
+        </div>
+      )}
     </Panel>
   );
 }
