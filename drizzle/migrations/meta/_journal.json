@@ -71,6 +71,13 @@
       "when": 1791392003691,
       "tag": "0009_agency_path_qualification_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1792017153170,
+      "tag": "0010_reconcile_auto_onboarding_steps",
+      "breakpoints": true
     }
   ]
 }
