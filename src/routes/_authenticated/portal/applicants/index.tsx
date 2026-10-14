@@ -6,7 +6,7 @@ import { z } from "zod";
 import { ChevronRight, Plus } from "lucide-react";
 import { PortalShell } from "@/components/vantage/portal-shell";
 import { ApplicantRecord } from "@/components/vantage/applicant-record";
-import { listApplicants, updateApplicantStage } from "@/lib/portal.functions";
+import { listApplicants, listReferrerOptions, updateApplicantStage } from "@/lib/portal.functions";
 import { AssignContractingLinkModal } from "@/components/vantage/assign-contracting-link-modal";
 import { AddApplicantModal } from "@/components/vantage/add-applicant-modal";
 import { PossibleDuplicatesPanel } from "@/components/vantage/possible-duplicates";
@@ -47,6 +47,8 @@ import {
 const searchSchema = z.object({
   tab: z.enum(["list", "pipeline"]).optional(),
   open: z.string().uuid().optional(),
+  type: z.enum(["agent", "builder", "owner"]).optional(),
+  referrer: z.string().uuid().optional(),
 });
 
 export const Route = createFileRoute("/_authenticated/portal/applicants/")({
@@ -69,7 +71,15 @@ type View = "all" | "agency" | "pre_licensing";
 function ApplicantsPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const { tab, open } = Route.useSearch();
+  const { tab, open, type, referrer } = Route.useSearch();
+  const setFilter = (patch: { type?: string; referrer?: string }) =>
+    navigate({
+      to: "/portal/applicants",
+      search: (prev: any) => ({ ...prev, ...Object.fromEntries(Object.entries(patch).map(([k, v]) => [k, v || undefined])) }),
+      replace: true,
+    });
+  const referrerFn = useServerFn(listReferrerOptions);
+  const referrersQ = useQuery({ queryKey: ["referrer-options"], queryFn: () => referrerFn(), staleTime: 300000 });
   const activeTab: "list" | "pipeline" = tab === "pipeline" ? "pipeline" : "list";
 
   // Applicant record opens in a side drawer (deep-linkable via ?open=<id>).
@@ -79,7 +89,7 @@ function ApplicantsPage() {
   }, [open]);
   const closeDrawer = () => {
     setOpenId(null);
-    if (open) navigate({ to: "/portal/applicants", search: { tab } });
+    if (open) navigate({ to: "/portal/applicants", search: { tab, type, referrer } });
   };
 
   const [q, setQ] = useState("");
@@ -103,13 +113,13 @@ function ApplicantsPage() {
 
   // Shared query drives both tabs. The List tab additionally applies q/stage/view.
   const applicantsQ = useQuery({
-    queryKey: ["applicants", { q, scope, stage, view, tab: activeTab }],
+    queryKey: ["applicants", { q, scope, stage, view, type, referrer, tab: activeTab }],
     queryFn: () =>
       fn({
         data:
           activeTab === "pipeline"
-            ? { scope, limit: 200, q: "", stage: "", view: "all" }
-            : { q, scope, stage, view, limit: 200 },
+            ? { scope, limit: 200, q: "", stage: "", view: "all", type: type ?? "", referrer: referrer ?? "" }
+            : { q, scope, stage, view, type: type ?? "", referrer: referrer ?? "", limit: 200 },
       }),
   });
   const { data, isLoading } = applicantsQ;
@@ -159,7 +169,7 @@ function ApplicantsPage() {
   }
 
   function setTab(t: "list" | "pipeline") {
-    navigate({ to: "/portal/applicants", search: t === "pipeline" ? { tab: "pipeline" } : {} });
+    navigate({ to: "/portal/applicants", search: { ...(t === "pipeline" ? { tab: "pipeline" as const } : {}), type, referrer } });
   }
 
   const applicants = data?.applicants ?? [];
@@ -343,6 +353,28 @@ function ListView({
             ))}
           </Select>
         )}
+        <Select
+          className="w-auto max-w-[190px]"
+          aria-label="Applicant type"
+          value={type ?? ""}
+          onChange={(e) => setFilter({ type: e.target.value })}
+        >
+          <option value="">All types</option>
+          <option value="agent">Agent applicants</option>
+          <option value="builder">Agency – Builder</option>
+          <option value="owner">Agency – Owner</option>
+        </Select>
+        <Select
+          className="w-auto max-w-[200px]"
+          aria-label="Referred by"
+          value={referrer ?? ""}
+          onChange={(e) => setFilter({ referrer: e.target.value })}
+        >
+          <option value="">Referred by: anyone</option>
+          {(referrersQ.data ?? []).map((r) => (
+            <option key={r.id} value={r.id}>{r.name}</option>
+          ))}
+        </Select>
         <ToolbarSpacer />
         <SegmentedControl
           size="sm"
@@ -350,7 +382,6 @@ function ListView({
           onChange={setView}
           options={[
             { value: "all", label: "All applicants" },
-            { value: "agency", label: "Agency" },
             { value: "pre_licensing", label: "Pre-Licensing" },
           ]}
         />
