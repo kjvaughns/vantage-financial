@@ -305,11 +305,7 @@ export const submitApplication = createServerFn({ method: "POST" })
         referredByName: recruiterName ?? undefined,
         applicantUrl: `${(process.env.VANTAGE_APP_URL || "https://vantage-financial.net").replace(/\/$/, "")}/portal/crm/${res.id}`,
         agencyTrack: agency?.track,
-        agencySummary: agency?.track === "builder"
-          ? `${agency.team_size} downlines · ${agency.monthly_production} monthly · ${agency.builder_priorities.join(", ")}${agency.builder_priority_other ? ` (${agency.builder_priority_other})` : ""}`
-          : agency?.track === "owner"
-            ? `${agency.agency_name} · ${agency.team_size} active writers · Bottleneck: ${agency.bottleneck} · Needs: ${agency.help_needed}`
-            : undefined,
+        agencySummary: agencyDetails,
       });
     };
     if (alertEmail) await sendAlert(alertEmail, alertName);
