@@ -2452,6 +2452,10 @@ export type Database = {
         }[]
       }
       promote_applicant_to_agent: { Args: { payload: Json }; Returns: Json }
+      reconcile_auto_onboarding: {
+        Args: { _profile_id: string }
+        Returns: undefined
+      }
       resend_invitation: { Args: { _id: string }; Returns: Json }
       resolve_one_on_one_url: { Args: { _profile_id: string }; Returns: string }
       resolve_scheduling_context: { Args: { _token: string }; Returns: Json }
