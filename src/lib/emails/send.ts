@@ -130,7 +130,7 @@ export async function sendAgentNewApplicant(
     const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
     const result = await sendTemplateEmail("agent-new-applicant", agentEmail, {
       templateData,
-      idempotencyKey: `agent-new-applicant-${alert.applicantId ?? alert.applicantEmail ?? agentEmail}`,
+      idempotencyKey: `agent-new-applicant-${alert.applicantId ?? alert.applicantEmail}-${agentEmail}`,
     });
     if (!result.sent) {
       status = "skipped";

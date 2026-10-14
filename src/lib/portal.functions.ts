@@ -530,6 +530,8 @@ const listInput = z.object({
   stage: z.string().optional().default(""),
   scope: z.enum(["mine", "direct", "downline", "all"]).optional().default("mine"),
   view: z.enum(["all", "agency", "pre_licensing"]).optional().default("all"),
+  type: z.enum(["", "agent", "builder", "owner"]).optional().default(""),
+  referrer: z.string().uuid().optional().or(z.literal("")).default(""),
   limit: z.number().int().min(1).max(200).optional().default(100),
 });
 
@@ -571,6 +573,11 @@ export const listApplicants = createServerFn({ method: "POST" })
       query = query.in("assigned_recruiter_id", ids);
     }
     if (data.stage) query = query.eq("current_stage_id", data.stage);
+    if (data.type === "agent") query = query.neq("applicant_type", "agency");
+    if (data.type === "builder" || data.type === "owner")
+      query = query.eq("applicant_type", "agency").eq("agency_track", data.type);
+    if (data.referrer)
+      query = query.or(`referred_by_profile_id.eq.${data.referrer},and(referred_by_profile_id.is.null,assigned_recruiter_id.eq.${data.referrer})`);
     if (data.q.trim()) {
       const q = data.q.trim();
       query = query.or(
@@ -2702,4 +2709,20 @@ export const getOnboardingContext = createServerFn({ method: "POST" })
         ? { slug: courseRow.slug, title: courseRow.title, published: courseRow.status === "published" }
         : null,
     };
+  });
+
+
+/** Agents visible to the caller (RLS-scoped) for the Applicants "Referred by" filter. */
+export const listReferrerOptions = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data } = await context.supabase
+      .from("profiles")
+      .select("id, full_name, first_name, last_name, email")
+      .eq("is_active", true)
+      .order("full_name");
+    return ((data ?? []) as any[]).map((p) => ({
+      id: p.id as string,
+      name: (p.full_name || [p.first_name, p.last_name].filter(Boolean).join(" ") || p.email || "Agent") as string,
+    }));
   });

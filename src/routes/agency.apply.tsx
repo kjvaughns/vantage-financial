@@ -11,6 +11,7 @@ import { InterviewSlotPicker } from "@/components/vantage/interview-slot-picker"
 import { submitApplication } from "@/lib/applications.functions";
 import { getOverviewSlots } from "@/lib/calendly.functions";
 import { getReferral } from "@/lib/referral";
+import { RecruiterCombobox, type RecruiterSelection } from "@/components/vantage/recruiter-combobox";
 import { formatPhoneInput, isValidUsPhone } from "@/lib/phone";
 import { TRACKS } from "./agency.index";
 
@@ -60,7 +61,12 @@ function AgencyApply() {
   const [errors, setErrors] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [quiz, setQuiz] = useState<{ answers: Record<string, string>; result: { recommendation: string; headline: string; pain_points: string[] } } | null>(null);
-  useEffect(() => setRef(getReferral()), []);
+  const [recruiter, setRecruiter] = useState<RecruiterSelection | null>(null);
+  useEffect(() => {
+    const r = getReferral();
+    setRef(r);
+    if (r?.recruiter) setRecruiter(r.recruiter);
+  }, []);
   useEffect(() => {
     if (!prefill) return;
     try {
@@ -105,6 +111,7 @@ function AgencyApply() {
       if (!f.help_needed.trim()) e.push("what you need help with");
     }
     if (slots.length > 0 && !f.slot) e.push("a strategy call time");
+    if (!recruiter) e.push("who referred you");
     if (!f.consent) e.push("consent to be contacted");
     if (f.us_citizen === false) return setErrors(["this opportunity requires US citizenship or work authorization"]);
     if (e.length) return setErrors(e);
@@ -124,13 +131,17 @@ function AgencyApply() {
             : `[Agency – ${label}] ${f.help_needed.trim()}`)
             + (quiz ? `\n\n[Path Finder → ${quiz.result.recommendation}] ${quiz.result.headline}. Pain points: ${quiz.result.pain_points.join("; ")}. Answers: ${Object.values(quiz.answers).join(" | ")}` : ""),
           consent_contact: true,
-          referred_by_profile_id: ref?.recruiter?.id ?? "",
-          referred_by_name: ref?.recruiter ? "" : "Agency Owners page",
-          original_referral_profile_id: ref?.recruiter?.id ?? "",
+          referred_by_profile_id: recruiter && !recruiter.custom && !recruiter.self ? recruiter.id : "",
+          referred_by_name: recruiter?.custom ? (recruiter.full_name ?? "") : "",
+          original_referral_profile_id: recruiter?.self ? "" : (ref?.recruiter?.id ?? ""),
           referral_slug: ref?.slug ?? "",
-          referral_source: ref?.recruiter ? "referral_link" : "manual",
+          referral_source: recruiter?.self
+            ? "self"
+            : ref?.recruiter && recruiter && !recruiter.custom && ref.recruiter.id === recruiter.id
+              ? "referral_link"
+              : "manual",
           referral_landing_url: ref?.landing_url ?? "",
-          invalid_referral_slug: "",
+          invalid_referral_slug: ref?.invalid ? ref.slug : "",
           requested_overview_at: f.slot,
           agency: {
             track,
@@ -256,6 +267,11 @@ function AgencyApply() {
               <textarea className={cn(input, "min-h-[100px]")} maxLength={1000} placeholder="What do you need the most help with? *" value={f.help_needed} onChange={(e) => set("help_needed", e.target.value)} />
             </div>
           )}
+          <div className="mt-5">
+            <div className="mb-2 text-[13px] font-semibold text-vantage-ivory">Who referred you? *</div>
+            <RecruiterCombobox value={recruiter} onChange={setRecruiter} invalid={errors.includes("who referred you")} />
+            <p className="mt-2 text-[12.5px] text-vantage-muted">Only pick an agent if they personally referred you. Otherwise choose that you found us directly.</p>
+          </div>
         </Section>
 
         {slots.length > 0 && (

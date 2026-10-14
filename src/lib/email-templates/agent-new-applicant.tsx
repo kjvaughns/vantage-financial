@@ -35,6 +35,7 @@ const rowValue: React.CSSProperties = {
   fontSize: '15px',
   lineHeight: '1.5',
   color: '#F5F1E6',
+  whiteSpace: 'pre-line',
 }
 
 const Row = ({ label, value }: { label: string; value?: string }) =>
