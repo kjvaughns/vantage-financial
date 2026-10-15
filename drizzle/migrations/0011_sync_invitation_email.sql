@@ -14,7 +14,7 @@ BEGIN
   END IF;
 
   -- Retire pending invites for this applicant that still carry an old email.
-  UPDATE public.invitations SET status = 'revoked', updated_at = now()
+  UPDATE public.invitations SET status = 'cancelled', updated_at = now()
   WHERE applicant_id = a.id AND status = 'pending' AND lower(email) <> v_email;
 
   SELECT id, token INTO v_id, v_token FROM public.invitations
