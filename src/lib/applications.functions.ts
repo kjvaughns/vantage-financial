@@ -1,3 +1,4 @@
+import { cleanAgencyDetails, agencyDetailLines } from "@/lib/agency-questions";
 import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
@@ -56,18 +57,20 @@ const applicationSchema = z
         builder_priority_other: z.string().trim().max(300).optional().or(z.literal("")),
         bottleneck: z.literal("").optional(),
         help_needed: z.literal("").optional(),
+        details: z.record(z.string(), z.union([z.string().max(200), z.array(z.string().max(60)).max(10)])).default({}),
       }).refine((value) => !value.builder_priorities.includes("other") || !!value.builder_priority_other, {
         message: "Describe what else you are looking for", path: ["builder_priority_other"],
       }),
       z.object({
         track: z.literal("owner"),
         team_size: z.number().int().min(1).max(100000),
-        monthly_production: z.literal("").optional(),
+        monthly_production: z.string().trim().min(1).max(60),
         agency_name: z.string().trim().min(1).max(160),
         builder_priorities: z.array(z.never()).max(0).optional(),
         builder_priority_other: z.literal("").optional(),
         bottleneck: z.string().trim().min(1).max(1000),
         help_needed: z.string().trim().min(1).max(1000),
+        details: z.record(z.string(), z.union([z.string().max(200), z.array(z.string().max(60)).max(10)])).default({}),
       }),
     ]).optional(),
 
@@ -84,7 +87,9 @@ export const submitApplication = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => applicationSchema.parse(data))
   .handler(async ({ data }) => {
     const supabase = serverClient();
-    const { agency, ...payload } = data;
+    const { agency: rawAgency, ...payload } = data;
+    const agency = rawAgency ? { ...rawAgency, details: cleanAgencyDetails(rawAgency.track, rawAgency.details) } : undefined;
+    const extraLines = agency ? agencyDetailLines(agency.track, agency.details) : [];
     const { data: result, error } = await supabase.rpc("submit_application", {
       payload: payload as never,
     });
@@ -109,7 +114,9 @@ export const submitApplication = createServerFn({ method: "POST" })
           builder_priority_other: agency.builder_priority_other || null,
           agency_bottleneck: agency.bottleneck || null,
           agency_help_needed: agency.help_needed || null,
-        }).eq("id", res.id);
+          current_imo: typeof agency.details.current_imo === "string" ? agency.details.current_imo : null,
+          agency_details: agency.details,
+        } as never).eq("id", res.id);
         if (aErr) console.error("Saving agency fields failed", aErr.message);
       } catch (e) { console.error("Saving agency fields failed", e); }
     }
@@ -139,7 +146,8 @@ export const submitApplication = createServerFn({ method: "POST" })
         instagram: data.instagram_handle || null,
         notes: [
           agency?.track === "builder" ? `AGENCY STRATEGY CALL — Builder · ${agency.team_size} downlines · ${agency.monthly_production} · priorities: ${agency.builder_priorities.join(", ")}${agency.builder_priority_other ? ` (${agency.builder_priority_other})` : ""}` : null,
-          agency?.track === "owner" ? `AGENCY STRATEGY CALL — Owner · ${agency.agency_name} · ${agency.team_size} active writers · bottleneck: ${agency.bottleneck} · needs: ${agency.help_needed}` : null,
+          agency?.track === "owner" ? `AGENCY STRATEGY CALL — Owner · ${agency.agency_name} · ${agency.team_size} active writers · bottleneck: ${agency.bottleneck} · ${agency.monthly_production} monthly · needs: ${agency.help_needed}` : null,
+          extraLines.length ? extraLines.join(" · ") : null,
           data.referred_by_name ? `Referred by ${data.referred_by_name}` : null,
           data.licensed ? "Licensed" : "Not licensed",
           data.state ? `State: ${data.state}` : null,
@@ -278,14 +286,17 @@ export const submitApplication = createServerFn({ method: "POST" })
           `Current downlines: ${agency.team_size}`,
           `Monthly team production: ${agency.monthly_production}`,
           `Looking for: ${agency.builder_priorities.join(", ")}${agency.builder_priority_other ? ` (Other: ${agency.builder_priority_other})` : ""}`,
+          ...extraLines,
         ].join("\n")
       : agency?.track === "owner"
         ? [
             `Path: Owner`,
             `Agency name: ${agency.agency_name}`,
-            `Active writers: ${agency.team_size}`,
+            `Downlines / writers: ${agency.team_size}`,
+            `Monthly team production: ${agency.monthly_production}`,
             `Current bottleneck: ${agency.bottleneck}`,
             `Needs help with: ${agency.help_needed}`,
+            ...extraLines,
           ].join("\n")
         : undefined;
     const sendAlert = async (agentEmail: string, agentName: string | null) => {
@@ -327,9 +338,9 @@ export const submitApplication = createServerFn({ method: "POST" })
       state: data.state,
       agencyTrack: agency?.track ?? null,
       agencySummary: agency?.track === "builder"
-        ? `${agency.team_size} downlines · ${agency.monthly_production} monthly · Priorities: ${agency.builder_priorities.join(", ")}${agency.builder_priority_other ? ` (${agency.builder_priority_other})` : ""}`
+        ? `${agency.team_size} downlines · ${agency.monthly_production} monthly · Priorities: ${agency.builder_priorities.join(", ")}${agency.builder_priority_other ? ` (${agency.builder_priority_other})` : ""}${extraLines.length ? `\n${extraLines.join("\n")}` : ""}`
         : agency?.track === "owner"
-          ? `${agency.agency_name} · ${agency.team_size} active writers · Bottleneck: ${agency.bottleneck} · Needs: ${agency.help_needed}`
+          ? `${agency.agency_name} · ${agency.team_size} downlines · ${agency.monthly_production} monthly · Bottleneck: ${agency.bottleneck} · Needs: ${agency.help_needed}${extraLines.length ? `\n${extraLines.join("\n")}` : ""}`
           : null,
     });
     // Record the outcome on the applicant timeline so a silent Discord failure
