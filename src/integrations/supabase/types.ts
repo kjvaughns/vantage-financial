@@ -316,6 +316,7 @@ export type Database = {
         Row: {
           address: string | null
           agency_bottleneck: string | null
+          agency_details: Json
           agency_goals: string | null
           agency_help_needed: string | null
           agency_name: string | null
@@ -407,6 +408,7 @@ export type Database = {
         Insert: {
           address?: string | null
           agency_bottleneck?: string | null
+          agency_details?: Json
           agency_goals?: string | null
           agency_help_needed?: string | null
           agency_name?: string | null
@@ -498,6 +500,7 @@ export type Database = {
         Update: {
           address?: string | null
           agency_bottleneck?: string | null
+          agency_details?: Json
           agency_goals?: string | null
           agency_help_needed?: string | null
           agency_name?: string | null
