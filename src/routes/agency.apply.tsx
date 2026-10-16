@@ -14,6 +14,7 @@ import { getReferral } from "@/lib/referral";
 import { RecruiterCombobox, type RecruiterSelection } from "@/components/vantage/recruiter-combobox";
 import { formatPhoneInput, isValidUsPhone } from "@/lib/phone";
 import { TRACKS } from "./agency.index";
+import { AGENCY_QUESTIONS, missingAgencyDetails, type AgencyDetails } from "@/lib/agency-questions";
 
 const searchSchema = z.object({ track: z.enum(["builder", "owner"]).optional(), prefill: z.boolean().optional() });
 
@@ -58,6 +59,7 @@ function AgencyApply() {
     agency_name: "", bottleneck: "", help_needed: "", slot: "", consent: false,
   });
   const [ref, setRef] = useState<ReturnType<typeof getReferral>>(null);
+  const [details, setDetails] = useState<AgencyDetails>({});
   const [errors, setErrors] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [quiz, setQuiz] = useState<{ answers: Record<string, string>; result: { recommendation: string; headline: string; pain_points: string[] } } | null>(null);
@@ -106,10 +108,12 @@ function AgencyApply() {
     }
     if (track === "owner") {
       if (!f.agency_name.trim()) e.push("agency name");
-      if (f.team_size === "" || Number(f.team_size) < 1) e.push("at least one active writer");
+      if (f.team_size === "" || Number(f.team_size) < 1) e.push("at least one current downline");
+      if (!f.production) e.push("monthly team production");
       if (!f.bottleneck.trim()) e.push("current bottleneck");
       if (!f.help_needed.trim()) e.push("what you need help with");
     }
+    if (track) e.push(...missingAgencyDetails(track, details));
     if (slots.length > 0 && !f.slot) e.push("a strategy call time");
     if (!recruiter) e.push("who referred you");
     if (!f.consent) e.push("consent to be contacted");
@@ -146,7 +150,8 @@ function AgencyApply() {
           agency: {
             track,
             team_size: Number(f.team_size),
-            monthly_production: track === "builder" ? f.production : "",
+            monthly_production: f.production,
+            details,
             agency_name: track === "owner" ? f.agency_name.trim() : "",
             builder_priorities: track === "builder" ? f.builder_priorities : [],
             builder_priority_other: track === "builder" ? f.builder_other.trim() : "",
@@ -171,6 +176,7 @@ function AgencyApply() {
   const input = "w-full rounded-[10px] border border-white/10 bg-white/[0.03] px-4 py-3 text-[15px] text-vantage-ivory outline-none focus:border-vantage-gold/60";
   const chooseTrack = (next: Track) => {
     setTrack(next);
+    setDetails({});
     setF((prev) => ({
       ...prev,
       team_size: "", production: "", builder_priorities: [], builder_other: "",
@@ -261,10 +267,45 @@ function AgencyApply() {
             <div className="mt-6 space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <input className={input} maxLength={160} placeholder="Agency name *" value={f.agency_name} onChange={(e) => set("agency_name", e.target.value)} />
-                <input className={input} type="number" min={1} placeholder="Active writers *" value={f.team_size} onChange={(e) => set("team_size", e.target.value)} />
+                <input className={input} type="number" min={1} placeholder="Current downlines / writers *" value={f.team_size} onChange={(e) => set("team_size", e.target.value)} />
               </div>
+              <ProductionSelect value={f.production} onChange={(v) => set("production", v)} />
               <textarea className={cn(input, "min-h-[100px]")} maxLength={1000} placeholder="What is your agency's biggest bottleneck right now? *" value={f.bottleneck} onChange={(e) => set("bottleneck", e.target.value)} />
               <textarea className={cn(input, "min-h-[100px]")} maxLength={1000} placeholder="What do you need the most help with? *" value={f.help_needed} onChange={(e) => set("help_needed", e.target.value)} />
+            </div>
+          )}
+          {track && (
+            <div className="mt-6 space-y-5">
+              {AGENCY_QUESTIONS[track].map((q) => {
+                const v = details[q.key];
+                if (q.kind === "text") return (
+                  <div key={q.key}>
+                    <div className="mb-2 text-[13px] font-semibold text-vantage-ivory">{q.label} *</div>
+                    <input className={input} maxLength={200} value={(v as string) ?? ""} onChange={(e) => setDetails((d) => ({ ...d, [q.key]: e.target.value }))} />
+                  </div>
+                );
+                const opts = q.kind === "yesno" ? ["Yes", "No"] : q.options!;
+                const multi = q.kind === "multi";
+                const arr = Array.isArray(v) ? v : [];
+                return (
+                  <div key={q.key}>
+                    <div className="mb-2 text-[13px] font-semibold text-vantage-ivory">{q.label} *{multi && <span className="font-normal text-vantage-muted"> (select all that apply)</span>}</div>
+                    <div className="flex flex-wrap gap-2">
+                      {opts.map((o) => {
+                        const on = multi ? arr.includes(o) : v === o;
+                        return (
+                          <button key={o} type="button"
+                            onClick={() => setDetails((d) => ({ ...d, [q.key]: multi ? (on ? arr.filter((x) => x !== o) : [...arr, o]) : o }))}
+                            className={cn("rounded-[10px] border px-4 py-2.5 text-[13.5px] transition-colors",
+                              on ? "border-vantage-gold bg-vantage-gold/15 text-vantage-gold" : "border-white/10 text-vantage-fog hover:border-vantage-gold/50")}>
+                            {o}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
           <div className="mt-5">

@@ -92,6 +92,13 @@
       "when": 1792097856122,
       "tag": "0012_sync_invitation_email_fix",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1792189000887,
+      "tag": "0013_agency_extra_details",
+      "breakpoints": true
     }
   ]
 }

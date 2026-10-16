@@ -1,0 +1,2 @@
+ALTER TABLE public.applicants ADD COLUMN IF NOT EXISTS agency_details jsonb NOT NULL DEFAULT '{}'::jsonb;
+COMMENT ON COLUMN public.applicants.agency_details IS 'Path-specific agency qualifying answers (Builder/Owner).';
