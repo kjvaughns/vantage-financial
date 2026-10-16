@@ -746,13 +746,8 @@ export const completeOnboardingStep = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z
       .object({
-        step: z.enum([
-          "agent_cloud_onboarding",
-          "discord_role_update",
-          "read_agent_playbook",
-          "agent_expectations_schedule",
-          "complete_vantage_closer_course",
-        ]),
+        // Steps are admin-configurable; the database validates the key.
+        step: z.string().trim().regex(/^[a-z0-9_]{1,80}$/),
       })
       .parse(d),
   )
