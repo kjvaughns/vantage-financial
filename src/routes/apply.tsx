@@ -404,6 +404,17 @@ function ApplyPage() {
                 </span>
               </button>
             )}
+            {form.licensed === true && form.has_downlines && (
+              <div className="mt-3 rounded-[12px] border border-vantage-gold/40 bg-vantage-gold/10 p-4">
+                <div className="text-[14px] font-semibold text-vantage-gold">You may qualify for the Builder path</div>
+                <p className="mt-1 text-[13px] leading-relaxed text-vantage-fog">
+                  Leaders bringing a team can build under Vantage with covered leads, an AI dialer for your agents, and team training.
+                </p>
+                <Link to="/agency/apply" search={{ track: "builder" }} className="vantage-btn-primary mt-3 inline-block px-5 py-2.5 text-[14px]">
+                  Apply as a Builder →
+                </Link>
+              </div>
+            )}
           </Field>
 
           {!slotsQuery.isLoading && slots.length > 0 && (
