@@ -1,3 +1,4 @@
+import { agencyDetailLines } from "@/lib/agency-questions";
 import { Link } from "@tanstack/react-router";
 import { formatPhone, phoneHref } from "@/lib/phone";
 import { instagramLabel, instagramUrl } from "@/lib/instagram";
@@ -311,7 +312,8 @@ export function ApplicantRecord({
                 <div className="sm:col-span-2"><div className="p-label mb-1">Looking for</div>{[...((a as any).builder_priorities ?? []), (a as any).builder_priority_other].filter(Boolean).join(", ") || "—"}</div>
               </> : (a as any).agency_track === "owner" ? <>
                 <div><div className="p-label mb-1">Agency name</div>{(a as any).agency_name ?? "—"}</div>
-                <div><div className="p-label mb-1">Active writers</div>{(a as any).team_size ?? "—"}</div>
+                <div><div className="p-label mb-1">Downlines / writers</div>{(a as any).team_size ?? "—"}</div>
+                <div><div className="p-label mb-1">Monthly team production</div>{(a as any).monthly_production ?? "—"}</div>
                 <div className="sm:col-span-2"><div className="p-label mb-1">Current bottleneck</div>{(a as any).agency_bottleneck ?? "—"}</div>
                 <div className="sm:col-span-2"><div className="p-label mb-1">Needs help with</div>{(a as any).agency_help_needed ?? "—"}</div>
               </> : <>
@@ -320,6 +322,10 @@ export function ApplicantRecord({
                 <div><div className="p-label mb-1">Current agency / IMO</div>{(a as any).current_imo ?? "—"}</div>
                 <div className="sm:col-span-2"><div className="p-label mb-1">Goals</div>{(a as any).agency_goals ?? "—"}</div>
               </>}
+              {agencyDetailLines((a as any).agency_track, (a as any).agency_details).map((line) => {
+                const i = line.indexOf(": ");
+                return <div key={line} className="sm:col-span-2"><div className="p-label mb-1">{line.slice(0, i)}</div>{line.slice(i + 2)}</div>;
+              })}
             </div>
           </Panel>
         )}
