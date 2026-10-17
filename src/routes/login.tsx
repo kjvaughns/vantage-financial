@@ -2,10 +2,15 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { PublicShell } from "@/components/vantage/brand";
 import { supabase } from "@/integrations/supabase/client";
+import { oauthReturnPath } from "@/lib/oauth-return-path";
 
 export const Route = createFileRoute("/login")({
-  validateSearch: (search: Record<string, unknown>): { forgot?: boolean } =>
-    search.forgot === true || search.forgot === "true" ? { forgot: true } : {},
+  validateSearch: (search: Record<string, unknown>): { forgot?: boolean; next?: string } => ({
+    ...(search.forgot === true || search.forgot === "true" ? { forgot: true } : {}),
+    ...(typeof search.next === "string" && oauthReturnPath(search.next) !== "/"
+      ? { next: oauthReturnPath(search.next) }
+      : {}),
+  }),
 
   head: () => ({
     meta: [
@@ -21,7 +26,7 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const navigate = useNavigate();
-  const { forgot } = Route.useSearch();
+  const { forgot, next } = Route.useSearch();
   const [mode, setMode] = useState<"signin" | "forgot">(forgot ? "forgot" : "signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,6 +41,7 @@ function LoginPage() {
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
     setBusy(false);
     if (error) { setError(error.message); return; }
+    if (next) { window.location.assign(oauthReturnPath(next)); return; }
     navigate({ to: "/portal" });
   }
 
