@@ -13,3 +13,4 @@
 - Reschedule applicant interviews through a confirmation-token page and Cal.com booking UID, because creating a second booking would leave the original calendar event active.
 - Keep AgentLink contracting URLs upline-owned and assign exactly one active link per agent; never restore a universal contracting URL.
 - Keep agency applications on two active paths (`builder` and `owner`); retain `launch_pad` only as a readable legacy value so historical records remain intact.
+- Keep HyperAgent/external-assistant MCP tools in src/lib/mcp (OAuth, caller-scoped client) and verify RLS access before any privileged stage-engine call, so external agents never exceed the signed-in user's permissions.
