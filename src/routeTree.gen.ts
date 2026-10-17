@@ -16,9 +16,11 @@ import { Route as ApplicationCompleteRouteImport } from './routes/application-co
 import { Route as ApplyRouteImport } from './routes/apply'
 import { Route as EvaluationRouteImport } from './routes/evaluation'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ScheduleRouteImport } from './routes/schedule'
 import { Route as WatchRouteImport } from './routes/watch'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as AuthenticatedPortalRouteRouteImport } from './routes/_authenticated/portal/route'
 import { Route as AgencyIndexRouteImport } from './routes/agency.index'
 import { Route as AgencyApplyRouteImport } from './routes/agency.apply'
@@ -28,6 +30,7 @@ import { Route as CoursePurchasedTokenRouteImport } from './routes/course-purcha
 import { Route as JoinSlugRouteImport } from './routes/join.$slug'
 import { Route as PortalInviteTokenRouteImport } from './routes/portal-invite/$token'
 import { Route as RescheduleTokenRouteImport } from './routes/reschedule.$token'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as AuthenticatedPortalIndexRouteImport } from './routes/_authenticated/portal/index'
 import { Route as AuthenticatedPortalAcademyRouteRouteImport } from './routes/_authenticated/portal/academy/route'
 import { Route as AuthenticatedPortalAdminRouteRouteImport } from './routes/_authenticated/portal/admin/route'
@@ -104,6 +107,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
@@ -119,6 +127,12 @@ const WatchRoute = WatchRouteImport.update({
   path: '/watch',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedPortalRouteRoute =
   AuthenticatedPortalRouteRouteImport.update({
     id: '/portal',
@@ -164,6 +178,11 @@ const PortalInviteTokenRoute = PortalInviteTokenRouteImport.update({
 const RescheduleTokenRoute = RescheduleTokenRouteImport.update({
   id: '/reschedule/$token',
   path: '/reschedule/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedPortalIndexRoute =
@@ -418,10 +437,12 @@ export interface FileRoutesByFullPath {
   '/apply': typeof ApplyRoute
   '/evaluation': typeof EvaluationRoute
   '/login': typeof LoginRoute
+  '/mcp': typeof McpRoute
   '/reset-password': typeof ResetPasswordRoute
   '/schedule': typeof ScheduleRoute
   '/watch': typeof WatchRoute
   '/portal': typeof AuthenticatedPortalRouteRouteWithChildren
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/agency/apply': typeof AgencyApplyRoute
   '/agency/path': typeof AgencyPathRoute
   '/course-purchased/$token': typeof CoursePurchasedTokenRoute
@@ -435,6 +456,7 @@ export interface FileRoutesByFullPath {
   '/portal/applicants': typeof AuthenticatedPortalApplicantsRouteRouteWithChildren
   '/portal/crm': typeof AuthenticatedPortalCrmRouteRouteWithChildren
   '/portal/resources': typeof AuthenticatedPortalResourcesRouteRouteWithChildren
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/portal/calendar': typeof AuthenticatedPortalCalendarRoute
   '/portal/leaderboard': typeof AuthenticatedPortalLeaderboardRoute
   '/portal/onboarding': typeof AuthenticatedPortalOnboardingRoute
@@ -477,9 +499,11 @@ export interface FileRoutesByTo {
   '/apply': typeof ApplyRoute
   '/evaluation': typeof EvaluationRoute
   '/login': typeof LoginRoute
+  '/mcp': typeof McpRoute
   '/reset-password': typeof ResetPasswordRoute
   '/schedule': typeof ScheduleRoute
   '/watch': typeof WatchRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/agency/apply': typeof AgencyApplyRoute
   '/agency/path': typeof AgencyPathRoute
   '/course-purchased/$token': typeof CoursePurchasedTokenRoute
@@ -488,6 +512,7 @@ export interface FileRoutesByTo {
   '/reschedule/$token': typeof RescheduleTokenRoute
   '/agency': typeof AgencyIndexRoute
   '/application-complete': typeof ApplicationCompleteIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/portal/calendar': typeof AuthenticatedPortalCalendarRoute
   '/portal/leaderboard': typeof AuthenticatedPortalLeaderboardRoute
   '/portal/onboarding': typeof AuthenticatedPortalOnboardingRoute
@@ -534,10 +559,12 @@ export interface FileRoutesById {
   '/apply': typeof ApplyRoute
   '/evaluation': typeof EvaluationRoute
   '/login': typeof LoginRoute
+  '/mcp': typeof McpRoute
   '/reset-password': typeof ResetPasswordRoute
   '/schedule': typeof ScheduleRoute
   '/watch': typeof WatchRoute
   '/_authenticated/portal': typeof AuthenticatedPortalRouteRouteWithChildren
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/agency/apply': typeof AgencyApplyRoute
   '/agency/path': typeof AgencyPathRoute
   '/course-purchased/$token': typeof CoursePurchasedTokenRoute
@@ -551,6 +578,7 @@ export interface FileRoutesById {
   '/_authenticated/portal/applicants': typeof AuthenticatedPortalApplicantsRouteRouteWithChildren
   '/_authenticated/portal/crm': typeof AuthenticatedPortalCrmRouteRouteWithChildren
   '/_authenticated/portal/resources': typeof AuthenticatedPortalResourcesRouteRouteWithChildren
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/_authenticated/portal/calendar': typeof AuthenticatedPortalCalendarRoute
   '/_authenticated/portal/leaderboard': typeof AuthenticatedPortalLeaderboardRoute
   '/_authenticated/portal/onboarding': typeof AuthenticatedPortalOnboardingRoute
@@ -597,10 +625,12 @@ export interface FileRouteTypes {
     | '/apply'
     | '/evaluation'
     | '/login'
+    | '/mcp'
     | '/reset-password'
     | '/schedule'
     | '/watch'
     | '/portal'
+    | '/.well-known/oauth-protected-resource'
     | '/agency/apply'
     | '/agency/path'
     | '/course-purchased/$token'
@@ -614,6 +644,7 @@ export interface FileRouteTypes {
     | '/portal/applicants'
     | '/portal/crm'
     | '/portal/resources'
+    | '/.lovable/oauth/consent'
     | '/portal/calendar'
     | '/portal/leaderboard'
     | '/portal/onboarding'
@@ -656,9 +687,11 @@ export interface FileRouteTypes {
     | '/apply'
     | '/evaluation'
     | '/login'
+    | '/mcp'
     | '/reset-password'
     | '/schedule'
     | '/watch'
+    | '/.well-known/oauth-protected-resource'
     | '/agency/apply'
     | '/agency/path'
     | '/course-purchased/$token'
@@ -667,6 +700,7 @@ export interface FileRouteTypes {
     | '/reschedule/$token'
     | '/agency'
     | '/application-complete'
+    | '/.lovable/oauth/consent'
     | '/portal/calendar'
     | '/portal/leaderboard'
     | '/portal/onboarding'
@@ -712,10 +746,12 @@ export interface FileRouteTypes {
     | '/apply'
     | '/evaluation'
     | '/login'
+    | '/mcp'
     | '/reset-password'
     | '/schedule'
     | '/watch'
     | '/_authenticated/portal'
+    | '/.well-known/oauth-protected-resource'
     | '/agency/apply'
     | '/agency/path'
     | '/course-purchased/$token'
@@ -729,6 +765,7 @@ export interface FileRouteTypes {
     | '/_authenticated/portal/applicants'
     | '/_authenticated/portal/crm'
     | '/_authenticated/portal/resources'
+    | '/.lovable/oauth/consent'
     | '/_authenticated/portal/calendar'
     | '/_authenticated/portal/leaderboard'
     | '/_authenticated/portal/onboarding'
@@ -775,13 +812,16 @@ export interface RootRouteChildren {
   ApplyRoute: typeof ApplyRoute
   EvaluationRoute: typeof EvaluationRoute
   LoginRoute: typeof LoginRoute
+  McpRoute: typeof McpRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ScheduleRoute: typeof ScheduleRoute
   WatchRoute: typeof WatchRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   CoursePurchasedTokenRoute: typeof CoursePurchasedTokenRoute
   JoinSlugRoute: typeof JoinSlugRoute
   PortalInviteTokenRoute: typeof PortalInviteTokenRoute
   RescheduleTokenRoute: typeof RescheduleTokenRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   ApiPublicHooksEmailDispatchRoute: typeof ApiPublicHooksEmailDispatchRoute
   ApiPublicWebhooksCalendlyRoute: typeof ApiPublicWebhooksCalendlyRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -840,6 +880,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
@@ -859,6 +906,13 @@ declare module '@tanstack/react-router' {
       path: '/watch'
       fullPath: '/watch'
       preLoaderRoute: typeof WatchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/portal': {
@@ -922,6 +976,13 @@ declare module '@tanstack/react-router' {
       path: '/reschedule/$token'
       fullPath: '/reschedule/$token'
       preLoaderRoute: typeof RescheduleTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/portal/': {
@@ -1435,13 +1496,17 @@ const rootRouteChildren: RootRouteChildren = {
   ApplyRoute: ApplyRoute,
   EvaluationRoute: EvaluationRoute,
   LoginRoute: LoginRoute,
+  McpRoute: McpRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ScheduleRoute: ScheduleRoute,
   WatchRoute: WatchRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
   CoursePurchasedTokenRoute: CoursePurchasedTokenRoute,
   JoinSlugRoute: JoinSlugRoute,
   PortalInviteTokenRoute: PortalInviteTokenRoute,
   RescheduleTokenRoute: RescheduleTokenRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   ApiPublicHooksEmailDispatchRoute: ApiPublicHooksEmailDispatchRoute,
   ApiPublicWebhooksCalendlyRoute: ApiPublicWebhooksCalendlyRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
