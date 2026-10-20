@@ -154,6 +154,13 @@ export const getMyTraining = createServerFn({ method: "GET" })
     const a = await applicantForProfile(context.userId);
     const unlocked = isUnlocked(a);
     const t = await loadTrack(context.supabase, context.userId, false);
+    // Attach Call Coach analysis status so the training page can show and poll it.
+    const reviewIds = t.submissions.map((s) => s.review_id).filter((x): x is string => !!x);
+    if (reviewIds.length) {
+      const { data: reviews } = await context.supabase.from("call_reviews").select("id, status, overall").in("id", reviewIds);
+      const rmap = new Map((reviews ?? []).map((r: any) => [r.id, r]));
+      for (const s of t.submissions) s.review = s.review_id ? ((rmap.get(s.review_id) as any) ?? null) : null;
+    }
     return {
       unlocked,
       onboardingDone: !!a?.onboarding_completed_at,
