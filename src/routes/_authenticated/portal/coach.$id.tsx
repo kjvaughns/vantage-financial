@@ -2,12 +2,12 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, ChevronDown } from "lucide-react";
+import { ArrowLeft, ChevronDown, RefreshCw } from "lucide-react";
 import { PortalShell } from "@/components/vantage/portal-shell";
 import { Badge, Button, EmptyState, PageBody, PageHeader, Panel, TextSkeleton, Textarea, notify } from "@/components/portal/ui";
 import { PillarBars, ScoreRing, StatusBadge, useReviewPolling } from "@/components/vantage/coach";
 import { PILLARS, scoreTone } from "@/lib/coach-scoring";
-import { addReviewComment, getReview, retryReview } from "@/lib/coach.functions";
+import { addReviewComment, getReview, reanalyzeReview, retryReview } from "@/lib/coach.functions";
 
 export const Route = createFileRoute("/_authenticated/portal/coach/$id")({
   head: () => ({
@@ -38,6 +38,12 @@ function ReviewPage() {
   useReviewPolling(id, r?.status, () => qc.invalidateQueries({ queryKey: ["coach-review", id] }));
   const retryFn = useServerFn(retryReview);
   const retry = useMutation({ mutationFn: () => retryFn({ data: { id } }), onSuccess: () => qc.invalidateQueries({ queryKey: ["coach-review", id] }) });
+  const reanalyzeFn = useServerFn(reanalyzeReview);
+  const reanalyze = useMutation({
+    mutationFn: () => reanalyzeFn({ data: { id } }),
+    onSuccess: () => { notify.success("Re-analyzing", "Scoring again against the current Gold Standard."); qc.invalidateQueries({ queryKey: ["coach-review", id] }); },
+    onError: (e: Error) => notify.error("Couldn't re-analyze", e.message),
+  });
 
   return (
     <PortalShell>
@@ -47,7 +53,16 @@ function ReviewPage() {
           <Panel><EmptyState title="Couldn't load this call" description={(q.error as Error)?.message} /></Panel>
         ) : (
           <>
-            <PageHeader title={r.title} description={`${r.agent_name} · ${r.call_type === "live" ? "Live call" : "Roleplay"} · ${new Date(r.created_at).toLocaleString()}`} actions={<StatusBadge status={r.status} />} />
+            <PageHeader title={r.title} description={`${r.agent_name} · ${r.call_type === "live" ? "Live call" : "Roleplay"} · ${new Date(r.created_at).toLocaleString()}`} actions={
+              <div className="flex items-center gap-2">
+                {r.status === "done" && (
+                  <Button size="sm" variant="ghost" loading={reanalyze.isPending} onClick={() => reanalyze.mutate()} aria-label="Re-analyze this call">
+                    <RefreshCw size={14} aria-hidden /> Re-analyze
+                  </Button>
+                )}
+                <StatusBadge status={r.status} />
+              </div>
+            } />
             {r.status === "failed" ? (
               <Panel>
                 <EmptyState title="We couldn't score this call" description={r.error ?? "Something went wrong."} action={q.data!.isOwner ? <Button variant="primary" loading={retry.isPending} onClick={() => retry.mutate()}>Try again</Button> : undefined} />

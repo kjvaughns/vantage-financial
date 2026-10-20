@@ -170,6 +170,32 @@ export const retryReview = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/** Re-run AI scoring on an already-scored (or failed) call using the current Gold Standard.
+ *  Anyone who can read the review (owner, upline, admin) may re-analyze; the transcript is kept. */
+export const reanalyzeReview = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { data: row } = await context.supabase.from("call_reviews").select("id, status, transcript_text").eq("id", data.id).maybeSingle();
+    if (!row) throw new Error("Call not found.");
+    if (row.status !== "done" && row.status !== "failed") throw new Error("This call is still being processed.");
+    const sb = await admin();
+    const hasTranscript = !!row.transcript_text;
+    await sb
+      .from("call_reviews")
+      .update({
+        status: hasTranscript ? "scoring" : "queued",
+        pillar_scores: null,
+        overall: null,
+        summary: null,
+        improvements: null,
+        error: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", row.id);
+    return { ok: true };
+  });
+
 export const deleteReview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
