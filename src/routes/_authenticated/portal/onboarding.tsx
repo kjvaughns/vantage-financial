@@ -32,7 +32,15 @@ import type { OnboardingStepState } from "@/lib/onboarding";
 
 export const Route = createFileRoute("/_authenticated/portal/onboarding")({
   head: () => ({
-    meta: [{ title: "Onboarding — Vantage Portal" }, { name: "robots", content: "noindex" }],
+    meta: [
+      { title: "Onboarding — Vantage Portal" },
+      { name: "description", content: "Complete your Vantage onboarding checklist and continue to your daily training track." },
+      { property: "og:title", content: "Onboarding — Vantage Portal" },
+      { property: "og:description", content: "Your onboarding checklist and next steps for Vantage agent training." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { name: "robots", content: "noindex" },
+    ],
   }),
   component: OnboardingPage,
 });
@@ -68,6 +76,7 @@ function OnboardingPage() {
     mutationFn: (step: string) => completeStep({ data: { step } as any }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["my-onboarding"] });
+      qc.invalidateQueries({ queryKey: ["my-training"] });
       qc.invalidateQueries({ queryKey: ["applicants"] });
       qc.invalidateQueries({ queryKey: ["applicant"] });
       notify.success("Step marked complete.");
@@ -223,15 +232,20 @@ function CompletionPanel() {
       </div>
       <h2 className="p-card-title">Onboarding complete</h2>
       <p className="p-secondary mx-auto mt-2 max-w-[460px]">
-        You&apos;re ready for Vantage New Agent Live Training. Notify your trainer that you have completed
-        onboarding.
+        You&apos;re ready for Vantage New Agent Live Training. Your Training tab follows your live
+        training days: Monday–Thursday lessons and daily roleplay homework, then your Friday release
+        call. Each next day opens after the previous day&apos;s homework is approved. Pass your release
+        call to be cleared to call.
       </p>
       <div className="mt-4 flex flex-wrap justify-center gap-2">
-        <Button variant="primary" loading={mut.isPending} disabled={sent} onClick={() => mut.mutate()}>
+        <Link to="/portal/training">
+          <Button variant="primary">Start training →</Button>
+        </Link>
+        <Button variant="secondary" loading={mut.isPending} disabled={sent} onClick={() => mut.mutate()}>
           {sent ? "✓ Trainer notified" : "Notify trainer"}
         </Button>
         <Link to="/portal">
-          <Button variant="secondary">Go to your dashboard →</Button>
+          <Button variant="ghost">Go to your dashboard →</Button>
         </Link>
       </div>
     </Panel>
