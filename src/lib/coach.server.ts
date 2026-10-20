@@ -76,48 +76,46 @@ Also return sections: where each pillar starts in the call, using the [mm:ss] ti
   const pillarProps = Object.fromEntries(
     PILLARS.map((p) => [p.key, {
       type: "object",
+      additionalProperties: false,
       properties: { score: { type: "integer" }, went_well: { type: "string" }, to_fix: { type: "string" }, better_line: { type: "string" } },
       required: ["score", "went_well", "to_fix", "better_line"],
     }]),
   );
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: { authorization: `Bearer ${apiKey}`, "content-type": "application/json" },
-    body: JSON.stringify({
-      model: "google/gemini-2.5-pro",
-      messages: [{ role: "system", content: system }, { role: "user", content: user }],
-      tools: [{
-        type: "function",
-        function: {
-          name: "submit_review",
-          description: "Submit the scored call review.",
-          parameters: {
-            type: "object",
-            properties: {
-              pillars: { type: "object", properties: pillarProps, required: PILLARS.map((p) => p.key) },
-              summary: { type: "string", description: "2-4 sentence overall assessment" },
-              improvements: { type: "array", items: { type: "string" }, description: "Top 3 highest-impact fixes" },
-              sections: { type: "array", items: { type: "object", properties: { pillar: { type: "string" }, start_ms: { type: "integer" } }, required: ["pillar", "start_ms"] } },
-            },
-            required: ["pillars", "summary", "improvements", "sections"],
-          },
-        },
-      }],
-      tool_choice: { type: "function", function: { name: "submit_review" } },
-    }),
-  });
-  const body = await res.text();
-  if (!res.ok) {
-    console.error(`Coach scoring failed [${res.status}]: ${body}`);
-    if (res.status === 429) throw new Error("AI is busy right now. Try again in a minute.");
-    if (res.status === 402) throw new Error("AI credits are used up. Add credits in workspace settings.");
-    throw new Error(`AI scoring failed (${res.status}).`);
+  const schema = {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      pillars: { type: "object", additionalProperties: false, properties: pillarProps, required: PILLARS.map((p) => p.key) },
+      summary: { type: "string" },
+      improvements: { type: "array", items: { type: "string" } },
+      sections: { type: "array", items: { type: "object", additionalProperties: false, properties: { pillar: { type: "string" }, start_ms: { type: "integer" } }, required: ["pillar", "start_ms"] } },
+    },
+    required: ["pillars", "summary", "improvements", "sections"],
+  };
+  const { generateResponse, GatewayError } = await import("@lovable.dev/ai-gateway");
+  let text = "";
+  try {
+    const res = await generateResponse({
+      model: "openai/gpt-6-astra",
+      instructions: system,
+      input: user,
+      text: { format: { type: "json_schema", name: "call_review", schema, strict: true } },
+    } as any);
+    for (const item of (res as any).output ?? []) {
+      if (item.type === "message") for (const c of item.content ?? []) if (c.type === "output_text") text += c.text;
+    }
+  } catch (e) {
+    if (e instanceof GatewayError) {
+      console.error("Coach scoring failed", e.code, e.httpStatus, e.ids);
+      if (e.httpStatus === 429) throw new Error("AI is busy right now. Try again in a minute.");
+      if (e.httpStatus === 402) throw new Error("AI credits are used up. Add credits in workspace settings.");
+      throw new Error(`AI scoring failed (${e.httpStatus ?? e.code}).`);
+    }
+    throw e;
   }
-  const msg = JSON.parse(body)?.choices?.[0]?.message;
-  const argStr = msg?.tool_calls?.[0]?.function?.arguments ?? msg?.content ?? "{}";
   let parsed: any = {};
   try {
-    parsed = typeof argStr === "string" ? JSON.parse(argStr.replace(/^```(?:json)?/i, "").replace(/```$/, "")) : argStr;
+    parsed = JSON.parse(text);
   } catch {
     throw new Error("AI returned an unreadable review. Try again.");
   }
