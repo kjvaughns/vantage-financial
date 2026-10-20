@@ -153,12 +153,12 @@ function ReferenceCalls({ calls, candidates }: { calls: any[]; candidates: any[]
           <MediaPicker mode={mode} setMode={setMode} file={file} setFile={setFile} link={link} setLink={setLink} />
           <Button variant="primary" loading={m.isPending} disabled={mode === "upload" ? !file : !link.trim()} onClick={() => m.mutate()}>Add model call</Button>
         </div>
-        {q.candidates.length > 0 && (
+        {candidates.length > 0 && (
           <div className="rounded-md border border-border p-3">
             <div className="p-label mb-1">Reuse an already-analyzed call</div>
             <p className="mb-2 text-[12.5px] text-muted-foreground">Any call that's been scored already has a transcript — add it as a model call without re-uploading.</p>
             <div className="space-y-2">
-              {q.candidates.map((r: any) => (
+              {candidates.map((r: any) => (
                 <div key={r.id} className="flex flex-wrap items-center gap-2 rounded-md border border-border px-3 py-2 text-[13.5px]">
                   <span className="flex-1 font-medium">{r.title}</span>
                   <span className="text-[12px] text-muted-foreground">{r.call_type === "live" ? "Live call" : "Roleplay"} · {new Date(r.created_at).toLocaleDateString()}{r.overall != null ? ` · scored ${r.overall}` : ""}</span>
