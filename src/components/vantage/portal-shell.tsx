@@ -49,7 +49,6 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     label: "Growth",
     items: [
       { to: "/portal/training", label: "Training Hub", icon: Target },
-      { to: "/portal/coach", label: "Call Coach", icon: Mic },
       { to: "/portal/academy", label: "Academy", icon: GraduationCap },
       { to: "/portal/leaderboard", label: "Leaderboard", icon: Trophy },
       { to: "/portal/organization", label: "Organization", icon: Network },

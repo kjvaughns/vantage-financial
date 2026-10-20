@@ -29,7 +29,7 @@ function TeamPage() {
   return (
     <PortalShell>
       <PageBody>
-        <Link to="/portal/coach" className="mb-3 inline-flex items-center gap-1 text-[13px] text-muted-foreground hover:text-foreground"><ArrowLeft size={14} aria-hidden /> Call Coach</Link>
+        <Link to="/portal/training" search={{ tab: "coach" }} className="mb-3 inline-flex items-center gap-1 text-[13px] text-muted-foreground hover:text-foreground"><ArrowLeft size={14} aria-hidden /> Call Coach</Link>
         <PageHeader title="Team Coaching" description="Every call your downline submits, with averages and the pillar each agent needs most help on." />
         <Panel padded={false}>
           {q.isLoading ? <div className="p-4"><TextSkeleton lines={5} /></div> : !q.data?.agents.length ? (
