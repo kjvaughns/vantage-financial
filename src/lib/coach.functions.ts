@@ -36,6 +36,15 @@ async function mediaFor(row: { media_path: string | null; media_url: string | nu
   throw new Error("This call has no recording attached.");
 }
 
+/** Start processing a queued review: submit transcription and move it to transcribing.
+ *  Exported so training homework submissions can kick off analysis immediately. */
+export async function kickReviewProcessing(row: { id: string; media_path: string | null; media_url: string | null }) {
+  const sb = await admin();
+  const tx = await import("@/lib/academy/transcribe.server");
+  const jobId = await tx.submitTranscription(await mediaFor(row));
+  await sb.from("call_reviews").update({ status: "transcribing", provider_job_id: jobId, error: null, updated_at: new Date().toISOString() }).eq("id", row.id);
+}
+
 const mediaInput = z
   .object({
     title: z.string().trim().min(1).max(160),

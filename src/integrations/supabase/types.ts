@@ -2630,6 +2630,7 @@ export type Database = {
           link_url: string | null
           note: string | null
           profile_id: string
+          review_id: string | null
           reviewed_at: string | null
           reviewed_by: string | null
           status: string
@@ -2643,6 +2644,7 @@ export type Database = {
           link_url?: string | null
           note?: string | null
           profile_id: string
+          review_id?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: string
@@ -2656,6 +2658,7 @@ export type Database = {
           link_url?: string | null
           note?: string | null
           profile_id?: string
+          review_id?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: string
