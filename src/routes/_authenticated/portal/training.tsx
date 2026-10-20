@@ -1,49 +1,83 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Check, Copy, Lock, Mic } from "lucide-react";
+import { Check, ChevronRight, Copy, Lock, Mic, Users } from "lucide-react";
 import { PortalShell } from "@/components/vantage/portal-shell";
 import { Badge, Button, EmptyState, Field, Input, PageBody, Panel, TextSkeleton, Textarea, btnClass, notify } from "@/components/portal/ui";
 import { STATE_LABEL, STATE_TONE } from "@/components/vantage/training-panel";
 import { getMyTraining, submitHomework, type TrainingDay } from "@/lib/training.functions";
 import { isGoogleDriveRecordingLink } from "@/lib/training-homework";
 import { NewContentBadge } from "@/components/vantage/new-content-badge";
-import { PillarBars, ScoreRing } from "@/components/vantage/coach";
+import { PillarBars, ScoreRing, StatusBadge, SubmitCallForm } from "@/components/vantage/coach";
 import { listMyReviews } from "@/lib/coach.functions";
 import { PILLARS } from "@/lib/coach-scoring";
 
-function CoachPanel() {
+/** Call Coach lives inside the Training Hub as its own tab. */
+function CoachTab() {
+  const navigate = useNavigate();
   const fn = useServerFn(listMyReviews);
-  const q = useQuery({ queryKey: ["coach-mine"], queryFn: () => fn() });
-  const latest = q.data?.reviews.find((r: any) => r.status === "done");
+  const q = useQuery({
+    queryKey: ["coach-mine"],
+    queryFn: () => fn(),
+    refetchInterval: (qq) => ((qq.state.data?.reviews ?? []).some((r: any) => r.status !== "done" && r.status !== "failed") ? 8000 : false),
+  });
   const weakest = Object.entries(q.data?.pillarAvg ?? {}).sort((a, b) => a[1] - b[1])[0]?.[0];
   return (
-    <Panel title="Call Coach" actions={<Link to="/portal/coach" className="text-[13px] text-primary underline">Open</Link>}>
-      {q.isLoading ? <TextSkeleton lines={4} /> : !q.data?.reviews.length ? (
-        <div className="space-y-3 text-[13.5px]">
-          <p className="text-muted-foreground">Upload any roleplay or live call and get scored 1–10 on Intro, Needs Analysis, Medical, Social, Bank, Close, Rapport and Tonality — judged against the Vantage script.</p>
-          <Link to="/portal/coach" className={btnClass("primary", "sm")}><Mic size={14} aria-hidden /> Analyze a call</Link>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          <div className="flex items-center gap-4">
-            <ScoreRing value={q.data.overallAvg} label="Avg" />
-            <div className="text-[13px]">
-              <div className="text-muted-foreground">{q.data.reviews.length} call{q.data.reviews.length === 1 ? "" : "s"} analyzed</div>
-              {weakest && <div className="mt-1">Focus on: <span className="font-medium text-primary">{PILLARS.find((p) => p.key === weakest)?.label}</span></div>}
-              {latest && <Link to="/portal/coach/$id" params={{ id: latest.id }} className="mt-1 inline-block text-primary underline">Latest: {latest.title} ({latest.overall})</Link>}
+    <div className="grid gap-4 lg:grid-cols-[1.3fr_1fr]">
+      <div className="space-y-4">
+        <Panel title="Analyze a call">
+          <p className="mb-4 text-[13.5px] text-muted-foreground">Upload a roleplay or live call. It's scored 1–10 on all 8 pillars against the Vantage script and model calls.</p>
+          <SubmitCallForm onCreated={(id) => navigate({ to: "/portal/coach/$id", params: { id } })} />
+        </Panel>
+        <Panel title="Call history" padded={false}>
+          {q.isLoading ? <div className="p-4"><TextSkeleton lines={4} /></div> : !q.data?.reviews.length ? (
+            <EmptyState title="No calls yet" description="Submit your first call above to get your scorecard." />
+          ) : (
+            <ul>
+              {q.data.reviews.map((r: any) => (
+                <li key={r.id} className="border-b border-border last:border-0">
+                  <Link to="/portal/coach/$id" params={{ id: r.id }} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30">
+                    <div className="w-12 text-center text-[18px] font-semibold tabular-nums text-primary">{r.overall ?? "—"}</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-[14px] font-medium">{r.title}</div>
+                      <div className="text-[12px] text-muted-foreground">{r.call_type === "live" ? "Live call" : "Roleplay"} · {new Date(r.created_at).toLocaleDateString()}</div>
+                    </div>
+                    <StatusBadge status={r.status} />
+                    <ChevronRight size={16} className="text-muted-foreground" aria-hidden />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Panel>
+      </div>
+      <div className="space-y-4 lg:sticky lg:top-4 lg:self-start">
+        <Panel title="Your averages">
+          {q.isLoading ? <TextSkeleton lines={6} /> : (
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <ScoreRing value={q.data?.overallAvg ?? null} label="Avg" />
+                <div className="text-[13px]">
+                  <div className="text-muted-foreground">{q.data?.reviews.length ?? 0} call{q.data?.reviews.length === 1 ? "" : "s"} analyzed</div>
+                  {weakest && <div className="mt-1">Focus on: <span className="font-medium text-primary">{PILLARS.find((p) => p.key === weakest)?.label}</span></div>}
+                </div>
+              </div>
+              <PillarBars scores={q.data?.pillarAvg ?? {}} />
             </div>
-          </div>
-          <PillarBars scores={q.data.pillarAvg} />
-          <Link to="/portal/coach" className={btnClass("primary", "sm")}><Mic size={14} aria-hidden /> Analyze a call</Link>
-        </div>
-      )}
-    </Panel>
+          )}
+        </Panel>
+        <Panel title="Team coaching">
+          <p className="text-[13.5px] text-muted-foreground">Leaders: review and score your team's calls in one place.</p>
+          <div className="mt-3"><Link to="/portal/coach/team" className={btnClass("secondary", "sm")}><Users size={14} aria-hidden /> Open team coaching</Link></div>
+        </Panel>
+      </div>
+    </div>
   );
 }
 
 export const Route = createFileRoute("/_authenticated/portal/training")({
+  validateSearch: (search: Record<string, unknown>) => ({ tab: search.tab === "coach" ? "coach" : "days" }),
   head: () => ({
     meta: [{ title: "Training — Vantage Portal" }, { name: "description", content: "Complete Vantage's daily roleplay training and submit recording homework for review." }, { property: "og:title", content: "Training — Vantage Portal" }, { property: "og:description", content: "Daily roleplay training, recording homework and release call progress." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }],
   }),
@@ -65,6 +99,7 @@ function TrainingPage() {
   const fetchFn = useServerFn(getMyTraining);
   const q = useQuery({ queryKey: ["my-training"], queryFn: () => fetchFn() });
   const [openId, setOpenId] = useState<string | null>(null);
+  const { tab } = Route.useSearch();
 
   const track = q.data?.track ?? [];
   const approvedCount = track.filter((e) => e.state === "approved").length;
@@ -82,12 +117,31 @@ function TrainingPage() {
               <h1 className="mt-1 text-[26px] font-semibold leading-tight">{stage || "Training"}</h1>
               <p className="p-secondary mt-1 max-w-xl">Monday–Thursday reps, then your Friday release call. Each day unlocks when the one before it is approved.</p>
             </div>
-            <div className="flex gap-2">
-              {currentEntry && <Button variant="primary" onClick={() => setOpenId(currentEntry.day.id)}>Continue {currentEntry.day.day_label ?? "training"}</Button>}
-              <Link to="/portal/coach" className={btnClass("secondary")}><Mic size={14} aria-hidden /> Call Coach</Link>
+            <div className="flex flex-wrap items-center gap-2">
+              {currentEntry && tab === "days" && <Button variant="primary" onClick={() => setOpenId(currentEntry.day.id)}>Continue {currentEntry.day.day_label ?? "training"}</Button>}
+              <div className="flex rounded-md border border-border p-0.5" role="tablist" aria-label="Training Hub sections">
+                <Link
+                  to="/portal/training"
+                  search={{ tab: "days" }}
+                  aria-current={tab === "days" ? "page" : undefined}
+                  className={tab === "days" ? "rounded-[5px] px-3 py-1.5 text-[13px] font-medium" : "rounded-[5px] px-3 py-1.5 text-[13px] text-muted-foreground transition hover:text-foreground"}
+                  style={tab === "days" ? { background: "var(--p-gold-soft)", color: "var(--p-gold)" } : undefined}
+                >
+                  Training days
+                </Link>
+                <Link
+                  to="/portal/training"
+                  search={{ tab: "coach" }}
+                  aria-current={tab === "coach" ? "page" : undefined}
+                  className={tab === "coach" ? "rounded-[5px] px-3 py-1.5 text-[13px] font-medium" : "rounded-[5px] px-3 py-1.5 text-[13px] text-muted-foreground transition hover:text-foreground"}
+                  style={tab === "coach" ? { background: "var(--p-gold-soft)", color: "var(--p-gold)" } : undefined}
+                >
+                  Call Coach
+                </Link>
+              </div>
             </div>
           </div>
-          {q.data?.unlocked && (
+          {tab === "days" && q.data?.unlocked && (
             <div className="relative mt-5">
               <div className="mb-1.5 flex justify-between text-[12px] text-muted-foreground"><span>{approvedCount} of {track.length} days approved</span><span>{pct}%</span></div>
               <div className="h-2 overflow-hidden rounded-full" style={{ background: "var(--p-border)" }}><div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} /></div>
@@ -101,35 +155,31 @@ function TrainingPage() {
             </div>
           )}
         </section>
-        {q.isLoading ? (
+        {tab === "coach" ? (
+          <CoachTab />
+        ) : q.isLoading ? (
           <Panel><TextSkeleton lines={5} /></Panel>
         ) : q.error ? (
           <Panel><EmptyState title="Couldn't load training" description={(q.error as Error).message} /></Panel>
         ) : !q.data!.unlocked ? (
-          <div className="space-y-4">
-            <Panel>
-              <EmptyState
-                title="Training unlocks after onboarding"
-                description="Finish every onboarding step, including the Vantage Closer Course, and your training days will open here."
-                action={<Link to="/portal/onboarding" className="text-primary underline">Go to onboarding</Link>}
-              />
-            </Panel>
-            <CoachPanel />
-          </div>
+          <Panel>
+            <EmptyState
+              title="Training unlocks after onboarding"
+              description="Finish every onboarding step, including the Vantage Closer Course, and your training days will open here."
+              action={<Link to="/portal/onboarding" className="text-primary underline">Go to onboarding</Link>}
+            />
+          </Panel>
         ) : (
-          <div className="grid gap-4 lg:grid-cols-[1.6fr_1fr]">
-            <div className="space-y-3">
-              {q.data!.clearedAt && (
-                <Panel><div className="flex items-center gap-2 text-[14px]"><Badge tone="green">Cleared to call</Badge> You passed your release call. Get on the phones.</div></Panel>
-              )}
-              {track.map((entry) => {
-                const current = openId ?? currentEntry?.day.id;
-                return (
-                  <DayCard key={entry.day.id} entry={entry} open={current === entry.day.id} onToggle={() => setOpenId(current === entry.day.id ? "" : entry.day.id)} />
-                );
-              })}
-            </div>
-            <div className="lg:sticky lg:top-4 lg:self-start"><CoachPanel /></div>
+          <div className="space-y-3">
+            {q.data!.clearedAt && (
+              <Panel><div className="flex items-center gap-2 text-[14px]"><Badge tone="green">Cleared to call</Badge> You passed your release call. Get on the phones.</div></Panel>
+            )}
+            {track.map((entry) => {
+              const current = openId ?? currentEntry?.day.id;
+              return (
+                <DayCard key={entry.day.id} entry={entry} open={current === entry.day.id} onToggle={() => setOpenId(current === entry.day.id ? "" : entry.day.id)} />
+              );
+            })}
           </div>
         )}
       </PageBody>
