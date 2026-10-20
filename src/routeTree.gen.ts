@@ -52,6 +52,7 @@ import { Route as AuthenticatedPortalAcademyAdminRouteImport } from './routes/_a
 import { Route as AuthenticatedPortalAdminIndexRouteImport } from './routes/_authenticated/portal/admin/index'
 import { Route as AuthenticatedPortalAdminAuditRouteImport } from './routes/_authenticated/portal/admin/audit'
 import { Route as AuthenticatedPortalAdminEmailsRouteImport } from './routes/_authenticated/portal/admin/emails'
+import { Route as AuthenticatedPortalAdminGoldStandardRouteImport } from './routes/_authenticated/portal/admin/gold-standard'
 import { Route as AuthenticatedPortalAdminOnboardingRouteImport } from './routes/_authenticated/portal/admin/onboarding'
 import { Route as AuthenticatedPortalAdminSettingsRouteImport } from './routes/_authenticated/portal/admin/settings'
 import { Route as AuthenticatedPortalAdminStagesRouteImport } from './routes/_authenticated/portal/admin/stages'
@@ -59,6 +60,9 @@ import { Route as AuthenticatedPortalAdminTrainingRouteImport } from './routes/_
 import { Route as AuthenticatedPortalAdminUsersRouteImport } from './routes/_authenticated/portal/admin/users'
 import { Route as AuthenticatedPortalApplicantsIndexRouteImport } from './routes/_authenticated/portal/applicants/index'
 import { Route as AuthenticatedPortalApplicantsApplicantIdRouteImport } from './routes/_authenticated/portal/applicants/$applicantId'
+import { Route as AuthenticatedPortalCoachIndexRouteImport } from './routes/_authenticated/portal/coach.index'
+import { Route as AuthenticatedPortalCoachIdRouteImport } from './routes/_authenticated/portal/coach.$id'
+import { Route as AuthenticatedPortalCoachTeamRouteImport } from './routes/_authenticated/portal/coach.team'
 import { Route as AuthenticatedPortalCrmIndexRouteImport } from './routes/_authenticated/portal/crm/index'
 import { Route as AuthenticatedPortalCrmApplicantIdRouteImport } from './routes/_authenticated/portal/crm/$applicantId'
 import { Route as AuthenticatedPortalResourcesIndexRouteImport } from './routes/_authenticated/portal/resources/index'
@@ -313,6 +317,12 @@ const AuthenticatedPortalAdminEmailsRoute =
     path: '/emails',
     getParentRoute: () => AuthenticatedPortalAdminRouteRoute,
   } as any)
+const AuthenticatedPortalAdminGoldStandardRoute =
+  AuthenticatedPortalAdminGoldStandardRouteImport.update({
+    id: '/gold-standard',
+    path: '/gold-standard',
+    getParentRoute: () => AuthenticatedPortalAdminRouteRoute,
+  } as any)
 const AuthenticatedPortalAdminOnboardingRoute =
   AuthenticatedPortalAdminOnboardingRouteImport.update({
     id: '/onboarding',
@@ -354,6 +364,24 @@ const AuthenticatedPortalApplicantsApplicantIdRoute =
     id: '/$applicantId',
     path: '/$applicantId',
     getParentRoute: () => AuthenticatedPortalApplicantsRouteRoute,
+  } as any)
+const AuthenticatedPortalCoachIndexRoute =
+  AuthenticatedPortalCoachIndexRouteImport.update({
+    id: '/coach/',
+    path: '/coach/',
+    getParentRoute: () => AuthenticatedPortalRouteRoute,
+  } as any)
+const AuthenticatedPortalCoachIdRoute =
+  AuthenticatedPortalCoachIdRouteImport.update({
+    id: '/coach/$id',
+    path: '/coach/$id',
+    getParentRoute: () => AuthenticatedPortalRouteRoute,
+  } as any)
+const AuthenticatedPortalCoachTeamRoute =
+  AuthenticatedPortalCoachTeamRouteImport.update({
+    id: '/coach/team',
+    path: '/coach/team',
+    getParentRoute: () => AuthenticatedPortalRouteRoute,
   } as any)
 const AuthenticatedPortalCrmIndexRoute =
   AuthenticatedPortalCrmIndexRouteImport.update({
@@ -485,12 +513,15 @@ export interface FileRoutesByFullPath {
   '/portal/academy/admin': typeof AuthenticatedPortalAcademyAdminRoute
   '/portal/admin/audit': typeof AuthenticatedPortalAdminAuditRoute
   '/portal/admin/emails': typeof AuthenticatedPortalAdminEmailsRoute
+  '/portal/admin/gold-standard': typeof AuthenticatedPortalAdminGoldStandardRoute
   '/portal/admin/onboarding': typeof AuthenticatedPortalAdminOnboardingRoute
   '/portal/admin/settings': typeof AuthenticatedPortalAdminSettingsRoute
   '/portal/admin/stages': typeof AuthenticatedPortalAdminStagesRoute
   '/portal/admin/training': typeof AuthenticatedPortalAdminTrainingRoute
   '/portal/admin/users': typeof AuthenticatedPortalAdminUsersRouteWithChildren
   '/portal/applicants/$applicantId': typeof AuthenticatedPortalApplicantsApplicantIdRoute
+  '/portal/coach/$id': typeof AuthenticatedPortalCoachIdRoute
+  '/portal/coach/team': typeof AuthenticatedPortalCoachTeamRoute
   '/portal/crm/$applicantId': typeof AuthenticatedPortalCrmApplicantIdRoute
   '/portal/resources/admin': typeof AuthenticatedPortalResourcesAdminRoute
   '/portal/resources/library': typeof AuthenticatedPortalResourcesLibraryRoute
@@ -503,6 +534,7 @@ export interface FileRoutesByFullPath {
   '/portal/academy/': typeof AuthenticatedPortalAcademyIndexRoute
   '/portal/admin/': typeof AuthenticatedPortalAdminIndexRoute
   '/portal/applicants/': typeof AuthenticatedPortalApplicantsIndexRoute
+  '/portal/coach/': typeof AuthenticatedPortalCoachIndexRoute
   '/portal/crm/': typeof AuthenticatedPortalCrmIndexRoute
   '/portal/resources/': typeof AuthenticatedPortalResourcesIndexRoute
   '/portal/academy/courses/$slug': typeof AuthenticatedPortalAcademyCoursesSlugRoute
@@ -543,12 +575,15 @@ export interface FileRoutesByTo {
   '/portal/academy/admin': typeof AuthenticatedPortalAcademyAdminRoute
   '/portal/admin/audit': typeof AuthenticatedPortalAdminAuditRoute
   '/portal/admin/emails': typeof AuthenticatedPortalAdminEmailsRoute
+  '/portal/admin/gold-standard': typeof AuthenticatedPortalAdminGoldStandardRoute
   '/portal/admin/onboarding': typeof AuthenticatedPortalAdminOnboardingRoute
   '/portal/admin/settings': typeof AuthenticatedPortalAdminSettingsRoute
   '/portal/admin/stages': typeof AuthenticatedPortalAdminStagesRoute
   '/portal/admin/training': typeof AuthenticatedPortalAdminTrainingRoute
   '/portal/admin/users': typeof AuthenticatedPortalAdminUsersRouteWithChildren
   '/portal/applicants/$applicantId': typeof AuthenticatedPortalApplicantsApplicantIdRoute
+  '/portal/coach/$id': typeof AuthenticatedPortalCoachIdRoute
+  '/portal/coach/team': typeof AuthenticatedPortalCoachTeamRoute
   '/portal/crm/$applicantId': typeof AuthenticatedPortalCrmApplicantIdRoute
   '/portal/resources/admin': typeof AuthenticatedPortalResourcesAdminRoute
   '/portal/resources/library': typeof AuthenticatedPortalResourcesLibraryRoute
@@ -561,6 +596,7 @@ export interface FileRoutesByTo {
   '/portal/academy': typeof AuthenticatedPortalAcademyIndexRoute
   '/portal/admin': typeof AuthenticatedPortalAdminIndexRoute
   '/portal/applicants': typeof AuthenticatedPortalApplicantsIndexRoute
+  '/portal/coach': typeof AuthenticatedPortalCoachIndexRoute
   '/portal/crm': typeof AuthenticatedPortalCrmIndexRoute
   '/portal/resources': typeof AuthenticatedPortalResourcesIndexRoute
   '/portal/academy/courses/$slug': typeof AuthenticatedPortalAcademyCoursesSlugRoute
@@ -611,12 +647,15 @@ export interface FileRoutesById {
   '/_authenticated/portal/academy/admin': typeof AuthenticatedPortalAcademyAdminRoute
   '/_authenticated/portal/admin/audit': typeof AuthenticatedPortalAdminAuditRoute
   '/_authenticated/portal/admin/emails': typeof AuthenticatedPortalAdminEmailsRoute
+  '/_authenticated/portal/admin/gold-standard': typeof AuthenticatedPortalAdminGoldStandardRoute
   '/_authenticated/portal/admin/onboarding': typeof AuthenticatedPortalAdminOnboardingRoute
   '/_authenticated/portal/admin/settings': typeof AuthenticatedPortalAdminSettingsRoute
   '/_authenticated/portal/admin/stages': typeof AuthenticatedPortalAdminStagesRoute
   '/_authenticated/portal/admin/training': typeof AuthenticatedPortalAdminTrainingRoute
   '/_authenticated/portal/admin/users': typeof AuthenticatedPortalAdminUsersRouteWithChildren
   '/_authenticated/portal/applicants/$applicantId': typeof AuthenticatedPortalApplicantsApplicantIdRoute
+  '/_authenticated/portal/coach/$id': typeof AuthenticatedPortalCoachIdRoute
+  '/_authenticated/portal/coach/team': typeof AuthenticatedPortalCoachTeamRoute
   '/_authenticated/portal/crm/$applicantId': typeof AuthenticatedPortalCrmApplicantIdRoute
   '/_authenticated/portal/resources/admin': typeof AuthenticatedPortalResourcesAdminRoute
   '/_authenticated/portal/resources/library': typeof AuthenticatedPortalResourcesLibraryRoute
@@ -629,6 +668,7 @@ export interface FileRoutesById {
   '/_authenticated/portal/academy/': typeof AuthenticatedPortalAcademyIndexRoute
   '/_authenticated/portal/admin/': typeof AuthenticatedPortalAdminIndexRoute
   '/_authenticated/portal/applicants/': typeof AuthenticatedPortalApplicantsIndexRoute
+  '/_authenticated/portal/coach/': typeof AuthenticatedPortalCoachIndexRoute
   '/_authenticated/portal/crm/': typeof AuthenticatedPortalCrmIndexRoute
   '/_authenticated/portal/resources/': typeof AuthenticatedPortalResourcesIndexRoute
   '/_authenticated/portal/academy/courses/$slug': typeof AuthenticatedPortalAcademyCoursesSlugRoute
@@ -679,12 +719,15 @@ export interface FileRouteTypes {
     | '/portal/academy/admin'
     | '/portal/admin/audit'
     | '/portal/admin/emails'
+    | '/portal/admin/gold-standard'
     | '/portal/admin/onboarding'
     | '/portal/admin/settings'
     | '/portal/admin/stages'
     | '/portal/admin/training'
     | '/portal/admin/users'
     | '/portal/applicants/$applicantId'
+    | '/portal/coach/$id'
+    | '/portal/coach/team'
     | '/portal/crm/$applicantId'
     | '/portal/resources/admin'
     | '/portal/resources/library'
@@ -697,6 +740,7 @@ export interface FileRouteTypes {
     | '/portal/academy/'
     | '/portal/admin/'
     | '/portal/applicants/'
+    | '/portal/coach/'
     | '/portal/crm/'
     | '/portal/resources/'
     | '/portal/academy/courses/$slug'
@@ -737,12 +781,15 @@ export interface FileRouteTypes {
     | '/portal/academy/admin'
     | '/portal/admin/audit'
     | '/portal/admin/emails'
+    | '/portal/admin/gold-standard'
     | '/portal/admin/onboarding'
     | '/portal/admin/settings'
     | '/portal/admin/stages'
     | '/portal/admin/training'
     | '/portal/admin/users'
     | '/portal/applicants/$applicantId'
+    | '/portal/coach/$id'
+    | '/portal/coach/team'
     | '/portal/crm/$applicantId'
     | '/portal/resources/admin'
     | '/portal/resources/library'
@@ -755,6 +802,7 @@ export interface FileRouteTypes {
     | '/portal/academy'
     | '/portal/admin'
     | '/portal/applicants'
+    | '/portal/coach'
     | '/portal/crm'
     | '/portal/resources'
     | '/portal/academy/courses/$slug'
@@ -804,12 +852,15 @@ export interface FileRouteTypes {
     | '/_authenticated/portal/academy/admin'
     | '/_authenticated/portal/admin/audit'
     | '/_authenticated/portal/admin/emails'
+    | '/_authenticated/portal/admin/gold-standard'
     | '/_authenticated/portal/admin/onboarding'
     | '/_authenticated/portal/admin/settings'
     | '/_authenticated/portal/admin/stages'
     | '/_authenticated/portal/admin/training'
     | '/_authenticated/portal/admin/users'
     | '/_authenticated/portal/applicants/$applicantId'
+    | '/_authenticated/portal/coach/$id'
+    | '/_authenticated/portal/coach/team'
     | '/_authenticated/portal/crm/$applicantId'
     | '/_authenticated/portal/resources/admin'
     | '/_authenticated/portal/resources/library'
@@ -822,6 +873,7 @@ export interface FileRouteTypes {
     | '/_authenticated/portal/academy/'
     | '/_authenticated/portal/admin/'
     | '/_authenticated/portal/applicants/'
+    | '/_authenticated/portal/coach/'
     | '/_authenticated/portal/crm/'
     | '/_authenticated/portal/resources/'
     | '/_authenticated/portal/academy/courses/$slug'
@@ -1158,6 +1210,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPortalAdminEmailsRouteImport
       parentRoute: typeof AuthenticatedPortalAdminRouteRoute
     }
+    '/_authenticated/portal/admin/gold-standard': {
+      id: '/_authenticated/portal/admin/gold-standard'
+      path: '/gold-standard'
+      fullPath: '/portal/admin/gold-standard'
+      preLoaderRoute: typeof AuthenticatedPortalAdminGoldStandardRouteImport
+      parentRoute: typeof AuthenticatedPortalAdminRouteRoute
+    }
     '/_authenticated/portal/admin/onboarding': {
       id: '/_authenticated/portal/admin/onboarding'
       path: '/onboarding'
@@ -1206,6 +1265,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/portal/applicants/$applicantId'
       preLoaderRoute: typeof AuthenticatedPortalApplicantsApplicantIdRouteImport
       parentRoute: typeof AuthenticatedPortalApplicantsRouteRoute
+    }
+    '/_authenticated/portal/coach/': {
+      id: '/_authenticated/portal/coach/'
+      path: '/coach'
+      fullPath: '/portal/coach/'
+      preLoaderRoute: typeof AuthenticatedPortalCoachIndexRouteImport
+      parentRoute: typeof AuthenticatedPortalRouteRoute
+    }
+    '/_authenticated/portal/coach/$id': {
+      id: '/_authenticated/portal/coach/$id'
+      path: '/coach/$id'
+      fullPath: '/portal/coach/$id'
+      preLoaderRoute: typeof AuthenticatedPortalCoachIdRouteImport
+      parentRoute: typeof AuthenticatedPortalRouteRoute
+    }
+    '/_authenticated/portal/coach/team': {
+      id: '/_authenticated/portal/coach/team'
+      path: '/coach/team'
+      fullPath: '/portal/coach/team'
+      preLoaderRoute: typeof AuthenticatedPortalCoachTeamRouteImport
+      parentRoute: typeof AuthenticatedPortalRouteRoute
     }
     '/_authenticated/portal/crm/': {
       id: '/_authenticated/portal/crm/'
@@ -1358,6 +1438,7 @@ const AuthenticatedPortalAdminUsersRouteWithChildren =
 interface AuthenticatedPortalAdminRouteRouteChildren {
   AuthenticatedPortalAdminAuditRoute: typeof AuthenticatedPortalAdminAuditRoute
   AuthenticatedPortalAdminEmailsRoute: typeof AuthenticatedPortalAdminEmailsRoute
+  AuthenticatedPortalAdminGoldStandardRoute: typeof AuthenticatedPortalAdminGoldStandardRoute
   AuthenticatedPortalAdminOnboardingRoute: typeof AuthenticatedPortalAdminOnboardingRoute
   AuthenticatedPortalAdminSettingsRoute: typeof AuthenticatedPortalAdminSettingsRoute
   AuthenticatedPortalAdminStagesRoute: typeof AuthenticatedPortalAdminStagesRoute
@@ -1370,6 +1451,8 @@ const AuthenticatedPortalAdminRouteRouteChildren: AuthenticatedPortalAdminRouteR
   {
     AuthenticatedPortalAdminAuditRoute: AuthenticatedPortalAdminAuditRoute,
     AuthenticatedPortalAdminEmailsRoute: AuthenticatedPortalAdminEmailsRoute,
+    AuthenticatedPortalAdminGoldStandardRoute:
+      AuthenticatedPortalAdminGoldStandardRoute,
     AuthenticatedPortalAdminOnboardingRoute:
       AuthenticatedPortalAdminOnboardingRoute,
     AuthenticatedPortalAdminSettingsRoute:
@@ -1461,6 +1544,9 @@ interface AuthenticatedPortalRouteRouteChildren {
   AuthenticatedPortalTasksRoute: typeof AuthenticatedPortalTasksRoute
   AuthenticatedPortalTrainingRoute: typeof AuthenticatedPortalTrainingRoute
   AuthenticatedPortalIndexRoute: typeof AuthenticatedPortalIndexRoute
+  AuthenticatedPortalCoachIdRoute: typeof AuthenticatedPortalCoachIdRoute
+  AuthenticatedPortalCoachTeamRoute: typeof AuthenticatedPortalCoachTeamRoute
+  AuthenticatedPortalCoachIndexRoute: typeof AuthenticatedPortalCoachIndexRoute
 }
 
 const AuthenticatedPortalRouteRouteChildren: AuthenticatedPortalRouteRouteChildren =
@@ -1484,6 +1570,9 @@ const AuthenticatedPortalRouteRouteChildren: AuthenticatedPortalRouteRouteChildr
     AuthenticatedPortalTasksRoute: AuthenticatedPortalTasksRoute,
     AuthenticatedPortalTrainingRoute: AuthenticatedPortalTrainingRoute,
     AuthenticatedPortalIndexRoute: AuthenticatedPortalIndexRoute,
+    AuthenticatedPortalCoachIdRoute: AuthenticatedPortalCoachIdRoute,
+    AuthenticatedPortalCoachTeamRoute: AuthenticatedPortalCoachTeamRoute,
+    AuthenticatedPortalCoachIndexRoute: AuthenticatedPortalCoachIndexRoute,
   }
 
 const AuthenticatedPortalRouteRouteWithChildren =
