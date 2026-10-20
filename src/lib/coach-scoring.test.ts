@@ -16,8 +16,9 @@ describe("coach scoring", () => {
 
   it("applies pillar weights", () => {
     const s = normalizePillars({ intro: { score: 10 }, needs_analysis: { score: 10 }, medical: { score: 10 }, social: { score: 10 }, bank: { score: 10 }, close: { score: 4 }, rapport: { score: 10 }, tonality: { score: 10 } });
-    // close weighted 3: (7*10 + 3*4) / 10 = 8.2 → 82
-    expect(overallScore(s, { close: 3 })).toBe(82);
+    // close explicitly weighted 3; intro/needs_analysis/tonality default to 3, rest to 1:
+    // (10*13 + 4*3) / 16 = 8.875 → 89
+    expect(overallScore(s, { close: 3 })).toBe(89);
   });
 
   it("zero weight removes a pillar", () => {

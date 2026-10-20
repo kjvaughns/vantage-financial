@@ -6,7 +6,7 @@ import { RefreshCw, Trash2 } from "lucide-react";
 import { PortalShell } from "@/components/vantage/portal-shell";
 import { Badge, Button, EmptyState, Field, Input, PageBody, PageHeader, Panel, TextSkeleton, Textarea, Toggle, notify } from "@/components/portal/ui";
 import { MediaPicker, StatusBadge, uploadRecording } from "@/components/vantage/coach";
-import { PILLARS } from "@/lib/coach-scoring";
+import { DEFAULT_WEIGHTS, PILLARS } from "@/lib/coach-scoring";
 import {
   addReferenceCall,
   advanceReferenceCall,
@@ -185,7 +185,7 @@ function ReferenceCalls({ calls, candidates }: { calls: any[]; candidates: any[]
 function Scoring({ settings }: { settings: any }) {
   const qc = useQueryClient();
   const save = useServerFn(saveCoachSettings);
-  const [weights, setWeights] = useState<Record<string, number>>(() => Object.fromEntries(PILLARS.map((p) => [p.key, settings.weights?.[p.key] ?? 1])));
+  const [weights, setWeights] = useState<Record<string, number>>(() => Object.fromEntries(PILLARS.map((p) => [p.key, settings.weights?.[p.key] ?? DEFAULT_WEIGHTS[p.key]])));
   const [notes, setNotes] = useState<Record<string, string>>(() => Object.fromEntries(PILLARS.map((p) => [p.key, settings.rubric_notes?.[p.key] ?? ""])));
   const [minScore, setMinScore] = useState<string>(settings.min_score_for_approval?.toString() ?? "");
   const m = useMutation({

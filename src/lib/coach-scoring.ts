@@ -24,6 +24,18 @@ export type PillarScores = Record<PillarKey, PillarScore>;
 
 export const DEFAULT_WEIGHT = 1;
 
+/** Vantage default scoring emphasis: Intro, Needs Analysis and Tonality matter most (per KJ's training). */
+export const DEFAULT_WEIGHTS: Record<PillarKey, number> = {
+  intro: 3,
+  needs_analysis: 3,
+  tonality: 3,
+  medical: 1,
+  social: 1,
+  bank: 1,
+  close: 1,
+  rapport: 1,
+};
+
 /** Clamp to an integer 1–10. Non-numbers become 1. */
 export function clampScore(n: unknown): number {
   const v = typeof n === "number" ? n : Number(n);
@@ -39,7 +51,7 @@ export function overallScore(scores: Partial<Record<PillarKey, { score: number }
     const s = scores[p.key];
     if (!s) continue;
     const raw = weights[p.key];
-    const w = typeof raw === "number" && Number.isFinite(raw) && raw >= 0 ? raw : DEFAULT_WEIGHT;
+    const w = typeof raw === "number" && Number.isFinite(raw) && raw >= 0 ? raw : DEFAULT_WEIGHTS[p.key] ?? DEFAULT_WEIGHT;
     if (w === 0) continue;
     total += clampScore(s.score) * w;
     weightSum += w;
