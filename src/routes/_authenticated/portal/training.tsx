@@ -2,13 +2,46 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Check, Copy, Lock } from "lucide-react";
+import { Check, Copy, Lock, Mic } from "lucide-react";
 import { PortalShell } from "@/components/vantage/portal-shell";
-import { Badge, Button, EmptyState, Field, Input, PageBody, PageHeader, Panel, TextSkeleton, Textarea, notify } from "@/components/portal/ui";
+import { Badge, Button, EmptyState, Field, Input, PageBody, Panel, TextSkeleton, Textarea, btnClass, notify } from "@/components/portal/ui";
 import { STATE_LABEL, STATE_TONE } from "@/components/vantage/training-panel";
 import { getMyTraining, submitHomework, type TrainingDay } from "@/lib/training.functions";
 import { isGoogleDriveRecordingLink } from "@/lib/training-homework";
 import { NewContentBadge } from "@/components/vantage/new-content-badge";
+import { PillarBars, ScoreRing } from "@/components/vantage/coach";
+import { listMyReviews } from "@/lib/coach.functions";
+import { PILLARS } from "@/lib/coach-scoring";
+
+function CoachPanel() {
+  const fn = useServerFn(listMyReviews);
+  const q = useQuery({ queryKey: ["coach-mine"], queryFn: () => fn() });
+  const latest = q.data?.reviews.find((r: any) => r.status === "done");
+  const weakest = Object.entries(q.data?.pillarAvg ?? {}).sort((a, b) => a[1] - b[1])[0]?.[0];
+  return (
+    <Panel title="Call Coach" actions={<Link to="/portal/coach" className="text-[13px] text-primary underline">Open</Link>}>
+      {q.isLoading ? <TextSkeleton lines={4} /> : !q.data?.reviews.length ? (
+        <div className="space-y-3 text-[13.5px]">
+          <p className="text-muted-foreground">Upload any roleplay or live call and get scored 1–10 on Intro, Needs Analysis, Medical, Social, Bank, Close, Rapport and Tonality — judged against the Vantage script.</p>
+          <Link to="/portal/coach" className={btnClass("primary", "sm")}><Mic size={14} aria-hidden /> Analyze a call</Link>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <div className="flex items-center gap-4">
+            <ScoreRing value={q.data.overallAvg} label="Avg" />
+            <div className="text-[13px]">
+              <div className="text-muted-foreground">{q.data.reviews.length} call{q.data.reviews.length === 1 ? "" : "s"} analyzed</div>
+              {weakest && <div className="mt-1">Focus on: <span className="font-medium text-primary">{PILLARS.find((p) => p.key === weakest)?.label}</span></div>}
+              {latest && <Link to="/portal/coach/$id" params={{ id: latest.id }} className="mt-1 inline-block text-primary underline">Latest: {latest.title} ({latest.overall})</Link>}
+            </div>
+          </div>
+          <PillarBars scores={q.data.pillarAvg} />
+          <Link to="/portal/coach" className={btnClass("primary", "sm")}><Mic size={14} aria-hidden /> Analyze a call</Link>
+        </div>
+      )}
+    </Panel>
+  );
+}
 
 export const Route = createFileRoute("/_authenticated/portal/training")({
   head: () => ({
@@ -33,33 +66,70 @@ function TrainingPage() {
   const q = useQuery({ queryKey: ["my-training"], queryFn: () => fetchFn() });
   const [openId, setOpenId] = useState<string | null>(null);
 
+  const track = q.data?.track ?? [];
+  const approvedCount = track.filter((e) => e.state === "approved").length;
+  const currentEntry = track.find((e) => e.state !== "approved" && e.state !== "locked");
+  const stage = !q.data ? "" : !q.data.unlocked ? "Onboarding" : q.data.clearedAt ? "Cleared to Call" : currentEntry?.day.is_release ? "Release" : currentEntry ? (currentEntry.day.day_label ?? currentEntry.day.title) : "In review";
+  const pct = track.length ? Math.round((approvedCount / track.length) * 100) : 0;
   return (
     <PortalShell>
       <PageBody>
-        <PageHeader title="New Agent Release Track" description="Four days of reps, then your release call. Each day unlocks when the one before it is approved." />
+        <section className="p-panel relative mb-4 overflow-hidden p-5 sm:p-6">
+          <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-primary/10 blur-3xl" aria-hidden />
+          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <div className="p-label text-primary">Vantage Training Hub</div>
+              <h1 className="mt-1 text-[26px] font-semibold leading-tight">{stage || "Training"}</h1>
+              <p className="p-secondary mt-1 max-w-xl">Monday–Thursday reps, then your Friday release call. Each day unlocks when the one before it is approved.</p>
+            </div>
+            <div className="flex gap-2">
+              {currentEntry && <Button variant="primary" onClick={() => setOpenId(currentEntry.day.id)}>Continue {currentEntry.day.day_label ?? "training"}</Button>}
+              <Link to="/portal/coach" className={btnClass("secondary")}><Mic size={14} aria-hidden /> Call Coach</Link>
+            </div>
+          </div>
+          {q.data?.unlocked && (
+            <div className="relative mt-5">
+              <div className="mb-1.5 flex justify-between text-[12px] text-muted-foreground"><span>{approvedCount} of {track.length} days approved</span><span>{pct}%</span></div>
+              <div className="h-2 overflow-hidden rounded-full" style={{ background: "var(--p-border)" }}><div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} /></div>
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {track.map((e) => (
+                  <button key={e.day.id} type="button" disabled={e.state === "locked"} onClick={() => setOpenId(e.day.id)} className="rounded-full border border-border px-3 py-1 text-[12px] transition hover:border-primary disabled:opacity-50" style={e.state === "approved" ? { background: "var(--p-gold-soft)", color: "var(--p-gold)" } : undefined}>
+                    {e.state === "approved" ? "✓ " : e.state === "locked" ? "🔒 " : ""}{e.day.day_label ?? e.day.title}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </section>
         {q.isLoading ? (
           <Panel><TextSkeleton lines={5} /></Panel>
         ) : q.error ? (
           <Panel><EmptyState title="Couldn't load training" description={(q.error as Error).message} /></Panel>
         ) : !q.data!.unlocked ? (
-          <Panel>
-            <EmptyState
-              title="Training unlocks after onboarding"
-              description="Finish every onboarding step, including the Vantage Closer Course, and your training days will open here."
-              action={<Link to="/portal/onboarding" className="text-primary underline">Go to onboarding</Link>}
-            />
-          </Panel>
+          <div className="space-y-4">
+            <Panel>
+              <EmptyState
+                title="Training unlocks after onboarding"
+                description="Finish every onboarding step, including the Vantage Closer Course, and your training days will open here."
+                action={<Link to="/portal/onboarding" className="text-primary underline">Go to onboarding</Link>}
+              />
+            </Panel>
+            <CoachPanel />
+          </div>
         ) : (
-          <div className="space-y-3">
-            {q.data!.clearedAt && (
-              <Panel><div className="flex items-center gap-2 text-[14px]"><Badge tone="green">Cleared to call</Badge> You passed your release call. Get on the phones.</div></Panel>
-            )}
-            {q.data!.track.map((entry) => {
-              const current = openId ?? q.data!.track.find((e) => e.state !== "approved" && e.state !== "locked")?.day.id;
-              return (
-                <DayCard key={entry.day.id} entry={entry} open={current === entry.day.id} onToggle={() => setOpenId(current === entry.day.id ? "" : entry.day.id)} />
-              );
-            })}
+          <div className="grid gap-4 lg:grid-cols-[1.6fr_1fr]">
+            <div className="space-y-3">
+              {q.data!.clearedAt && (
+                <Panel><div className="flex items-center gap-2 text-[14px]"><Badge tone="green">Cleared to call</Badge> You passed your release call. Get on the phones.</div></Panel>
+              )}
+              {track.map((entry) => {
+                const current = openId ?? currentEntry?.day.id;
+                return (
+                  <DayCard key={entry.day.id} entry={entry} open={current === entry.day.id} onToggle={() => setOpenId(current === entry.day.id ? "" : entry.day.id)} />
+                );
+              })}
+            </div>
+            <div className="lg:sticky lg:top-4 lg:self-start"><CoachPanel /></div>
           </div>
         )}
       </PageBody>
