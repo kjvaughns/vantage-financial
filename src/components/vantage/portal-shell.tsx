@@ -21,7 +21,6 @@ import {
   Settings,
   Rocket,
   Target,
-  Mic,
   UserPlus,
   ShieldCheck,
   ScrollText,
