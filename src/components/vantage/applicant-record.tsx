@@ -1,3 +1,4 @@
+import { ApplicantTrainingPanel } from "@/components/vantage/training-panel";
 import { agencyDetailLines } from "@/lib/agency-questions";
 import { Link } from "@tanstack/react-router";
 import { formatPhone, phoneHref } from "@/lib/phone";
@@ -203,7 +204,7 @@ export function ApplicantRecord({
   }
 
   const Wrapper = variant === "drawer" ? DrawerShell : PageShell;
-  const [tab, setTab] = useState<"overview" | "activity" | "emails" | "evaluation">("overview");
+  const [tab, setTab] = useState<"overview" | "activity" | "emails" | "evaluation" | "training">("overview");
 
   if (recordQ.isError) {
     return (
@@ -296,6 +297,7 @@ export function ApplicantRecord({
             { value: "overview", label: "Overview" },
             { value: "activity", label: "Activity", count: (data?.activities ?? []).length },
             { value: "emails", label: "Emails" },
+            { value: "training", label: "Training" },
             { value: "evaluation", label: "Evaluation", count: (data?.evaluations ?? []).length },
           ]}
         />
@@ -486,6 +488,7 @@ export function ApplicantRecord({
 
         {/* Evaluation results (View Evaluation) */}
         {tab === "emails" && <ApplicantEmailHistory applicantId={applicantId} />}
+        {tab === "training" && <ApplicantTrainingPanel applicantId={applicantId} />}
 
         {tab === "evaluation" && (
         <div className="space-y-4">

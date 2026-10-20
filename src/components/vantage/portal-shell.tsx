@@ -18,6 +18,7 @@ import {
   Network,
   Settings,
   Rocket,
+  Target,
   UserPlus,
   ShieldCheck,
   ScrollText,
@@ -44,6 +45,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
   {
     label: "Growth",
     items: [
+      { to: "/portal/training", label: "Training", icon: Target },
       { to: "/portal/academy", label: "Academy", icon: GraduationCap },
       { to: "/portal/leaderboard", label: "Leaderboard", icon: Trophy },
       { to: "/portal/organization", label: "Organization", icon: Network },

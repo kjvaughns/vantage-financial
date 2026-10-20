@@ -331,6 +331,7 @@ export type Database = {
           calendly_scheduled_at: string | null
           calendly_url_used: string | null
           city: string | null
+          cleared_to_call_at: string | null
           confirmation_token: string | null
           consent_contact: boolean
           course_confirmed_at: string | null
@@ -383,6 +384,8 @@ export type Database = {
           referred_by_name: string | null
           referred_by_name_snapshot: string | null
           referred_by_profile_id: string | null
+          release_passed_at: string | null
+          release_requested_at: string | null
           requested_overview_at: string | null
           resident_state: string | null
           scheduled_event_end: string | null
@@ -400,6 +403,8 @@ export type Database = {
           team_id: string | null
           team_size: number | null
           training_started_at: string | null
+          training_unlock_override_by: string | null
+          training_unlocked_at: string | null
           updated_at: string
           vsl_watched_at: string | null
           wants_one_on_one: boolean
@@ -424,6 +429,7 @@ export type Database = {
           calendly_scheduled_at?: string | null
           calendly_url_used?: string | null
           city?: string | null
+          cleared_to_call_at?: string | null
           confirmation_token?: string | null
           consent_contact?: boolean
           course_confirmed_at?: string | null
@@ -476,6 +482,8 @@ export type Database = {
           referred_by_name?: string | null
           referred_by_name_snapshot?: string | null
           referred_by_profile_id?: string | null
+          release_passed_at?: string | null
+          release_requested_at?: string | null
           requested_overview_at?: string | null
           resident_state?: string | null
           scheduled_event_end?: string | null
@@ -493,6 +501,8 @@ export type Database = {
           team_id?: string | null
           team_size?: number | null
           training_started_at?: string | null
+          training_unlock_override_by?: string | null
+          training_unlocked_at?: string | null
           updated_at?: string
           vsl_watched_at?: string | null
           wants_one_on_one?: boolean
@@ -517,6 +527,7 @@ export type Database = {
           calendly_scheduled_at?: string | null
           calendly_url_used?: string | null
           city?: string | null
+          cleared_to_call_at?: string | null
           confirmation_token?: string | null
           consent_contact?: boolean
           course_confirmed_at?: string | null
@@ -569,6 +580,8 @@ export type Database = {
           referred_by_name?: string | null
           referred_by_name_snapshot?: string | null
           referred_by_profile_id?: string | null
+          release_passed_at?: string | null
+          release_requested_at?: string | null
           requested_overview_at?: string | null
           resident_state?: string | null
           scheduled_event_end?: string | null
@@ -586,6 +599,8 @@ export type Database = {
           team_id?: string | null
           team_size?: number | null
           training_started_at?: string | null
+          training_unlock_override_by?: string | null
+          training_unlocked_at?: string | null
           updated_at?: string
           vsl_watched_at?: string | null
           wants_one_on_one?: boolean
@@ -2280,6 +2295,95 @@ export type Database = {
         }
         Relationships: []
       }
+      training_days: {
+        Row: {
+          checklist: string[]
+          created_at: string
+          day_label: string | null
+          id: string
+          instructions: string | null
+          is_published: boolean
+          is_release: boolean
+          objective: string | null
+          position: number
+          prompt: string | null
+          slug: string
+          title: string
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          checklist?: string[]
+          created_at?: string
+          day_label?: string | null
+          id?: string
+          instructions?: string | null
+          is_published?: boolean
+          is_release?: boolean
+          objective?: string | null
+          position?: number
+          prompt?: string | null
+          slug: string
+          title: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          checklist?: string[]
+          created_at?: string
+          day_label?: string | null
+          id?: string
+          instructions?: string | null
+          is_published?: boolean
+          is_release?: boolean
+          objective?: string | null
+          position?: number
+          prompt?: string | null
+          slug?: string
+          title?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
+      training_progress: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          day_id: string
+          id: string
+          is_override: boolean
+          profile_id: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          day_id: string
+          id?: string
+          is_override?: boolean
+          profile_id: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          day_id?: string
+          id?: string
+          is_override?: boolean
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_progress_day_id_fkey"
+            columns: ["day_id"]
+            isOneToOne: false
+            referencedRelation: "training_days"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       training_schedule_items: {
         Row: {
           created_at: string
@@ -2312,6 +2416,56 @@ export type Database = {
           when_text?: string
         }
         Relationships: []
+      }
+      training_submissions: {
+        Row: {
+          created_at: string
+          day_id: string
+          feedback: string | null
+          file_path: string | null
+          id: string
+          link_url: string | null
+          note: string | null
+          profile_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          day_id: string
+          feedback?: string | null
+          file_path?: string | null
+          id?: string
+          link_url?: string | null
+          note?: string | null
+          profile_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          day_id?: string
+          feedback?: string | null
+          file_path?: string | null
+          id?: string
+          link_url?: string | null
+          note?: string | null
+          profile_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_submissions_day_id_fkey"
+            columns: ["day_id"]
+            isOneToOne: false
+            referencedRelation: "training_days"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

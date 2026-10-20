@@ -9,6 +9,7 @@ import confirmCourse from "./tools/confirm-course";
 import listAgents from "./tools/list-agents";
 import pipelineSummary from "./tools/pipeline-summary";
 import recentActivity from "./tools/recent-activity";
+import trainingStatus from "./tools/training-status";
 
 const projectRef = import.meta.env["VITE_SUPABASE_PROJECT_ID"] ?? "project-ref-unset";
 
@@ -24,6 +25,6 @@ export default defineMcp({
   }),
   tools: [
     listApplicants, getApplicant, createApplicant, updateApplicant, changeStage,
-    addNote, confirmCourse, listAgents, pipelineSummary, recentActivity,
+    addNote, confirmCourse, listAgents, pipelineSummary, recentActivity, trainingStatus,
   ],
 });

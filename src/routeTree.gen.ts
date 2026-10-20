@@ -44,6 +44,7 @@ import { Route as AuthenticatedPortalPipelineRouteImport } from './routes/_authe
 import { Route as AuthenticatedPortalResourcesRouteRouteImport } from './routes/_authenticated/portal/resources/route'
 import { Route as AuthenticatedPortalSettingsRouteImport } from './routes/_authenticated/portal/settings'
 import { Route as AuthenticatedPortalTasksRouteImport } from './routes/_authenticated/portal/tasks'
+import { Route as AuthenticatedPortalTrainingRouteImport } from './routes/_authenticated/portal/training'
 import { Route as ApplicationCompleteLicensedTokenRouteImport } from './routes/application-complete/licensed.$token'
 import { Route as ApplicationCompleteUnlicensedTokenRouteImport } from './routes/application-complete/unlicensed.$token'
 import { Route as AuthenticatedPortalAcademyIndexRouteImport } from './routes/_authenticated/portal/academy/index'
@@ -54,6 +55,7 @@ import { Route as AuthenticatedPortalAdminEmailsRouteImport } from './routes/_au
 import { Route as AuthenticatedPortalAdminOnboardingRouteImport } from './routes/_authenticated/portal/admin/onboarding'
 import { Route as AuthenticatedPortalAdminSettingsRouteImport } from './routes/_authenticated/portal/admin/settings'
 import { Route as AuthenticatedPortalAdminStagesRouteImport } from './routes/_authenticated/portal/admin/stages'
+import { Route as AuthenticatedPortalAdminTrainingRouteImport } from './routes/_authenticated/portal/admin/training'
 import { Route as AuthenticatedPortalAdminUsersRouteImport } from './routes/_authenticated/portal/admin/users'
 import { Route as AuthenticatedPortalApplicantsIndexRouteImport } from './routes/_authenticated/portal/applicants/index'
 import { Route as AuthenticatedPortalApplicantsApplicantIdRouteImport } from './routes/_authenticated/portal/applicants/$applicantId'
@@ -263,6 +265,12 @@ const AuthenticatedPortalTasksRoute =
     path: '/tasks',
     getParentRoute: () => AuthenticatedPortalRouteRoute,
   } as any)
+const AuthenticatedPortalTrainingRoute =
+  AuthenticatedPortalTrainingRouteImport.update({
+    id: '/training',
+    path: '/training',
+    getParentRoute: () => AuthenticatedPortalRouteRoute,
+  } as any)
 const ApplicationCompleteLicensedTokenRoute =
   ApplicationCompleteLicensedTokenRouteImport.update({
     id: '/licensed/$token',
@@ -321,6 +329,12 @@ const AuthenticatedPortalAdminStagesRoute =
   AuthenticatedPortalAdminStagesRouteImport.update({
     id: '/stages',
     path: '/stages',
+    getParentRoute: () => AuthenticatedPortalAdminRouteRoute,
+  } as any)
+const AuthenticatedPortalAdminTrainingRoute =
+  AuthenticatedPortalAdminTrainingRouteImport.update({
+    id: '/training',
+    path: '/training',
     getParentRoute: () => AuthenticatedPortalAdminRouteRoute,
   } as any)
 const AuthenticatedPortalAdminUsersRoute =
@@ -464,6 +478,7 @@ export interface FileRoutesByFullPath {
   '/portal/pipeline': typeof AuthenticatedPortalPipelineRoute
   '/portal/settings': typeof AuthenticatedPortalSettingsRoute
   '/portal/tasks': typeof AuthenticatedPortalTasksRoute
+  '/portal/training': typeof AuthenticatedPortalTrainingRoute
   '/application-complete/licensed/$token': typeof ApplicationCompleteLicensedTokenRoute
   '/application-complete/unlicensed/$token': typeof ApplicationCompleteUnlicensedTokenRoute
   '/portal/': typeof AuthenticatedPortalIndexRoute
@@ -473,6 +488,7 @@ export interface FileRoutesByFullPath {
   '/portal/admin/onboarding': typeof AuthenticatedPortalAdminOnboardingRoute
   '/portal/admin/settings': typeof AuthenticatedPortalAdminSettingsRoute
   '/portal/admin/stages': typeof AuthenticatedPortalAdminStagesRoute
+  '/portal/admin/training': typeof AuthenticatedPortalAdminTrainingRoute
   '/portal/admin/users': typeof AuthenticatedPortalAdminUsersRouteWithChildren
   '/portal/applicants/$applicantId': typeof AuthenticatedPortalApplicantsApplicantIdRoute
   '/portal/crm/$applicantId': typeof AuthenticatedPortalCrmApplicantIdRoute
@@ -520,6 +536,7 @@ export interface FileRoutesByTo {
   '/portal/pipeline': typeof AuthenticatedPortalPipelineRoute
   '/portal/settings': typeof AuthenticatedPortalSettingsRoute
   '/portal/tasks': typeof AuthenticatedPortalTasksRoute
+  '/portal/training': typeof AuthenticatedPortalTrainingRoute
   '/application-complete/licensed/$token': typeof ApplicationCompleteLicensedTokenRoute
   '/application-complete/unlicensed/$token': typeof ApplicationCompleteUnlicensedTokenRoute
   '/portal': typeof AuthenticatedPortalIndexRoute
@@ -529,6 +546,7 @@ export interface FileRoutesByTo {
   '/portal/admin/onboarding': typeof AuthenticatedPortalAdminOnboardingRoute
   '/portal/admin/settings': typeof AuthenticatedPortalAdminSettingsRoute
   '/portal/admin/stages': typeof AuthenticatedPortalAdminStagesRoute
+  '/portal/admin/training': typeof AuthenticatedPortalAdminTrainingRoute
   '/portal/admin/users': typeof AuthenticatedPortalAdminUsersRouteWithChildren
   '/portal/applicants/$applicantId': typeof AuthenticatedPortalApplicantsApplicantIdRoute
   '/portal/crm/$applicantId': typeof AuthenticatedPortalCrmApplicantIdRoute
@@ -586,6 +604,7 @@ export interface FileRoutesById {
   '/_authenticated/portal/pipeline': typeof AuthenticatedPortalPipelineRoute
   '/_authenticated/portal/settings': typeof AuthenticatedPortalSettingsRoute
   '/_authenticated/portal/tasks': typeof AuthenticatedPortalTasksRoute
+  '/_authenticated/portal/training': typeof AuthenticatedPortalTrainingRoute
   '/application-complete/licensed/$token': typeof ApplicationCompleteLicensedTokenRoute
   '/application-complete/unlicensed/$token': typeof ApplicationCompleteUnlicensedTokenRoute
   '/_authenticated/portal/': typeof AuthenticatedPortalIndexRoute
@@ -595,6 +614,7 @@ export interface FileRoutesById {
   '/_authenticated/portal/admin/onboarding': typeof AuthenticatedPortalAdminOnboardingRoute
   '/_authenticated/portal/admin/settings': typeof AuthenticatedPortalAdminSettingsRoute
   '/_authenticated/portal/admin/stages': typeof AuthenticatedPortalAdminStagesRoute
+  '/_authenticated/portal/admin/training': typeof AuthenticatedPortalAdminTrainingRoute
   '/_authenticated/portal/admin/users': typeof AuthenticatedPortalAdminUsersRouteWithChildren
   '/_authenticated/portal/applicants/$applicantId': typeof AuthenticatedPortalApplicantsApplicantIdRoute
   '/_authenticated/portal/crm/$applicantId': typeof AuthenticatedPortalCrmApplicantIdRoute
@@ -652,6 +672,7 @@ export interface FileRouteTypes {
     | '/portal/pipeline'
     | '/portal/settings'
     | '/portal/tasks'
+    | '/portal/training'
     | '/application-complete/licensed/$token'
     | '/application-complete/unlicensed/$token'
     | '/portal/'
@@ -661,6 +682,7 @@ export interface FileRouteTypes {
     | '/portal/admin/onboarding'
     | '/portal/admin/settings'
     | '/portal/admin/stages'
+    | '/portal/admin/training'
     | '/portal/admin/users'
     | '/portal/applicants/$applicantId'
     | '/portal/crm/$applicantId'
@@ -708,6 +730,7 @@ export interface FileRouteTypes {
     | '/portal/pipeline'
     | '/portal/settings'
     | '/portal/tasks'
+    | '/portal/training'
     | '/application-complete/licensed/$token'
     | '/application-complete/unlicensed/$token'
     | '/portal'
@@ -717,6 +740,7 @@ export interface FileRouteTypes {
     | '/portal/admin/onboarding'
     | '/portal/admin/settings'
     | '/portal/admin/stages'
+    | '/portal/admin/training'
     | '/portal/admin/users'
     | '/portal/applicants/$applicantId'
     | '/portal/crm/$applicantId'
@@ -773,6 +797,7 @@ export interface FileRouteTypes {
     | '/_authenticated/portal/pipeline'
     | '/_authenticated/portal/settings'
     | '/_authenticated/portal/tasks'
+    | '/_authenticated/portal/training'
     | '/application-complete/licensed/$token'
     | '/application-complete/unlicensed/$token'
     | '/_authenticated/portal/'
@@ -782,6 +807,7 @@ export interface FileRouteTypes {
     | '/_authenticated/portal/admin/onboarding'
     | '/_authenticated/portal/admin/settings'
     | '/_authenticated/portal/admin/stages'
+    | '/_authenticated/portal/admin/training'
     | '/_authenticated/portal/admin/users'
     | '/_authenticated/portal/applicants/$applicantId'
     | '/_authenticated/portal/crm/$applicantId'
@@ -1076,6 +1102,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPortalTasksRouteImport
       parentRoute: typeof AuthenticatedPortalRouteRoute
     }
+    '/_authenticated/portal/training': {
+      id: '/_authenticated/portal/training'
+      path: '/training'
+      fullPath: '/portal/training'
+      preLoaderRoute: typeof AuthenticatedPortalTrainingRouteImport
+      parentRoute: typeof AuthenticatedPortalRouteRoute
+    }
     '/application-complete/licensed/$token': {
       id: '/application-complete/licensed/$token'
       path: '/licensed/$token'
@@ -1144,6 +1177,13 @@ declare module '@tanstack/react-router' {
       path: '/stages'
       fullPath: '/portal/admin/stages'
       preLoaderRoute: typeof AuthenticatedPortalAdminStagesRouteImport
+      parentRoute: typeof AuthenticatedPortalAdminRouteRoute
+    }
+    '/_authenticated/portal/admin/training': {
+      id: '/_authenticated/portal/admin/training'
+      path: '/training'
+      fullPath: '/portal/admin/training'
+      preLoaderRoute: typeof AuthenticatedPortalAdminTrainingRouteImport
       parentRoute: typeof AuthenticatedPortalAdminRouteRoute
     }
     '/_authenticated/portal/admin/users': {
@@ -1321,6 +1361,7 @@ interface AuthenticatedPortalAdminRouteRouteChildren {
   AuthenticatedPortalAdminOnboardingRoute: typeof AuthenticatedPortalAdminOnboardingRoute
   AuthenticatedPortalAdminSettingsRoute: typeof AuthenticatedPortalAdminSettingsRoute
   AuthenticatedPortalAdminStagesRoute: typeof AuthenticatedPortalAdminStagesRoute
+  AuthenticatedPortalAdminTrainingRoute: typeof AuthenticatedPortalAdminTrainingRoute
   AuthenticatedPortalAdminUsersRoute: typeof AuthenticatedPortalAdminUsersRouteWithChildren
   AuthenticatedPortalAdminIndexRoute: typeof AuthenticatedPortalAdminIndexRoute
 }
@@ -1334,6 +1375,8 @@ const AuthenticatedPortalAdminRouteRouteChildren: AuthenticatedPortalAdminRouteR
     AuthenticatedPortalAdminSettingsRoute:
       AuthenticatedPortalAdminSettingsRoute,
     AuthenticatedPortalAdminStagesRoute: AuthenticatedPortalAdminStagesRoute,
+    AuthenticatedPortalAdminTrainingRoute:
+      AuthenticatedPortalAdminTrainingRoute,
     AuthenticatedPortalAdminUsersRoute:
       AuthenticatedPortalAdminUsersRouteWithChildren,
     AuthenticatedPortalAdminIndexRoute: AuthenticatedPortalAdminIndexRoute,
@@ -1416,6 +1459,7 @@ interface AuthenticatedPortalRouteRouteChildren {
   AuthenticatedPortalPipelineRoute: typeof AuthenticatedPortalPipelineRoute
   AuthenticatedPortalSettingsRoute: typeof AuthenticatedPortalSettingsRoute
   AuthenticatedPortalTasksRoute: typeof AuthenticatedPortalTasksRoute
+  AuthenticatedPortalTrainingRoute: typeof AuthenticatedPortalTrainingRoute
   AuthenticatedPortalIndexRoute: typeof AuthenticatedPortalIndexRoute
 }
 
@@ -1438,6 +1482,7 @@ const AuthenticatedPortalRouteRouteChildren: AuthenticatedPortalRouteRouteChildr
     AuthenticatedPortalPipelineRoute: AuthenticatedPortalPipelineRoute,
     AuthenticatedPortalSettingsRoute: AuthenticatedPortalSettingsRoute,
     AuthenticatedPortalTasksRoute: AuthenticatedPortalTasksRoute,
+    AuthenticatedPortalTrainingRoute: AuthenticatedPortalTrainingRoute,
     AuthenticatedPortalIndexRoute: AuthenticatedPortalIndexRoute,
   }
 
