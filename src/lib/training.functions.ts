@@ -38,7 +38,9 @@ export type TrainingSubmission = {
   reviewed_by: string | null;
   reviewed_at: string | null;
   created_at: string;
+  review_id: string | null;
   file_url?: string | null;
+  review?: { id: string; status: string; overall: number | null } | null;
 };
 
 export type DayState = "locked" | "open" | "submitted" | "redo" | "approved";
@@ -152,6 +154,13 @@ export const getMyTraining = createServerFn({ method: "GET" })
     const a = await applicantForProfile(context.userId);
     const unlocked = isUnlocked(a);
     const t = await loadTrack(context.supabase, context.userId, false);
+    // Attach Call Coach analysis status so the training page can show and poll it.
+    const reviewIds = t.submissions.map((s) => s.review_id).filter((x): x is string => !!x);
+    if (reviewIds.length) {
+      const { data: reviews } = await context.supabase.from("call_reviews").select("id, status, overall").in("id", reviewIds);
+      const rmap = new Map((reviews ?? []).map((r: any) => [r.id, r]));
+      for (const s of t.submissions) s.review = s.review_id ? ((rmap.get(s.review_id) as any) ?? null) : null;
+    }
     return {
       unlocked,
       onboardingDone: !!a?.onboarding_completed_at,
@@ -186,16 +195,35 @@ export const submitHomework = createServerFn({ method: "POST" })
     if (data.filePath && !data.filePath.startsWith(`${userId}/`)) throw new Error("Invalid upload.");
     validateHomeworkRecording(entry.day.is_release, data.linkUrl, data.filePath);
 
-    const { error } = await supabase.from("training_submissions").insert({
+    const { data: sub, error } = await supabase.from("training_submissions").insert({
       profile_id: userId,
       day_id: data.dayId,
       file_path: data.filePath ?? null,
       link_url: data.linkUrl?.trim() || null,
       note: data.note ?? null,
-    });
+    }).select("id").single();
     if (error) throw new Error(error.message);
 
     const label = `${entry.day.day_label ?? ""} ${entry.day.title}`.trim();
+
+    // Every homework recording gets a Call Coach review, analyzed automatically.
+    const driveLink = data.linkUrl?.trim() || null;
+    if (driveLink && !entry.day.is_release) {
+      try {
+        const { data: review, error: rErr } = await supabase
+          .from("call_reviews")
+          .insert({ profile_id: userId, title: label, call_type: "roleplay", source: "homework", media_url: driveLink })
+          .select("id, media_path, media_url")
+          .single();
+        if (rErr) throw new Error(rErr.message);
+        await supabase.from("training_submissions").update({ review_id: review.id }).eq("id", sub.id);
+        const { kickReviewProcessing } = await import("@/lib/coach.functions");
+        await kickReviewProcessing(review);
+      } catch (e) {
+        console.warn("[training] call coach auto-analysis failed to start", e);
+      }
+    }
+
     if (entry.day.is_release) {
       if (a) await (await admin()).from("applicants").update({ release_requested_at: new Date().toISOString() }).eq("id", a.id);
       await log(a?.id, "release_requested", "Requested release call", { day: entry.day.slug }, userId);
