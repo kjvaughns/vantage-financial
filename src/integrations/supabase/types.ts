@@ -857,6 +857,7 @@ export type Database = {
           media_path: string | null
           media_url: string | null
           provider_job_id: string | null
+          source_review_id: string | null
           status: string
           title: string
           transcript_text: string | null
@@ -871,6 +872,7 @@ export type Database = {
           media_path?: string | null
           media_url?: string | null
           provider_job_id?: string | null
+          source_review_id?: string | null
           status?: string
           title: string
           transcript_text?: string | null
@@ -885,6 +887,7 @@ export type Database = {
           media_path?: string | null
           media_url?: string | null
           provider_job_id?: string | null
+          source_review_id?: string | null
           status?: string
           title?: string
           transcript_text?: string | null
