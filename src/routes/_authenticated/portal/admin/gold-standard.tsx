@@ -185,7 +185,7 @@ function ReferenceCalls({ calls, candidates }: { calls: any[]; candidates: any[]
 function Scoring({ settings }: { settings: any }) {
   const qc = useQueryClient();
   const save = useServerFn(saveCoachSettings);
-  const [weights, setWeights] = useState<Record<string, number>>(() => Object.fromEntries(PILLARS.map((p) => [p.key, settings.weights?.[p.key] ?? 1])));
+  const [weights, setWeights] = useState<Record<string, number>>(() => Object.fromEntries(PILLARS.map((p) => [p.key, settings.weights?.[p.key] ?? DEFAULT_WEIGHTS[p.key]])));
   const [notes, setNotes] = useState<Record<string, string>>(() => Object.fromEntries(PILLARS.map((p) => [p.key, settings.rubric_notes?.[p.key] ?? ""])));
   const [minScore, setMinScore] = useState<string>(settings.min_score_for_approval?.toString() ?? "");
   const m = useMutation({
