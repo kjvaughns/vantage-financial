@@ -363,6 +363,7 @@ export type Database = {
           npn: string | null
           onboarding_completed_at: string | null
           onboarding_steps: Json | null
+          onboarding_substeps: Json
           original_recruiter_id: string | null
           original_referral_name_snapshot: string | null
           original_referral_profile_id: string | null
@@ -455,6 +456,7 @@ export type Database = {
           npn?: string | null
           onboarding_completed_at?: string | null
           onboarding_steps?: Json | null
+          onboarding_substeps?: Json
           original_recruiter_id?: string | null
           original_referral_name_snapshot?: string | null
           original_referral_profile_id?: string | null
@@ -547,6 +549,7 @@ export type Database = {
           npn?: string | null
           onboarding_completed_at?: string | null
           onboarding_steps?: Json | null
+          onboarding_substeps?: Json
           original_recruiter_id?: string | null
           original_referral_name_snapshot?: string | null
           original_referral_profile_id?: string | null
@@ -1614,6 +1617,7 @@ export type Database = {
           show_schedule: boolean
           show_upline: boolean
           step_key: string
+          substeps: Json
           title: string
           updated_at: string
         }
@@ -1638,6 +1642,7 @@ export type Database = {
           show_schedule?: boolean
           show_upline?: boolean
           step_key: string
+          substeps?: Json
           title: string
           updated_at?: string
         }
@@ -1662,6 +1667,7 @@ export type Database = {
           show_schedule?: boolean
           show_upline?: boolean
           step_key?: string
+          substeps?: Json
           title?: string
           updated_at?: string
         }
@@ -2427,6 +2433,7 @@ export type Database = {
       mark_licensed_fallback: { Args: { _token: string }; Returns: Json }
       mark_scheduled_by_token: { Args: { _token: string }; Returns: Json }
       mark_vsl_watched_by_token: { Args: { _token: string }; Returns: Json }
+      my_onboarding_substeps: { Args: never; Returns: Json }
       normalize_phone: { Args: { _txt: string }; Returns: string }
       onboarding_step_keys: {
         Args: { _required_only?: boolean }
@@ -2479,6 +2486,10 @@ export type Database = {
       slugify_name: { Args: { _text: string }; Returns: string }
       submit_application: { Args: { payload: Json }; Returns: Json }
       submit_evaluation: { Args: { payload: Json }; Returns: Json }
+      toggle_onboarding_substep: {
+        Args: { _done: boolean; _step: string; _sub: string }
+        Returns: Json
+      }
       update_onboarding: { Args: { _step: string }; Returns: Json }
     }
     Enums: {

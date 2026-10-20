@@ -399,6 +399,7 @@ function StepDrawer({
       auto_course_id: v.auto_course_id ?? v.course_id ?? null,
       show_schedule: v.show_schedule ?? false,
       show_upline: v.show_upline ?? false,
+      substeps: (v.substeps ?? []).filter((x) => x.title.trim()),
     });
   };
 
@@ -516,6 +517,8 @@ function StepDrawer({
           </Field>
         )}
       </FormGrid>
+
+      <SubstepsEditor value={v.substeps ?? []} onChange={(substeps) => set({ substeps })} />
 
       <div className="mt-4 space-y-3">
         <Toggle checked={v.is_published ?? true} onChange={(b) => set({ is_published: b })} label="Published" description="Unpublished steps are hidden from agents." />
@@ -734,6 +737,68 @@ function LinksTab({ links }: { links: AppLinkRow[] }) {
           </div>
         </Drawer>
       )}
+    </div>
+  );
+}
+
+// ------------------------------------------------------------- Substeps
+
+type Sub = { id: string; title: string; note?: string | null; url?: string | null };
+
+function SubstepsEditor({ value, onChange }: { value: Sub[]; onChange: (v: Sub[]) => void }) {
+  const [draft, setDraft] = useState("");
+  const add = () => {
+    const t = draft.trim();
+    if (!t) return;
+    if (value.length >= 20) return notify.error("Up to 20 substeps per step.");
+    onChange([...value, { id: Math.random().toString(36).slice(2, 10), title: t, note: null, url: null }]);
+    setDraft("");
+  };
+  const patch = (i: number, p: Partial<Sub>) => onChange(value.map((x, j) => (j === i ? { ...x, ...p } : x)));
+  const move = (i: number, d: number) => {
+    const j = i + d;
+    if (j < 0 || j >= value.length) return;
+    const next = [...value];
+    [next[i], next[j]] = [next[j], next[i]];
+    onChange(next);
+  };
+  return (
+    <div className="mt-4">
+      <div className="p-label mb-1">Substeps</div>
+      <p className="p-muted mb-2 text-[12px]">
+        Optional checklist inside this step. Agents tick each one before they can mark the step complete.
+      </p>
+      <div className="space-y-2">
+        {value.map((x, i) => (
+          <div key={x.id} className="rounded-md border p-2" style={{ borderColor: "var(--p-border)" }}>
+            <div className="flex items-center gap-2">
+              <span className="p-muted w-5 text-[12px]">{i + 1}.</span>
+              <Input value={x.title} onChange={(e) => patch(i, { title: e.target.value })} />
+              <Button variant="ghost" size="sm" onClick={() => move(i, -1)} disabled={i === 0} aria-label="Move up">↑</Button>
+              <Button variant="ghost" size="sm" onClick={() => move(i, 1)} disabled={i === value.length - 1} aria-label="Move down">↓</Button>
+              <Button variant="ghost" size="sm" onClick={() => onChange(value.filter((_, j) => j !== i))} aria-label="Remove">✕</Button>
+            </div>
+            <div className="mt-2 grid gap-2 pl-7 sm:grid-cols-2">
+              <Input value={x.note ?? ""} onChange={(e) => patch(i, { note: e.target.value || null })} placeholder="Short note (optional)" />
+              <Input value={x.url ?? ""} onChange={(e) => patch(i, { url: e.target.value || null })} placeholder="Link https://… (optional)" />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-2 flex gap-2">
+        <Input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              add();
+            }
+          }}
+          placeholder="Type a substep and press Enter"
+        />
+        <Button variant="secondary" size="sm" onClick={add}>Add</Button>
+      </div>
     </div>
   );
 }
