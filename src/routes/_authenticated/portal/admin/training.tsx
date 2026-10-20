@@ -91,6 +91,12 @@ function ReviewCard({ s }: { s: any }) {
       <div className="space-y-3 text-[14px]">
         {s.file_url && <video src={s.file_url} controls className="w-full max-w-xl rounded" />}
         {s.link_url && <a href={s.link_url} target="_blank" rel="noreferrer" className="text-primary underline">Open homework recording / link</a>}
+        {s.review_id && (
+          <div>
+            <Link to="/portal/coach/$id" params={{ id: s.review_id }} className="text-primary underline">View Call Coach scorecard</Link>
+            <span className="text-[12px] text-muted-foreground"> — auto-analyzed against the Gold Standard</span>
+          </div>
+        )}
         {s.note && <p>{s.note}</p>}
         <Field label="Feedback for the agent"><Textarea rows={2} value={feedback} onChange={(e) => setFeedback(e.target.value)} /></Field>
         <div className="flex gap-2">
