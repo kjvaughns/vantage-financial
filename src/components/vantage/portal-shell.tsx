@@ -7,6 +7,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getMe, addAgent, getMyOnboarding, getMyRecruitingLink } from "@/lib/portal.functions";
 import { AddAgentModal } from "@/components/vantage/add-agent-modal";
+import { NewContentBadge } from "@/components/vantage/new-content-badge";
+import { getNewContentDates } from "@/lib/new-content.functions";
 import { useTheme } from "@/components/vantage/theme";
 import { Avatar, Badge, btnClass } from "@/components/portal/ui";
 import {
@@ -143,6 +145,8 @@ export function PortalShell({ children }: { children: ReactNode }) {
   }, [collapsed]);
 
   const fetchMe = useServerFn(getMe);
+  const fetchContentDates = useServerFn(getNewContentDates);
+  const contentDatesQ = useQuery({ queryKey: ["new-content-dates"], queryFn: () => fetchContentDates(), refetchInterval: 60_000, staleTime: 0 });
   const addAgentFn = useServerFn(addAgent);
   const fetchOnboarding = useServerFn(getMyOnboarding);
   const meQ = useQuery({ queryKey: ["me"], queryFn: () => fetchMe() });
@@ -286,6 +290,7 @@ export function PortalShell({ children }: { children: ReactNode }) {
                     to={n.to}
                     icon={n.icon}
                     label={n.label}
+                    badge={n.to === "/portal/academy" ? <NewContentBadge createdAt={contentDatesQ.data?.academy} /> : n.to === "/portal/training" ? <NewContentBadge createdAt={contentDatesQ.data?.training} /> : undefined}
                     active={n.to === "/portal" ? path === "/portal" : path.startsWith(n.to)}
                     collapsed={collapsed}
                     onClick={() => setMobileOpen(false)}

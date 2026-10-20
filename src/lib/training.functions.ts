@@ -23,6 +23,7 @@ export type TrainingDay = {
   checklist: string[];
   is_release: boolean;
   is_published: boolean;
+  created_at?: string;
 };
 
 export type TrainingSubmission = {
@@ -43,7 +44,7 @@ export type TrainingSubmission = {
 export type DayState = "locked" | "open" | "submitted" | "redo" | "approved";
 
 const DAY_COLS =
-  "id, slug, title, day_label, position, video_url, objective, prompt, instructions, checklist, is_release, is_published";
+  "id, slug, title, day_label, position, video_url, objective, prompt, instructions, checklist, is_release, is_published, created_at";
 
 async function admin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
