@@ -238,7 +238,7 @@ function CompletionPanel() {
         call to be cleared to call.
       </p>
       <div className="mt-4 flex flex-wrap justify-center gap-2">
-        <Link to="/portal/training">
+        <Link to="/portal/training" search={{ tab: "days" }}>
           <Button variant="primary">Start training →</Button>
         </Link>
         <Button variant="secondary" loading={mut.isPending} disabled={sent} onClick={() => mut.mutate()}>
