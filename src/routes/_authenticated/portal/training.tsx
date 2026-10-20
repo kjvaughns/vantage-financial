@@ -9,9 +9,9 @@ import { STATE_LABEL, STATE_TONE } from "@/components/vantage/training-panel";
 import { getMyTraining, submitHomework, type TrainingDay } from "@/lib/training.functions";
 import { isGoogleDriveRecordingLink } from "@/lib/training-homework";
 import { NewContentBadge } from "@/components/vantage/new-content-badge";
-import { PillarBars, ScoreRing, StatusBadge, SubmitCallForm } from "@/components/vantage/coach";
+import { PillarBars, ScoreRing, StatusBadge, SubmitCallForm, useReviewPolling } from "@/components/vantage/coach";
 import { listMyReviews } from "@/lib/coach.functions";
-import { PILLARS } from "@/lib/coach-scoring";
+import { PILLARS, scoreTone } from "@/lib/coach-scoring";
 
 /** Call Coach lives inside the Training Hub as its own tab. */
 function CoachTab() {
@@ -252,7 +252,10 @@ function DayBody({ day, state, latest }: { day: TrainingDay; state: string; late
         <div className="rounded-md border border-border p-3"><div className="p-label mb-1">Trainer feedback</div>{latest.feedback}</div>
       )}
       {state === "approved" ? null : state === "submitted" ? (
-        <p className="text-muted-foreground">{day.is_release ? "Release call requested — your trainer will reach out to schedule it." : "Submitted. Your trainer will review it soon."}</p>
+        <div className="space-y-3">
+          <p className="text-muted-foreground">{day.is_release ? "Release call requested — your trainer will reach out to schedule it." : "Submitted. Your trainer will review it soon."}</p>
+          {latest?.review_id && latest?.review && <CoachAnalysis reviewId={latest.review_id} review={latest.review} />}
+        </div>
       ) : (
         <SubmitForm day={day} />
       )}
