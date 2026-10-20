@@ -12,6 +12,7 @@ import {
   advanceReferenceCall,
   deleteScript,
   getGoldStandard,
+  promoteReviewToReference,
   saveCoachSettings,
   saveScript,
   syncScriptFromDoc,
@@ -45,7 +46,7 @@ function GoldStandardPage() {
         {q.isLoading ? <Panel><TextSkeleton lines={6} /></Panel> : q.error ? <Panel><EmptyState title="Couldn't load" description={(q.error as Error).message} /></Panel> : (
           <div className="space-y-4">
             <Scripts scripts={q.data!.scripts} />
-            <ReferenceCalls calls={q.data!.calls} />
+            <ReferenceCalls calls={q.data!.calls} candidates={q.data!.candidates} />
             <Scoring settings={q.data!.settings} />
           </div>
         )}
@@ -110,7 +111,7 @@ function ScriptRow({ s, onSync, syncing }: { s: any; onSync: () => void; syncing
   );
 }
 
-function ReferenceCalls({ calls }: { calls: any[] }) {
+function ReferenceCalls({ calls, candidates }: { calls: any[]; candidates: any[] }) {
   const qc = useQueryClient();
   const add = useServerFn(addReferenceCall);
   const advance = useServerFn(advanceReferenceCall);
@@ -138,6 +139,12 @@ function ReferenceCalls({ calls }: { calls: any[] }) {
     onError: (e: Error) => notify.error("Couldn't add", e.message),
   });
   const refresh = () => qc.invalidateQueries({ queryKey: KEY });
+  const promote = useServerFn(promoteReviewToReference);
+  const pm = useMutation({
+    mutationFn: (reviewId: string) => promote({ data: { reviewId } }),
+    onSuccess: () => { notify.success("Model call added", "It's now part of the Gold Standard."); refresh(); },
+    onError: (e: Error) => notify.error("Couldn't add", e.message),
+  });
   return (
     <Panel title="Model calls" description="Your best calls. The 3 newest active ones are used as examples of how a call should sound.">
       <div className="space-y-4">
@@ -146,6 +153,21 @@ function ReferenceCalls({ calls }: { calls: any[] }) {
           <MediaPicker mode={mode} setMode={setMode} file={file} setFile={setFile} link={link} setLink={setLink} />
           <Button variant="primary" loading={m.isPending} disabled={mode === "upload" ? !file : !link.trim()} onClick={() => m.mutate()}>Add model call</Button>
         </div>
+        {candidates.length > 0 && (
+          <div className="rounded-md border border-border p-3">
+            <div className="p-label mb-1">Reuse an already-analyzed call</div>
+            <p className="mb-2 text-[12.5px] text-muted-foreground">Any call that's been scored already has a transcript — add it as a model call without re-uploading.</p>
+            <div className="space-y-2">
+              {candidates.map((r: any) => (
+                <div key={r.id} className="flex flex-wrap items-center gap-2 rounded-md border border-border px-3 py-2 text-[13.5px]">
+                  <span className="flex-1 font-medium">{r.title}</span>
+                  <span className="text-[12px] text-muted-foreground">{r.call_type === "live" ? "Live call" : "Roleplay"} · {new Date(r.created_at).toLocaleDateString()}{r.overall != null ? ` · scored ${r.overall}` : ""}</span>
+                  <Button size="sm" loading={pm.isPending && pm.variables === r.id} onClick={() => pm.mutate(r.id)}>Use as model call</Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         {calls.map((c) => (
           <div key={c.id} className="flex flex-wrap items-center gap-2 rounded-md border border-border p-3 text-[13.5px]">
             <span className="flex-1 font-medium">{c.title}</span>
