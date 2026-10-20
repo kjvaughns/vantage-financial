@@ -97,8 +97,7 @@ export const advanceReview = createServerFn({ method: "POST" })
     const tx = await import("@/lib/academy/transcribe.server");
     try {
       if (row.status === "queued") {
-        const jobId = await tx.submitTranscription(await mediaFor(row));
-        await sb.from("call_reviews").update({ status: "transcribing", provider_job_id: jobId, error: null, updated_at: new Date().toISOString() }).eq("id", row.id);
+        await kickReviewProcessing(row);
         return { status: "transcribing" as const };
       }
       if (row.status === "transcribing") {
