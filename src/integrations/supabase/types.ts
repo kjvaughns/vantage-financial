@@ -752,6 +752,206 @@ export type Database = {
           },
         ]
       }
+      call_review_comments: {
+        Row: {
+          author_id: string
+          body: string
+          created_at: string
+          id: string
+          review_id: string
+        }
+        Insert: {
+          author_id: string
+          body: string
+          created_at?: string
+          id?: string
+          review_id: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          created_at?: string
+          id?: string
+          review_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "call_review_comments_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "call_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      call_reviews: {
+        Row: {
+          call_type: string
+          created_at: string
+          error: string | null
+          id: string
+          improvements: Json | null
+          media_path: string | null
+          media_url: string | null
+          overall: number | null
+          pillar_scores: Json | null
+          profile_id: string
+          provider_job_id: string | null
+          source: string
+          status: string
+          summary: string | null
+          title: string
+          transcript: Json | null
+          transcript_text: string | null
+          updated_at: string
+        }
+        Insert: {
+          call_type?: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          improvements?: Json | null
+          media_path?: string | null
+          media_url?: string | null
+          overall?: number | null
+          pillar_scores?: Json | null
+          profile_id: string
+          provider_job_id?: string | null
+          source?: string
+          status?: string
+          summary?: string | null
+          title: string
+          transcript?: Json | null
+          transcript_text?: string | null
+          updated_at?: string
+        }
+        Update: {
+          call_type?: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          improvements?: Json | null
+          media_path?: string | null
+          media_url?: string | null
+          overall?: number | null
+          pillar_scores?: Json | null
+          profile_id?: string
+          provider_job_id?: string | null
+          source?: string
+          status?: string
+          summary?: string | null
+          title?: string
+          transcript?: Json | null
+          transcript_text?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      coach_reference_calls: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          error: string | null
+          id: string
+          is_active: boolean
+          media_path: string | null
+          media_url: string | null
+          provider_job_id: string | null
+          status: string
+          title: string
+          transcript_text: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          id?: string
+          is_active?: boolean
+          media_path?: string | null
+          media_url?: string | null
+          provider_job_id?: string | null
+          status?: string
+          title: string
+          transcript_text?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          id?: string
+          is_active?: boolean
+          media_path?: string | null
+          media_url?: string | null
+          provider_job_id?: string | null
+          status?: string
+          title?: string
+          transcript_text?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      coach_reference_scripts: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_active: boolean
+          sections: Json
+          source_doc_id: string | null
+          synced_at: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          sections?: Json
+          source_doc_id?: string | null
+          synced_at?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          sections?: Json
+          source_doc_id?: string | null
+          synced_at?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      coach_settings: {
+        Row: {
+          id: boolean
+          min_score_for_approval: number | null
+          rubric_notes: Json
+          updated_at: string
+          weights: Json
+        }
+        Insert: {
+          id?: boolean
+          min_score_for_approval?: number | null
+          rubric_notes?: Json
+          updated_at?: string
+          weights?: Json
+        }
+        Update: {
+          id?: boolean
+          min_score_for_approval?: number | null
+          rubric_notes?: Json
+          updated_at?: string
+          weights?: Json
+        }
+        Relationships: []
+      }
       course_lessons: {
         Row: {
           blurb: string | null
