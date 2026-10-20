@@ -7,6 +7,7 @@ import { PortalShell } from "@/components/vantage/portal-shell";
 import { getMe } from "@/lib/portal.functions";
 import { getAcademyHome } from "@/lib/academy.functions";
 import { listRecordingsLearner } from "@/lib/academy-content.functions";
+import { NewContentBadge } from "@/components/vantage/new-content-badge";
 import {
   PageHeader,
   PageBody,
@@ -30,7 +31,7 @@ const searchSchema = z.object({
 
 
 export const Route = createFileRoute("/_authenticated/portal/academy/")({
-  head: () => ({ meta: [{ title: "Academy — Vantage Portal" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Academy — Vantage Portal" }, { name: "description", content: "Vantage courses, recorded presentations and agent resources." }, { property: "og:title", content: "Academy — Vantage Portal" }, { property: "og:description", content: "Courses, presentations and resources for Vantage agents." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] }),
   validateSearch: (s) => searchSchema.parse(s),
   component: AcademyHome,
 });
@@ -96,12 +97,15 @@ function AcademyHome() {
   }
 
   if (section === "presentations") {
-    const speakers = new Map<string, { slug: string; name: string; role: string | null; photo_url: string | null; count: number }>();
+    const speakers = new Map<string, { slug: string; name: string; role: string | null; photo_url: string | null; count: number; created_at: string | null }>();
     for (const r of presentations) {
       const p = r.presenter;
       const key = p?.slug || p?.id || "unknown";
       const existing = speakers.get(key);
-      if (existing) existing.count += 1;
+      if (existing) {
+        existing.count += 1;
+        if (r.created_at && (!existing.created_at || r.created_at > existing.created_at)) existing.created_at = r.created_at;
+      }
       else
         speakers.set(key, {
           slug: key,
@@ -109,6 +113,7 @@ function AcademyHome() {
           role: p?.role ?? null,
           photo_url: p?.photo_url ?? null,
           count: 1,
+          created_at: r.created_at ?? null,
         });
     }
     const speakerList = Array.from(speakers.values()).sort((a, b) => a.name.localeCompare(b.name));
@@ -220,6 +225,7 @@ function AcademyHome() {
             title="Recorded Presentations"
             desc="Watch previous trainings and call breakdowns."
             count={presentations.length}
+            createdAt={latestContentDate(presentations)}
           />
           <HubCard
             to="courses"
@@ -227,6 +233,7 @@ function AcademyHome() {
             title="Courses"
             desc="Complete structured Vantage training programs."
             count={courses.length}
+            createdAt={latestContentDate(courses)}
           />
           <HubCard
             to="library"
@@ -234,6 +241,7 @@ function AcademyHome() {
             title="Library"
             desc="Access scripts, PDFs, guides, videos, and resources."
             count={library.length}
+            createdAt={latestContentDate(library)}
           />
         </div>
       </PageBody>
@@ -241,11 +249,15 @@ function AcademyHome() {
   );
 }
 
-function HubCard({ to, icon, title, desc, count }: { to: "presentations" | "courses" | "library"; icon: React.ReactNode; title: string; desc: string; count: number }) {
+function latestContentDate(items: { created_at?: string | null }[]) {
+  return items.flatMap((item) => item.created_at ? [item.created_at] : []).sort().at(-1) ?? null;
+}
+
+function HubCard({ to, icon, title, desc, count, createdAt }: { to: "presentations" | "courses" | "library"; icon: React.ReactNode; title: string; desc: string; count: number; createdAt: string | null }) {
   return (
     <Link to="/portal/academy" search={{ section: to }} className="p-panel flex flex-col gap-2 p-4 transition hover:[border-color:var(--p-border-strong)]">
       <span className="grid h-9 w-9 place-items-center rounded-[10px]" style={{ background: "var(--p-raised)", color: "var(--p-gold)" }}>{icon}</span>
-      <h2 className="p-card-title mt-1">{title}</h2>
+      <div className="flex flex-wrap items-center gap-2"><h2 className="p-card-title mt-1">{title}</h2><NewContentBadge createdAt={createdAt} /></div>
       <p className="p-secondary leading-snug">{desc}</p>
       <div className="mt-auto pt-2"><span className="p-muted">{count} {count === 1 ? "item" : "items"}</span></div>
     </Link>
@@ -257,7 +269,7 @@ function CourseCard({ c }: { c: any }) {
     <Link to="/portal/academy/courses/$slug" params={{ slug: c.slug }} className="p-panel flex flex-col gap-2 p-4 transition hover:[border-color:var(--p-border-strong)]">
       <div className="flex items-start justify-between gap-2">
         <span className="p-card-title">{c.title}</span>
-        {c.is_required && <Badge tone="gold">Required</Badge>}
+        <div className="flex shrink-0 flex-wrap gap-1"><NewContentBadge createdAt={c.created_at} />{c.is_required && <Badge tone="gold">Required</Badge>}</div>
       </div>
       {c.instructor_name && <span className="p-muted">{c.instructor_name}</span>}
       {c.description && <p className="p-secondary leading-snug">{c.description}</p>}
@@ -299,7 +311,7 @@ function PresentationCard({ r }: { r: any }) {
       <div className="p-3">
         <div className="flex items-start justify-between gap-2">
           <div className="p-card-title truncate">{r.title}</div>
-          {r.is_new && <Badge tone="blue">New</Badge>}
+          <NewContentBadge createdAt={r.created_at} />
         </div>
         <div className="p-muted mt-0.5 truncate">
           {[r.presenter?.name, r.topic, r.duration].filter(Boolean).join(" · ")}
@@ -353,7 +365,7 @@ function LibrarySection({ resources }: { resources: any[] }) {
             <Link key={r.id} to="/portal/academy/library/$slug" params={{ slug: r.slug }} className="p-panel flex flex-col gap-2 p-4 transition hover:[border-color:var(--p-border-strong)]">
               <div className="flex items-start justify-between gap-2">
                 <span className="grid h-8 w-8 place-items-center rounded-[8px]" style={{ background: "var(--p-raised)", color: "var(--p-gold)" }}>{typeIcon(r.type, 15)}</span>
-                {r.is_required && <Badge tone="gold">Required</Badge>}
+                <div className="flex flex-wrap gap-1"><NewContentBadge createdAt={r.created_at} />{r.is_required && <Badge tone="gold">Required</Badge>}</div>
               </div>
               <span className="p-card-title">{r.title}</span>
               {r.description && <p className="p-secondary leading-snug">{r.description}</p>}
@@ -369,7 +381,7 @@ function LibrarySection({ resources }: { resources: any[] }) {
   );
 }
 
-function SpeakerCard({ s }: { s: { slug: string; name: string; role: string | null; photo_url: string | null; count: number } }) {
+function SpeakerCard({ s }: { s: { slug: string; name: string; role: string | null; photo_url: string | null; count: number; created_at: string | null } }) {
   return (
     <Link
       to="/portal/academy"
@@ -383,6 +395,7 @@ function SpeakerCard({ s }: { s: { slug: string; name: string; role: string | nu
       )}
       <div className="min-w-0">
         <div className="p-card-title truncate">{s.name}</div>
+        <NewContentBadge createdAt={s.created_at} />
         {s.role && <div className="p-muted truncate">{s.role}</div>}
         <div className="p-muted mt-0.5">{s.count} {s.count === 1 ? "recording" : "recordings"}</div>
       </div>

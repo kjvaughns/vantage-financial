@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Badge, Button, EmptyState, Panel, TextSkeleton, notify, type BadgeTone } from "@/components/portal/ui";
 import { getApplicantTraining, overrideTraining, type DayState } from "@/lib/training.functions";
+import { NewContentBadge } from "@/components/vantage/new-content-badge";
 
 export const STATE_LABEL: Record<DayState, string> = {
   locked: "Locked",
@@ -77,6 +78,7 @@ export function ApplicantTrainingPanel({ applicantId }: { applicantId: string })
             title={<span>{day.day_label ? `${day.day_label} · ` : ""}{day.title}</span>}
             actions={
               <div className="flex items-center gap-2">
+                <NewContentBadge createdAt={day.created_at} />
                 <Badge tone={STATE_TONE[state]}>{STATE_LABEL[state]}</Badge>
                 {state === "approved" ? (
                   <Button size="sm" variant="ghost" disabled={m.isPending} onClick={() => m.mutate({ action: "unapprove_day", dayId: day.id })}>Undo</Button>

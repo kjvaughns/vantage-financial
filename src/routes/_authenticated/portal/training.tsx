@@ -8,6 +8,7 @@ import { Badge, Button, EmptyState, Field, Input, PageBody, PageHeader, Panel, T
 import { STATE_LABEL, STATE_TONE } from "@/components/vantage/training-panel";
 import { getMyTraining, submitHomework, type TrainingDay } from "@/lib/training.functions";
 import { isGoogleDriveRecordingLink } from "@/lib/training-homework";
+import { NewContentBadge } from "@/components/vantage/new-content-badge";
 
 export const Route = createFileRoute("/_authenticated/portal/training")({
   head: () => ({
@@ -85,7 +86,7 @@ function DayCard({
           <span>{day.day_label ? `${day.day_label} · ` : ""}{day.title}</span>
         </button>
       }
-      actions={<Badge tone={STATE_TONE[state]}>{STATE_LABEL[state]}</Badge>}
+      actions={<div className="flex items-center gap-2"><NewContentBadge createdAt={day.created_at} /><Badge tone={STATE_TONE[state]}>{STATE_LABEL[state]}</Badge></div>}
     >
       {locked ? (
         <p className="text-[13px] text-muted-foreground">{day.is_release ? "Unlocks when Monday–Thursday are approved." : "Unlocks when the previous day is approved."}</p>
