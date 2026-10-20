@@ -753,6 +753,13 @@ export const completeOnboardingStep = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const { supabase } = context;
+    const [{ data: def }, { data: doneMap }] = await Promise.all([
+      (supabase as any).from("onboarding_steps").select("substeps").eq("step_key", data.step).maybeSingle(),
+      (supabase as any).rpc("my_onboarding_substeps"),
+    ]);
+    const subs = (def?.substeps ?? []) as { id: string }[];
+    const ticked = new Set<string>(((doneMap ?? {}) as Record<string, string[]>)[data.step] ?? []);
+    if (subs.some((x) => !ticked.has(x.id))) throw new Error("Finish every substep first.");
     const { data: res, error } = await (supabase as any).rpc("update_onboarding", {
       _step: data.step,
     });

@@ -31,7 +31,10 @@ export type OnboardingStepRow = {
   auto_course_id: string | null;
   show_schedule: boolean;
   show_upline: boolean;
+  substeps: OnboardingSubstep[];
 };
+
+export type OnboardingSubstep = { id: string; title: string; note?: string | null; url?: string | null };
 
 export type OnboardingSectionRow = {
   id: string;
@@ -53,7 +56,7 @@ export type ScheduleItemRow = {
 export type AppLinkRow = { key: string; label: string; url: string; description: string | null };
 
 const STEP_COLS =
-  "id, section_id, step_key, title, description, instructions, position, is_published, is_required, action_type, action_url, internal_path, course_id, resource_id, recording_id, button_label, completion_mode, auto_course_id, show_schedule, show_upline";
+  "id, section_id, step_key, title, description, instructions, position, is_published, is_required, action_type, action_url, internal_path, course_id, resource_id, recording_id, button_label, completion_mode, auto_course_id, show_schedule, show_upline, substeps";
 
 /** Published onboarding content + schedule + links for the agent-facing page. */
 export const getOnboardingContent = createServerFn({ method: "POST" })
@@ -179,6 +182,17 @@ const stepSchema = z.object({
   auto_course_id: z.string().uuid().nullish(),
   show_schedule: z.boolean().optional(),
   show_upline: z.boolean().optional(),
+  substeps: z
+    .array(
+      z.object({
+        id: z.string().regex(/^[a-z0-9_-]{1,40}$/),
+        title: z.string().trim().min(1).max(200),
+        note: z.string().max(500).nullish(),
+        url: z.string().max(1000).nullish(),
+      }),
+    )
+    .max(20)
+    .optional(),
 });
 
 export const saveOnboardingStep = createServerFn({ method: "POST" })
@@ -206,6 +220,7 @@ export const saveOnboardingStep = createServerFn({ method: "POST" })
       auto_course_id: data.completion_mode === "auto" ? data.auto_course_id ?? data.course_id ?? null : null,
       show_schedule: data.show_schedule ?? false,
       show_upline: data.show_upline ?? false,
+      substeps: data.substeps ?? [],
     };
     if (data.id) {
       const { error } = await s.from("onboarding_steps").update(payload).eq("id", data.id);
@@ -382,4 +397,34 @@ export const setAgentOnboardingStep = createServerFn({ method: "POST" })
     });
     if (error) throw error;
     return res as { ok: boolean };
+  });
+
+/** Agent ticks/unticks a substep on their own checklist. */
+export const toggleOnboardingSubstep = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        step: z.string().regex(/^[a-z0-9_]{1,80}$/),
+        sub: z.string().regex(/^[a-z0-9_-]{1,40}$/),
+        done: z.boolean(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    const { data: map, error } = await (context.supabase as any).rpc("toggle_onboarding_substep", {
+      _step: data.step,
+      _sub: data.sub,
+      _done: data.done,
+    });
+    if (error) throw new Error(error.message);
+    return (map ?? {}) as Record<string, string[]>;
+  });
+
+/** The signed-in agent's ticked substeps, keyed by step. */
+export const getMySubsteps = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data } = await (context.supabase as any).rpc("my_onboarding_substeps");
+    return (data ?? {}) as Record<string, string[]>;
   });
