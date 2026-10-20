@@ -7,8 +7,9 @@ export const Route = createFileRoute("/_authenticated/portal/admin/")({
   component: AdminHome,
 });
 
-const CARDS: { to: "/portal/admin/users" | "/portal/admin/stages" | "/portal/admin/settings" | "/portal/admin/onboarding"; label: string; desc: string; icon: string }[] = [
+const CARDS: { to: "/portal/admin/users" | "/portal/admin/stages" | "/portal/admin/settings" | "/portal/admin/onboarding" | "/portal/admin/training"; label: string; desc: string; icon: string }[] = [
   { to: "/portal/admin/users", label: "Users & Roles", desc: "Grant admin, manager, or agent access; toggle activation and teams.", icon: "◐" },
+  { to: "/portal/admin/training", label: "Training Review", desc: "Review homework, run release calls, and edit the training days.", icon: "▶" },
   { to: "/portal/admin/onboarding", label: "Onboarding & Training", desc: "Build the new agent checklist, weekly schedule, and shared links.", icon: "✓" },
   { to: "/portal/admin/stages", label: "Pipeline Stages", desc: "Configure the recruiting pipeline stages, colors, and order.", icon: "▤" },
   { to: "/portal/admin/settings", label: "System Settings", desc: "Global platform configuration and defaults.", icon: "⚙" },
