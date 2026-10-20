@@ -46,7 +46,7 @@ function GoldStandardPage() {
         {q.isLoading ? <Panel><TextSkeleton lines={6} /></Panel> : q.error ? <Panel><EmptyState title="Couldn't load" description={(q.error as Error).message} /></Panel> : (
           <div className="space-y-4">
             <Scripts scripts={q.data!.scripts} />
-            <ReferenceCalls calls={q.data!.calls} />
+            <ReferenceCalls calls={q.data!.calls} candidates={q.data!.candidates} />
             <Scoring settings={q.data!.settings} />
           </div>
         )}
@@ -111,7 +111,7 @@ function ScriptRow({ s, onSync, syncing }: { s: any; onSync: () => void; syncing
   );
 }
 
-function ReferenceCalls({ calls }: { calls: any[] }) {
+function ReferenceCalls({ calls, candidates }: { calls: any[]; candidates: any[] }) {
   const qc = useQueryClient();
   const add = useServerFn(addReferenceCall);
   const advance = useServerFn(advanceReferenceCall);
