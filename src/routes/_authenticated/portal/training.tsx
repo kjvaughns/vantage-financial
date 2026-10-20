@@ -263,6 +263,29 @@ function DayBody({ day, state, latest }: { day: TrainingDay; state: string; late
   );
 }
 
+/** Shows the automatic Call Coach analysis for a submitted homework recording and polls it to completion. */
+function CoachAnalysis({ reviewId, review }: { reviewId: string; review: { status: string; overall: number | null } }) {
+  const qc = useQueryClient();
+  useReviewPolling(reviewId, review.status, () => qc.invalidateQueries({ queryKey: ["my-training"] }));
+  if (review.status === "failed") {
+    return <p className="text-[13px] text-muted-foreground">Call Coach couldn't analyze this recording — your trainer will still review it manually.</p>;
+  }
+  if (review.status !== "done") {
+    return (
+      <p className="flex items-center gap-2 text-[13px] text-muted-foreground">
+        <span className="h-3 w-3 animate-spin rounded-full border border-border border-t-primary" aria-hidden />
+        Call Coach is analyzing your recording against the Gold Standard…
+      </p>
+    );
+  }
+  return (
+    <div className="flex flex-wrap items-center gap-3 rounded-md border border-border p-3 text-[13px]">
+      <Badge tone={scoreTone(review.overall ?? 0, 100)}>Coach score {review.overall ?? "—"}/100</Badge>
+      <Link to="/portal/coach/$id" params={{ id: reviewId }} className="text-primary underline">View full scorecard</Link>
+    </div>
+  );
+}
+
 function SubmitForm({ day }: { day: TrainingDay }) {
   const qc = useQueryClient();
   const submitFn = useServerFn(submitHomework);
