@@ -8,6 +8,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertCanManage } from "@/lib/academy/guard";
+import { validateHomeworkRecording } from "@/lib/training-homework";
 
 export type TrainingDay = {
   id: string;
@@ -182,13 +183,13 @@ export const submitHomework = createServerFn({ method: "POST" })
     if (entry.state === "approved") throw new Error("This day is already approved.");
     if (entry.state === "submitted") throw new Error("You already submitted this — wait for review.");
     if (data.filePath && !data.filePath.startsWith(`${userId}/`)) throw new Error("Invalid upload.");
-    if (!entry.day.is_release && !data.filePath && !data.linkUrl) throw new Error("Add a recording or a ChatGPT link.");
+    validateHomeworkRecording(entry.day.is_release, data.linkUrl, data.filePath);
 
     const { error } = await supabase.from("training_submissions").insert({
       profile_id: userId,
       day_id: data.dayId,
       file_path: data.filePath ?? null,
-      link_url: data.linkUrl ?? null,
+      link_url: data.linkUrl?.trim() || null,
       note: data.note ?? null,
     });
     if (error) throw new Error(error.message);

@@ -2,16 +2,16 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Check, Copy, Lock, Upload } from "lucide-react";
+import { Check, Copy, Lock } from "lucide-react";
 import { PortalShell } from "@/components/vantage/portal-shell";
 import { Badge, Button, EmptyState, Field, Input, PageBody, PageHeader, Panel, TextSkeleton, Textarea, notify } from "@/components/portal/ui";
 import { STATE_LABEL, STATE_TONE } from "@/components/vantage/training-panel";
 import { getMyTraining, submitHomework, type TrainingDay } from "@/lib/training.functions";
-import { supabase } from "@/integrations/supabase/client";
+import { isGoogleDriveRecordingLink } from "@/lib/training-homework";
 
 export const Route = createFileRoute("/_authenticated/portal/training")({
   head: () => ({
-    meta: [{ title: "Training — Vantage Portal" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Training — Vantage Portal" }, { name: "description", content: "Complete Vantage's daily roleplay training and submit recording homework for review." }, { property: "og:title", content: "Training — Vantage Portal" }, { property: "og:description", content: "Daily roleplay training, recording homework and release call progress." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }],
   }),
   component: TrainingPage,
 });
@@ -142,22 +142,10 @@ function DayBody({ day, state, latest }: { day: TrainingDay; state: string; late
 function SubmitForm({ day }: { day: TrainingDay }) {
   const qc = useQueryClient();
   const submitFn = useServerFn(submitHomework);
-  const [file, setFile] = useState<File | null>(null);
   const [link, setLink] = useState("");
   const [note, setNote] = useState("");
   const m = useMutation({
-    mutationFn: async () => {
-      let filePath: string | null = null;
-      if (file) {
-        const { data: u } = await supabase.auth.getUser();
-        if (!u.user) throw new Error("Please sign in again.");
-        const ext = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "mp4";
-        filePath = `${u.user.id}/${day.slug}-${Date.now()}.${ext}`;
-        const { error } = await supabase.storage.from("training-submissions").upload(filePath, file, { contentType: file.type || undefined });
-        if (error) throw new Error(error.message);
-      }
-      return submitFn({ data: { dayId: day.id, filePath, linkUrl: link.trim() || null, note: note.trim() || null } });
-    },
+    mutationFn: () => submitFn({ data: { dayId: day.id, linkUrl: link.trim() || null, note: note.trim() || null } }),
     onSuccess: () => {
       notify.success(day.is_release ? "Release call requested" : "Homework submitted");
       qc.invalidateQueries({ queryKey: ["my-training"] });
@@ -176,16 +164,17 @@ function SubmitForm({ day }: { day: TrainingDay }) {
   return (
     <div className="space-y-3 rounded-md border border-border p-3">
       <div className="p-label">Submit your homework</div>
-      <Field label="Upload your recording" hint="Audio or video of your ChatGPT voice roleplay.">
-        <label className="flex cursor-pointer items-center gap-2 text-[13px]">
-          <Upload size={14} aria-hidden />
-          <span className="underline">{file ? file.name : "Choose a file"}</span>
-          <input type="file" accept="audio/*,video/*" className="hidden" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
-        </label>
-      </Field>
-      <Field label="Or paste a ChatGPT share link"><Input type="url" placeholder="https://chatgpt.com/share/..." value={link} onChange={(e) => setLink(e.target.value)} /></Field>
+      <ol className="list-decimal space-y-2 pl-5 text-[13px]">
+        <li>Copy today's prompt into ChatGPT and start the roleplay in voice mode.</li>
+        <li>Use Voice Memos on a separate device to record the full roleplay. Make sure both your voice and ChatGPT's voice can be heard clearly.</li>
+        <li>Upload the voice memo recording to Google Drive.</li>
+        <li>In Google Drive, open Share, set General access to “Anyone with the link” and the role to “Viewer,” then copy the link.</li>
+        <li>Paste that recording's shareable link below and submit it for today's review.</li>
+      </ol>
+      <Field label="Google Drive recording link" hint="Share the recording file, not a folder or ChatGPT conversation."><Input type="url" placeholder="https://drive.google.com/file/d/.../view" value={link} onChange={(e) => setLink(e.target.value)} /></Field>
+      {link.trim() && !isGoogleDriveRecordingLink(link) && <p role="alert" className="text-[13px] text-destructive">Enter a Google Drive recording file's shareable link.</p>}
       <Field label="Note (optional)"><Textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)} /></Field>
-      <Button variant="primary" loading={m.isPending} disabled={!file && !link.trim()} onClick={() => m.mutate()}>Submit for review</Button>
+      <Button variant="primary" loading={m.isPending} disabled={!isGoogleDriveRecordingLink(link)} onClick={() => m.mutate()}>Submit for review</Button>
     </div>
   );
 }

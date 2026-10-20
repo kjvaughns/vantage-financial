@@ -15,3 +15,4 @@
 - Keep agency applications on two active paths (`builder` and `owner`); retain `launch_pad` only as a readable legacy value so historical records remain intact.
 - Keep HyperAgent/external-assistant MCP tools in src/lib/mcp (OAuth, caller-scoped client) and verify RLS access before any privileged stage-engine call, so external agents never exceed the signed-in user's permissions.
 - Gate training days on onboarding completion (or a logged manual unlock) and on approval of the previous day via `computeTrack` in src/lib/training.functions.ts; release passes move the applicant to Active Agent through the stage engine, so progress stays on one record.
+- Keep homework link validation in the browser-safe training-homework module and enforce it on submission server-side; preserve existing file submissions for historical review.

@@ -8,7 +8,7 @@ import { listTrainingDaysAdmin, listTrainingReview, reviewSubmission, saveTraini
 
 export const Route = createFileRoute("/_authenticated/portal/admin/training")({
   head: () => ({
-    meta: [{ title: "Training Review — Vantage Portal" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Training Review — Vantage Portal" }, { name: "description", content: "Review Vantage training recordings, approve daily homework and manage release calls." }, { property: "og:title", content: "Training Review — Vantage Portal" }, { property: "og:description", content: "Review agent recordings and manage training approvals and release calls." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }],
   }),
   component: AdminTrainingPage,
 });
@@ -90,7 +90,7 @@ function ReviewCard({ s }: { s: any }) {
     >
       <div className="space-y-3 text-[14px]">
         {s.file_url && <video src={s.file_url} controls className="w-full max-w-xl rounded" />}
-        {s.link_url && <a href={s.link_url} target="_blank" rel="noreferrer" className="text-primary underline">Open ChatGPT link</a>}
+        {s.link_url && <a href={s.link_url} target="_blank" rel="noreferrer" className="text-primary underline">Open homework recording / link</a>}
         {s.note && <p>{s.note}</p>}
         <Field label="Feedback for the agent"><Textarea rows={2} value={feedback} onChange={(e) => setFeedback(e.target.value)} /></Field>
         <div className="flex gap-2">

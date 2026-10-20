@@ -99,7 +99,7 @@ export function ApplicantTrainingPanel({ applicantId }: { applicantId: string })
                       <span className="text-muted-foreground">{fmt(s.created_at)}</span>
                     </div>
                     {s.file_url && <video src={s.file_url} controls className="mt-2 w-full max-w-lg rounded" />}
-                    {s.link_url && <a href={s.link_url} target="_blank" rel="noreferrer" className="text-primary underline">Open ChatGPT link</a>}
+                    {s.link_url && <a href={s.link_url} target="_blank" rel="noreferrer" className="text-primary underline">Open homework recording / link</a>}
                     {s.note && <p className="mt-1">{s.note}</p>}
                     {s.feedback && <p className="mt-1 text-muted-foreground">Feedback: {s.feedback}</p>}
                   </li>
