@@ -10,4 +10,4 @@
 - [x] Add conditional agency application questions and validation
 - [x] Store and display path-specific agency answers
 - [x] Add path-specific summaries to recruiter and Discord alerts and call notes
-- [x] Verify both paths and the portal presentation
+- [x] Verify both paths and the portal presentation- [x] Training Hub redesign + AI Call Coach (Gold Standard scripts imported)

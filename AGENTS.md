@@ -17,3 +17,4 @@
 - Gate training days on onboarding completion (or a logged manual unlock) and on approval of the previous day via `computeTrack` in src/lib/training.functions.ts; release passes move the applicant to Active Agent through the stage engine, so progress stays on one record.
 - Keep homework link validation in the browser-safe training-homework module and enforce it on submission server-side; preserve existing file submissions for historical review.
 - Derive content novelty from creation timestamps through the shared new-content helper and expiring badge component, never the legacy manual is_new flag; navigation reads only caller-visible published content.
+- Score Call Coach reviews only against the stored Gold Standard (coach_reference_scripts + active reference calls) and advance processing via client polling in src/lib/coach.functions.ts, so scoring stays consistent and no request runs long on the worker.
