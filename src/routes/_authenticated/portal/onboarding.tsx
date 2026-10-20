@@ -23,6 +23,8 @@ import {
 } from "@/lib/portal.functions";
 import {
   getOnboardingContent,
+  getMySubsteps,
+  toggleOnboardingSubstep,
   type OnboardingStepRow,
   type ScheduleItemRow,
 } from "@/lib/onboarding-content.functions";
@@ -53,6 +55,14 @@ function OnboardingPage() {
   const q = useQuery({ queryKey: ["my-onboarding"], queryFn: () => fetchOnboarding() });
   const ctxQ = useQuery({ queryKey: ["onboarding-context"], queryFn: () => fetchContext() });
   const contentQ = useQuery({ queryKey: ["onboarding", "content"], queryFn: () => fetchContent() });
+  const fetchSubs = useServerFn(getMySubsteps);
+  const toggleSub = useServerFn(toggleOnboardingSubstep);
+  const subsQ = useQuery({ queryKey: ["my-substeps"], queryFn: () => fetchSubs() });
+  const subMut = useMutation({
+    mutationFn: (v: { step: string; sub: string; done: boolean }) => toggleSub({ data: v }),
+    onSuccess: (map) => qc.setQueryData(["my-substeps"], map),
+    onError: () => notify.error("Could not save that item.", "Please try again."),
+  });
 
   const mut = useMutation({
     mutationFn: (step: string) => completeStep({ data: { step } as any }),
@@ -178,6 +188,8 @@ function OnboardingPage() {
               currentIndex={currentIndex}
               pending={mut.isPending}
               ctx={ctxQ.data}
+              subsDone={subsQ.data ?? {}}
+              onToggleSub={(step, sub, done) => subMut.mutate({ step, sub, done })}
               onComplete={(key, showUpline) => {
                 mut.mutate(key);
                 if (showUpline) notifyContracting();
@@ -277,7 +289,11 @@ function StepChecklist({
   pending,
   preview,
   ctx,
+  subsDone,
+  onToggleSub,
 }: {
+  subsDone?: Record<string, string[]>;
+  onToggleSub?: (step: string, sub: string, done: boolean) => void;
   defs: OnboardingStepRow[];
   schedule: ScheduleItemRow[];
   links: Record<string, string>;
@@ -338,6 +354,8 @@ function StepChecklist({
               pending={pending}
               preview={preview}
               expanded={open.includes(def.step_key)}
+              subsDone={subsDone?.[def.step_key] ?? []}
+              onToggleSub={(sub, d) => onToggleSub?.(def.step_key, sub, d)}
               onToggle={() =>
                 setOpen((prev) =>
                   prev.includes(def.step_key)
@@ -481,7 +499,11 @@ function StepRow({
   expanded,
   onToggle,
   onComplete,
+  subsDone,
+  onToggleSub,
 }: {
+  subsDone: string[];
+  onToggleSub: (sub: string, done: boolean) => void;
   n: number;
   def: OnboardingStepRow;
   schedule: ScheduleItemRow[];
@@ -551,6 +573,39 @@ function StepRow({
           ) : (
             <div className="mt-1.5">
               <StepBody def={def} schedule={schedule} links={links} courseById={courseById} ctx={ctx} />
+              {(def.substeps ?? []).length > 0 && (
+                <ul className="mt-3 space-y-1.5">
+                  {def.substeps.map((x) => {
+                    const checked = status === "done" || subsDone.includes(x.id);
+                    const locked = preview || status === "done";
+                    return (
+                      <li key={x.id}>
+                        <label className="flex items-start gap-2.5" style={{ cursor: locked ? "default" : "pointer" }}>
+                          <input
+                            type="checkbox"
+                            className="mt-0.5 h-4 w-4 flex-none"
+                            style={{ accentColor: "var(--p-gold)" }}
+                            checked={checked}
+                            disabled={locked}
+                            onChange={(e) => onToggleSub(x.id, e.target.checked)}
+                          />
+                          <span className="min-w-0">
+                            <span className="text-[14px]" style={{ color: checked ? "var(--p-text-3)" : "var(--p-text)", textDecoration: checked ? "line-through" : "none" }}>
+                              {x.title}
+                            </span>
+                            {x.note && <span className="p-muted block text-[12px]">{x.note}</span>}
+                            {x.url && (
+                              <a href={x.url} target="_blank" rel="noreferrer noopener" className="block text-[12px]" style={{ color: "var(--p-gold)" }}>
+                                Open link →
+                              </a>
+                            )}
+                          </span>
+                        </label>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
             </div>
           )}
 
@@ -562,9 +617,17 @@ function StepRow({
                   {state.completed_at ? ` · ${new Date(state.completed_at).toLocaleDateString()}` : ""}
                 </div>
               ) : status === "current" && def.completion_mode === "self" && (def.step_key !== "agent_cloud_onboarding" || !!ctx?.agentLink) ? (
-                <Button variant="primary" size="sm" onClick={onComplete} disabled={pending}>
-                  Mark this step complete
-                </Button>
+                (() => {
+                  const left = (def.substeps ?? []).filter((x) => !subsDone.includes(x.id)).length;
+                  return (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Button variant="primary" size="sm" onClick={onComplete} disabled={pending || left > 0}>
+                        Mark this step complete
+                      </Button>
+                      {left > 0 && <span className="p-muted text-[12px]">{left} item{left === 1 ? "" : "s"} left above</span>}
+                    </div>
+                  );
+                })()
               ) : status === "current" && def.completion_mode === "admin" ? (
                 <p className="p-muted text-[12px]">Your leader confirms this step once it&apos;s done.</p>
               ) : null}
