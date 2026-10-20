@@ -261,12 +261,19 @@ export const getGoldStandard = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context.supabase, context.userId);
-    const [{ data: scripts }, { data: calls }, { data: settings }] = await Promise.all([
+    const [{ data: scripts }, { data: calls }, { data: settings }, { data: reviews }] = await Promise.all([
       context.supabase.from("coach_reference_scripts").select("*").order("created_at"),
-      context.supabase.from("coach_reference_calls").select("id, title, status, error, is_active, media_path, media_url, created_at").order("created_at", { ascending: false }),
+      context.supabase.from("coach_reference_calls").select("id, title, status, error, is_active, media_path, media_url, source_review_id, created_at").order("created_at", { ascending: false }),
       context.supabase.from("coach_settings").select("*").eq("id", true).maybeSingle(),
+      context.supabase.from("call_reviews").select("id, title, overall, call_type, created_at").eq("status", "done").not("transcript_text", "is", null).order("created_at", { ascending: false }).limit(30),
     ]);
-    return { scripts: scripts ?? [], calls: calls ?? [], settings: settings ?? { weights: {}, rubric_notes: {}, min_score_for_approval: null } };
+    const promoted = new Set((calls ?? []).map((c: any) => c.source_review_id).filter(Boolean));
+    return {
+      scripts: scripts ?? [],
+      calls: calls ?? [],
+      settings: settings ?? { weights: {}, rubric_notes: {}, min_score_for_approval: null },
+      candidates: (reviews ?? []).filter((r: any) => !promoted.has(r.id)),
+    };
   });
 
 export const syncScriptFromDoc = createServerFn({ method: "POST" })
@@ -320,6 +327,30 @@ export const addReferenceCall = createServerFn({ method: "POST" })
       title: data.title,
       media_path: data.mediaPath ?? null,
       media_url: data.mediaUrl ?? null,
+      created_by: context.userId,
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+/** Turns an already-scored call (with its transcript) into a Gold Standard model call. */
+export const promoteReviewToReference = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ reviewId: z.string().uuid(), title: z.string().trim().max(200).optional() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { data: review } = await context.supabase
+      .from("call_reviews")
+      .select("id, title, transcript_text")
+      .eq("id", data.reviewId)
+      .eq("status", "done")
+      .maybeSingle();
+    if (!review?.transcript_text) throw new Error("That call doesn't have a finished transcript yet.");
+    const { error } = await context.supabase.from("coach_reference_calls").insert({
+      title: data.title?.trim() || review.title,
+      transcript_text: review.transcript_text,
+      status: "done",
+      source_review_id: review.id,
       created_by: context.userId,
     });
     if (error) throw new Error(error.message);
