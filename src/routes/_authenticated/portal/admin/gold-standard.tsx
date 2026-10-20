@@ -6,7 +6,7 @@ import { RefreshCw, Trash2 } from "lucide-react";
 import { PortalShell } from "@/components/vantage/portal-shell";
 import { Badge, Button, EmptyState, Field, Input, PageBody, PageHeader, Panel, TextSkeleton, Textarea, Toggle, notify } from "@/components/portal/ui";
 import { MediaPicker, StatusBadge, uploadRecording } from "@/components/vantage/coach";
-import { PILLARS } from "@/lib/coach-scoring";
+import { DEFAULT_WEIGHTS, PILLARS } from "@/lib/coach-scoring";
 import {
   addReferenceCall,
   advanceReferenceCall,
