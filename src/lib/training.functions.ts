@@ -398,12 +398,8 @@ export const overrideTraining = createServerFn({ method: "POST" })
       if (rel) await approveDay(supabase, pid, rel.id, userId, true);
       await markCleared(pid, userId);
     }
-    try {
-      const { logAudit } = (await import("@/lib/audit")) as any;
-      await logAudit?.({ action: `training_${data.action}`, actorId: userId, targetApplicantId: a.id, metadata: { day_id: data.dayId } });
-    } catch {
-      /* audit is best-effort */
-    }
+    const { writeAudit } = await import("@/lib/audit");
+    await writeAudit(supabase, { action: `training_${data.action}`, actor_id: userId, target_applicant_id: a.id, metadata: { day_id: data.dayId } });
     return { ok: true };
   });
 
