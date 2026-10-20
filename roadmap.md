@@ -1,7 +1,7 @@
 # Roadmap
 
 - [x] Replace daily homework uploads with Google Drive recording links and separate-device recording instructions
-- [ ] Verify homework link validation and training page
+- [x] Verify homework link validation and signed-in training form (real recording submission not performed)
 
 - [x] Tailor Builder and Owner qualification copy
 - [x] Add conditional agency application questions and validation
