@@ -532,7 +532,7 @@ const listInput = z.object({
   view: z.enum(["all", "agency", "pre_licensing"]).optional().default("all"),
   type: z.enum(["", "agent", "builder", "owner"]).optional().default(""),
   referrer: z.string().uuid().optional().or(z.literal("")).default(""),
-  limit: z.number().int().min(1).max(200).optional().default(100),
+  limit: z.number().int().min(1).max(1000).optional().default(100),
 });
 
 export const listApplicants = createServerFn({ method: "POST" })

@@ -61,9 +61,9 @@ export const Route = createFileRoute("/_authenticated/portal/applicants/")({
 
 type Scope = "mine" | "direct" | "downline" | "all";
 const SCOPE_LABELS: Record<Scope, string> = {
-  mine: "Mine",
-  direct: "Direct",
-  downline: "Downline",
+  mine: "Just mine",
+  direct: "Direct team",
+  downline: "My organization",
   all: "All",
 };
 type View = "all" | "agency" | "pre_licensing";
@@ -86,7 +86,7 @@ function ApplicantsPage() {
   };
 
   const [q, setQ] = useState("");
-  const [scope, setScope] = useState<Scope>("mine");
+  const [scope, setScope] = useState<Scope>("downline");
   const [stage, setStage] = useState("");
   const [view, setView] = useState<View>("all");
   const [addOpen, setAddOpen] = useState(false);
@@ -94,11 +94,11 @@ function ApplicantsPage() {
 
   useEffect(() => {
     const saved =
-      typeof window !== "undefined" ? (localStorage.getItem("vantage_crm_scope") as Scope | null) : null;
+      typeof window !== "undefined" ? (localStorage.getItem("vantage_crm_scope_v2") as Scope | null) : null;
     if (saved && ["mine", "direct", "downline", "all"].includes(saved)) setScope(saved);
   }, []);
   useEffect(() => {
-    if (typeof window !== "undefined") localStorage.setItem("vantage_crm_scope", scope);
+    if (typeof window !== "undefined") localStorage.setItem("vantage_crm_scope_v2", scope);
   }, [scope]);
 
   const fn = useServerFn(listApplicants);
@@ -111,8 +111,8 @@ function ApplicantsPage() {
       fn({
         data:
           activeTab === "pipeline"
-            ? { scope, limit: 200, q: "", stage: "", view: "all", type: type ?? "", referrer: referrer ?? "" }
-            : { q, scope, stage, view, type: type ?? "", referrer: referrer ?? "", limit: 200 },
+            ? { scope, limit: 1000, q: "", stage: "", view: "all", type: type ?? "", referrer: referrer ?? "" }
+            : { q, scope, stage, view, type: type ?? "", referrer: referrer ?? "", limit: 1000 },
       }),
   });
   const { data, isLoading } = applicantsQ;
@@ -198,7 +198,7 @@ function ApplicantsPage() {
             size="sm"
             value={scope}
             onChange={(s) => setScope(s)}
-            options={(["mine", "direct", "downline", "all"] as const).map((s) => ({
+            options={(["downline", "mine", "direct", "all"] as const).map((s) => ({
               value: s,
               label: SCOPE_LABELS[s],
             }))}
