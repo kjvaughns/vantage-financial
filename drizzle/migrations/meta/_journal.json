@@ -134,6 +134,13 @@
       "when": 1792536308401,
       "tag": "0018_training_submission_review_link",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1792787015822,
+      "tag": "0019_hierarchy_referrer_visibility_and_coach_lockdown",
+      "breakpoints": true
     }
   ]
 }

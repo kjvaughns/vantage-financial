@@ -532,7 +532,7 @@ const listInput = z.object({
   view: z.enum(["all", "agency", "pre_licensing"]).optional().default("all"),
   type: z.enum(["", "agent", "builder", "owner"]).optional().default(""),
   referrer: z.string().uuid().optional().or(z.literal("")).default(""),
-  limit: z.number().int().min(1).max(200).optional().default(100),
+  limit: z.number().int().min(1).max(1000).optional().default(100),
 });
 
 export const listApplicants = createServerFn({ method: "POST" })
@@ -563,14 +563,25 @@ export const listApplicants = createServerFn({ method: "POST" })
     // Scope: mine = own only; direct = self + direct reports; downline/all rely
     // on hierarchy RLS (own + full downline; admins see everything).
     if (data.scope === "mine") {
-      query = query.eq("assigned_recruiter_id", userId);
+      query = query.or(
+        `assigned_recruiter_id.eq.${userId},original_recruiter_id.eq.${userId},referred_by_profile_id.eq.${userId}`,
+      );
     } else if (data.scope === "direct") {
       const { data: reports } = await supabase
         .from("profiles")
         .select("id")
         .eq("parent_user_id", userId);
-      const ids = [userId, ...((reports ?? []) as { id: string }[]).map((r) => r.id)];
-      query = query.in("assigned_recruiter_id", ids);
+      const ids = [userId, ...((reports ?? []) as { id: string }[]).map((r) => r.id)].join(",");
+      query = query.or(
+        `assigned_recruiter_id.in.(${ids}),original_recruiter_id.in.(${ids}),referred_by_profile_id.in.(${ids})`,
+      );
+    } else if (data.scope === "downline") {
+      // Full tree: self + every level beneath. Admins otherwise see everything via RLS.
+      const { data: desc } = await (supabase as any).rpc("descendant_ids", { _root: userId });
+      const ids = [userId, ...((desc ?? []) as { id: string }[]).map((r) => r.id)].join(",");
+      query = query.or(
+        `assigned_recruiter_id.in.(${ids}),original_recruiter_id.in.(${ids}),referred_by_profile_id.in.(${ids})`,
+      );
     }
     if (data.stage) query = query.eq("current_stage_id", data.stage);
     if (data.type === "agent") query = query.neq("applicant_type", "agency");
