@@ -137,10 +137,13 @@ export const advanceReview = createServerFn({ method: "POST" })
 
 async function runScoring(sb: any, row: any) {
   const { scoreCall, timedTranscript } = await import("@/lib/coach.server");
+  // Gold Standard is admin-only; read it privileged so agents' calls still score.
+  void sb;
+  const { supabaseAdmin: gs } = await import("@/integrations/supabase/client.server");
   const [{ data: scripts }, { data: refs }, { data: settings }] = await Promise.all([
-    sb.from("coach_reference_scripts").select("title, content").eq("is_active", true),
-    sb.from("coach_reference_calls").select("title, transcript_text").eq("is_active", true).eq("status", "done").limit(3),
-    sb.from("coach_settings").select("*").eq("id", true).maybeSingle(),
+    gs.from("coach_reference_scripts").select("title, content").eq("is_active", true),
+    gs.from("coach_reference_calls").select("title, transcript_text").eq("is_active", true).eq("status", "done").limit(3),
+    gs.from("coach_settings").select("*").eq("id", true).maybeSingle(),
   ]);
   const segs = (row.transcript?.segments ?? []) as { start: number; text: string; speaker?: string | null }[];
   const result = await scoreCall({
