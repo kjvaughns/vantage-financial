@@ -86,7 +86,7 @@ function ReviewPage() {
   );
 }
 
-function Scorecard({ review: r, audioUrl }: { review: any; audioUrl: string | null }) {
+function Scorecard({ review: r, audioUrl, driveFileId }: { review: any; audioUrl: string | null; driveFileId: string | null }) {
   const scores = r.pillar_scores ?? {};
   const segments: any[] = r.transcript?.segments ?? [];
   const sections: { pillar: string; start_ms: number }[] = r.transcript?.sections ?? [];
@@ -96,6 +96,10 @@ function Scorecard({ review: r, audioUrl }: { review: any; audioUrl: string | nu
     if (idx >= 0 && !sectionAt.has(idx)) sectionAt.set(idx, PILLARS.find((p) => p.key === s.pillar)?.label ?? s.pillar);
   }
   const [open, setOpen] = useState<string | null>(null);
+  const player = useRef<CallPlayerHandle>(null);
+  const [nowMs, setNowMs] = useState(-1);
+  const canSeek = !!audioUrl;
+  const activeIdx = nowMs < 0 ? -1 : segments.findIndex((seg, i) => seg.start <= nowMs && (segments[i + 1]?.start ?? Infinity) > nowMs);
   return (
     <div className="space-y-4">
       <div className="grid gap-4 lg:grid-cols-[1fr_1.4fr]">
@@ -103,7 +107,7 @@ function Scorecard({ review: r, audioUrl }: { review: any; audioUrl: string | nu
           <div className="flex flex-col items-center gap-4 text-center">
             <ScoreRing value={r.overall} size={128} />
             {r.summary && <p className="text-[14px] leading-relaxed">{r.summary}</p>}
-            {audioUrl && <audio controls src={audioUrl} className="w-full" />}
+            <CallPlayer ref={player} src={audioUrl} driveFileId={driveFileId} onTime={setNowMs} />
           </div>
         </Panel>
         <Panel title="Pillars"><PillarBars scores={scores} /></Panel>
