@@ -18,7 +18,7 @@ export type PathResult = {
   pain_points: string[];
 };
 
-function fallback(a: Record<string, string>): PathResult {
+export function fallback(a: Record<string, string>): PathResult {
   const team = a.team ?? "None";
   const owner = a.role?.startsWith("Agency owner") || a.brand?.includes("own agency") || a.goal?.includes("IMO");
   const rec: PathResult["recommendation"] = team === "None" ? "agent" : owner && team !== "1–3" ? "owner" : "builder";

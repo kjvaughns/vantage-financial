@@ -34,6 +34,7 @@ function PathFinder() {
   const q = PATH_QUESTIONS[step];
 
   async function advance(next: Record<string, string>) {
+    setAnswers(next);
     if (step < PATH_QUESTIONS.length - 1) {
       const nextQ = PATH_QUESTIONS[step + 1];
       setMultiSel(nextQ.multi ? (next[nextQ.id]?.split("; ") ?? []) : []);
