@@ -249,10 +249,13 @@ export const getReview = createServerFn({ method: "GET" })
       const { data: s } = await supabase.storage.from("call-recordings").createSignedUrl(row.media_path, 60 * 60);
       audioUrl = s?.signedUrl ?? null;
     }
+    const mu = (row as any).media_url as string | null;
+    const driveFileId = mu ? (mu.match(/drive\.google\.com\/file\/d\/([\w-]{10,})/)?.[1] ?? mu.match(/[?&]id=([\w-]{10,})/)?.[1] ?? null) : null;
     return {
       review: { ...row, pillar_scores: row.pillar_scores as PillarScores | null, agent_name: (nameMap.get(row.profile_id) as string) ?? "Agent" },
       comments: (comments ?? []).map((c: any) => ({ ...c, author_name: (nameMap.get(c.author_id) as string) ?? "Leader" })),
       audioUrl,
+      driveFileId,
       isOwner: row.profile_id === userId,
     };
   });
