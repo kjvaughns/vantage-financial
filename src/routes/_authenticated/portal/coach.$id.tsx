@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { CallPlayer, type CallPlayerHandle } from "@/components/coach/CallPlayer";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, ChevronDown, RefreshCw } from "lucide-react";
@@ -76,7 +77,7 @@ function ReviewPage() {
                 </div>
               </Panel>
             ) : (
-              <Scorecard review={r} audioUrl={q.data!.audioUrl} />
+              <Scorecard review={r} audioUrl={q.data!.audioUrl} driveFileId={(q.data as any).driveFileId ?? null} />
             )}
             <Comments id={id} comments={q.data!.comments} />
           </>
@@ -150,8 +151,12 @@ function Scorecard({ review: r, audioUrl, driveFileId }: { review: any; audioUrl
             {segments.map((seg, i) => (
               <div key={i}>
                 {sectionAt.has(i) && <div className="mb-1 mt-3"><Badge tone="gold">{sectionAt.get(i)}</Badge></div>}
-                <div className="flex gap-3">
-                  <span className="w-12 shrink-0 tabular-nums text-muted-foreground">{fmt(seg.start)}</span>
+                <div className={`flex gap-3 rounded px-1 ${i === activeIdx ? "bg-primary/10" : ""}`}>
+                  {canSeek ? (
+                    <button type="button" onClick={() => player.current?.seek(seg.start)} className="w-12 shrink-0 text-left tabular-nums text-primary hover:underline" aria-label={`Play from ${fmt(seg.start)}`}>{fmt(seg.start)}</button>
+                  ) : (
+                    <span className="w-12 shrink-0 tabular-nums text-muted-foreground">{fmt(seg.start)}</span>
+                  )}
                   <p><span className="font-medium">{seg.speaker ? `${seg.speaker}: ` : ""}</span>{seg.text}</p>
                 </div>
               </div>
