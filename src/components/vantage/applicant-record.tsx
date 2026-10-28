@@ -1,4 +1,5 @@
 import { ApplicantTrainingPanel } from "@/components/vantage/training-panel";
+import { changeUpline, getHierarchyOptions } from "@/lib/hierarchy.functions";
 import { agencyDetailLines } from "@/lib/agency-questions";
 import { Link } from "@tanstack/react-router";
 import { formatPhone, phoneHref } from "@/lib/phone";
@@ -144,6 +145,9 @@ export function ApplicantRecord({
   const setOverview = useServerFn(setOverviewStatus);
   const usersFn = useServerFn(listAssignableUsers);
   const leadersFn = useServerFn(listUplineLeaders);
+  const hierarchyFn = useServerFn(getHierarchyOptions);
+  const changeUplineFn = useServerFn(changeUpline);
+  const hierarchyQ = useQuery({ queryKey: ["hierarchy-options"], queryFn: () => hierarchyFn() });
 
   const recordQ = useQuery({
     queryKey: ["applicant", applicantId],
@@ -392,10 +396,23 @@ export function ApplicantRecord({
             </EditSelectField>
             <div>
               <div className="p-label mb-1">Upline</div>
-              <span className="p-body">
+              {hierarchyQ.data?.canManage ? <Select
+                value={a.upline_override_id ?? ""}
+                onChange={async (e) => {
+                  try {
+                    await changeUplineFn({ data: { id: applicantId, kind: "applicant", upline_id: e.target.value || null } });
+                    invalidate();
+                    qc.invalidateQueries({ queryKey: ["org"] });
+                    qc.invalidateQueries({ queryKey: ["agentlink"] });
+                    notify.success("Upline updated");
+                  } catch (error) { notify.error("Could not change upline", error instanceof Error ? error.message : "Please try again."); }
+                }}>
+                <option value="">Automatic — {leadersQ.data?.users.find((u) => u.id === a.assigned_manager_id)?.name ?? "nearest leader"}</option>
+                {hierarchyQ.data.leaders.map((leader) => <option key={leader.id} value={leader.id}>{leader.name}</option>)}
+              </Select> : <span className="p-body">
                 {leadersQ.isPending ? "Loading…" :
                   leadersQ.data?.users.find((u) => u.id === a.assigned_manager_id)?.name ?? "— none —"}
-              </span>
+              </span>}
             </div>
             <EditDateTimeField
               label="Next follow-up"
