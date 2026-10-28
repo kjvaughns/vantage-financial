@@ -99,6 +99,7 @@ export function TranscriptViewer({
   canSeek = false,
   currentMs = 0,
   maxHeight = 520,
+  fixedHeight,
 }: {
   segments?: Segment[] | null;
   fallbackText?: string | null;
@@ -107,8 +108,18 @@ export function TranscriptViewer({
   canSeek?: boolean;
   currentMs?: number;
   maxHeight?: number;
+  /** Fixed box height (px); enables follow-along auto-scroll with manual-scroll pause. */
+  fixedHeight?: number;
 }) {
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const userScrollAt = useRef(0);
+  const [paused, setPaused] = useState(false);
+  useEffect(() => {
+    if (!paused) return;
+    const t = setTimeout(() => setPaused(false), 5000);
+    return () => clearTimeout(t);
+  }, [paused, currentMs > 0 && Math.floor(currentMs / 5000)]);
+  const markUser = () => { userScrollAt.current = Date.now(); setPaused(true); };
   const list = useMemo(() => (Array.isArray(segments) ? segments.filter((s) => s && s.text) : []), [segments]);
 
   // Group consecutive segments by speaker.
@@ -131,14 +142,14 @@ export function TranscriptViewer({
 
   useEffect(() => {
     const c = scrollRef.current;
-    if (!c || activeStart < 0) return;
+    if (!c || activeStart < 0 || paused) return;
     const el = c.querySelector("[data-active='true']") as HTMLElement | null;
     if (!el) return;
     const cRect = c.getBoundingClientRect();
     const eRect = el.getBoundingClientRect();
     const top = c.scrollTop + (eRect.top - cRect.top) - c.clientHeight / 2 + eRect.height / 2;
     c.scrollTo({ top, behavior: "smooth" });
-  }, [activeStart]);
+  }, [activeStart, paused]);
 
   if (!list.length) {
     if (!fallbackText) return <p className="p-muted leading-snug">No transcript for this recording yet.</p>;
@@ -160,10 +171,13 @@ export function TranscriptViewer({
         {canSeek ? "Click any timestamp to jump the player to that moment." : "Timestamps show where each line happens."}
         {hasSpeakers ? " Lines are grouped by speaker." : ""}
       </div>
+      <div className="relative">
       <div
         ref={scrollRef}
+        onWheel={markUser}
+        onTouchMove={markUser}
         className="flex flex-col gap-3 overflow-y-auto rounded-[10px] p-3"
-        style={{ background: "var(--p-hover)", maxHeight }}
+        style={{ background: "var(--p-hover)", ...(fixedHeight ? { height: fixedHeight } : { maxHeight }) }}
       >
         {blocks.map((b, bi) => (
           <div key={bi} className="flex flex-col gap-1">
@@ -208,6 +222,17 @@ export function TranscriptViewer({
             })}
           </div>
         ))}
+      </div>
+      {paused && currentMs > 0 && (
+        <button
+          type="button"
+          onClick={() => setPaused(false)}
+          className="p-focus absolute bottom-2 right-3 rounded-full px-3 py-1 text-[12px] font-semibold shadow"
+          style={{ background: "var(--p-gold)", color: "var(--p-bg, #000)" }}
+        >
+          Back to live
+        </button>
+      )}
       </div>
     </div>
   );
