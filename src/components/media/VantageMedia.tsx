@@ -6,7 +6,7 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ExternalLink, Loader2, Maximize, Pause, Play, RotateCcw, RotateCw } from "lucide-react";
+import { AudioLines, ExternalLink, Loader2, Maximize, Pause, Play, RotateCcw, RotateCw } from "lucide-react";
 import { resolveMedia } from "@/lib/academy/media";
 import { ensureAcademyMediaCached } from "@/lib/media-cache.functions";
 import { TranscriptViewer, useMediaSeek, type Segment } from "@/components/vantage/academy/transcript-viewer";
@@ -86,7 +86,7 @@ export const VantageMedia = forwardRef<VantageMediaHandle, Props>(function Vanta
       </Empty>
     );
   } else if (nativeSrc) {
-    player = <NativePlayer src={nativeSrc} kind={kind} elRef={el} onMs={setNativeMs} />;
+    player = <NativePlayer src={nativeSrc} kind={kind} elRef={el} onMs={setNativeMs} title={title} />;
   } else if (embedUrl) {
     player = (
       <div className="space-y-1">
@@ -148,14 +148,17 @@ function Empty({ children }: { children: React.ReactNode }) {
 }
 
 function NativePlayer({
-  src, kind, elRef, onMs,
-}: { src: string; kind: "audio" | "video"; elRef: React.MutableRefObject<HTMLMediaElement | null>; onMs: (ms: number) => void }) {
+  src, kind, elRef, onMs, title,
+}: { src: string; kind: "audio" | "video"; elRef: React.MutableRefObject<HTMLMediaElement | null>; onMs: (ms: number) => void; title?: string }) {
   const wrap = useRef<HTMLDivElement>(null);
   const [playing, setPlaying] = useState(false);
   const [t, setT] = useState(0);
   const [dur, setDur] = useState(0);
   const [speed, setSpeed] = useState(1);
   const [loading, setLoading] = useState(true);
+  // Files labelled "video" can still be audio-only (e.g. an MP3 mislabelled in
+  // the admin). Drop the video frame whenever the media has no video track.
+  const [audioOnly, setAudioOnly] = useState(false);
 
   const common = {
     src,
@@ -164,7 +167,11 @@ function NativePlayer({
     onPause: () => setPlaying(false),
     onWaiting: () => setLoading(true),
     onCanPlay: () => setLoading(false),
-    onLoadedMetadata: (e: React.SyntheticEvent<HTMLMediaElement>) => { setDur(e.currentTarget.duration); setLoading(false); },
+    onLoadedMetadata: (e: React.SyntheticEvent<HTMLMediaElement>) => {
+      setDur(e.currentTarget.duration); setLoading(false);
+      const v = e.currentTarget as HTMLVideoElement;
+      if (kind === "video" && typeof v.videoWidth === "number" && v.videoWidth === 0) setAudioOnly(true);
+    },
     onTimeUpdate: (e: React.SyntheticEvent<HTMLMediaElement>) => { setT(e.currentTarget.currentTime); onMs(Math.floor(e.currentTarget.currentTime * 1000)); },
   };
   const a = () => elRef.current;
@@ -180,9 +187,21 @@ function NativePlayer({
   return (
     <div ref={wrap} className="overflow-hidden rounded-lg" style={{ background: "var(--p-raised)", border: "1px solid var(--p-border)" }}>
       {kind === "video" ? (
-        <video ref={elRef as React.Ref<HTMLVideoElement>} {...common} playsInline onClick={toggle} className="aspect-video w-full cursor-pointer bg-background" />
+        <video
+          ref={elRef as React.Ref<HTMLVideoElement>}
+          {...common}
+          playsInline
+          onClick={toggle}
+          className={audioOnly ? "hidden" : "aspect-video w-full cursor-pointer bg-background"}
+        />
       ) : (
         <audio ref={elRef as React.Ref<HTMLAudioElement>} {...common} />
+      )}
+      {audioOnly && (
+        <div className="flex items-center gap-2 px-3 pt-3" style={{ color: "var(--p-text-2)" }}>
+          <AudioLines size={16} style={{ color: "var(--p-gold)" }} />
+          <span className="truncate text-[12.5px]">{title ?? "Audio recording"}</span>
+        </div>
       )}
       <div className="p-3">
         <input
@@ -201,7 +220,7 @@ function NativePlayer({
           </div>
           <div className="flex w-28 items-center justify-end gap-1">
             <button type="button" onClick={cycle} aria-label="Playback speed" className="p-focus rounded-md px-2 py-1 text-[12px] font-semibold tabular-nums hover:bg-[var(--p-hover)]">{speed}x</button>
-            {kind === "video" && (
+            {kind === "video" && !audioOnly && (
               <button type="button" onClick={fullscreen} aria-label="Full screen" className="p-focus rounded-md p-1.5 hover:bg-[var(--p-hover)]"><Maximize size={15} /></button>
             )}
           </div>
