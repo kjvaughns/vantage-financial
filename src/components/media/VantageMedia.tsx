@@ -167,7 +167,11 @@ function NativePlayer({
     onPause: () => setPlaying(false),
     onWaiting: () => setLoading(true),
     onCanPlay: () => setLoading(false),
-    onLoadedMetadata: (e: React.SyntheticEvent<HTMLMediaElement>) => { setDur(e.currentTarget.duration); setLoading(false); },
+    onLoadedMetadata: (e: React.SyntheticEvent<HTMLMediaElement>) => {
+      setDur(e.currentTarget.duration); setLoading(false);
+      const v = e.currentTarget as HTMLVideoElement;
+      if (kind === "video" && typeof v.videoWidth === "number" && v.videoWidth === 0) setAudioOnly(true);
+    },
     onTimeUpdate: (e: React.SyntheticEvent<HTMLMediaElement>) => { setT(e.currentTarget.currentTime); onMs(Math.floor(e.currentTarget.currentTime * 1000)); },
   };
   const a = () => elRef.current;
@@ -183,9 +187,21 @@ function NativePlayer({
   return (
     <div ref={wrap} className="overflow-hidden rounded-lg" style={{ background: "var(--p-raised)", border: "1px solid var(--p-border)" }}>
       {kind === "video" ? (
-        <video ref={elRef as React.Ref<HTMLVideoElement>} {...common} playsInline onClick={toggle} className="aspect-video w-full cursor-pointer bg-background" />
+        <video
+          ref={elRef as React.Ref<HTMLVideoElement>}
+          {...common}
+          playsInline
+          onClick={toggle}
+          className={audioOnly ? "hidden" : "aspect-video w-full cursor-pointer bg-background"}
+        />
       ) : (
         <audio ref={elRef as React.Ref<HTMLAudioElement>} {...common} />
+      )}
+      {audioOnly && (
+        <div className="flex items-center gap-2 px-3 pt-3" style={{ color: "var(--p-text-2)" }}>
+          <AudioLines size={16} style={{ color: "var(--p-gold)" }} />
+          <span className="truncate text-[12.5px]">{title ?? "Audio recording"}</span>
+        </div>
       )}
       <div className="p-3">
         <input
