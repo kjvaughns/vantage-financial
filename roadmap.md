@@ -1,7 +1,7 @@
 # Roadmap
 
-- [ ] Automatically assign applicant upline to the highest leader in recruiter ancestry
-- [ ] Verify deep-hierarchy assignment and applicant profile display
+- [x] Automatically assign applicant upline to the highest leader in recruiter ancestry
+- [x] Verify three-level selection rules and signed-in applicant profile display
 
 - [x] Automatically show New badges for company content and expire after seven days
 - [x] Verify seven-day expiry rules and signed-in badge display
