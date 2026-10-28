@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useRef, useState } from "react";
-import { CallPlayer, type CallPlayerHandle } from "@/components/coach/CallPlayer";
+import { VantageMedia } from "@/components/media/VantageMedia";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, ChevronDown, RefreshCw } from "lucide-react";
@@ -91,16 +91,8 @@ function Scorecard({ review: r, audioUrl, driveFileId }: { review: any; audioUrl
   const scores = r.pillar_scores ?? {};
   const segments: any[] = r.transcript?.segments ?? [];
   const sections: { pillar: string; start_ms: number }[] = r.transcript?.sections ?? [];
-  const sectionAt = new Map<number, string>();
-  for (const s of sections) {
-    const idx = segments.findIndex((seg, i) => seg.start <= s.start_ms && (segments[i + 1]?.start ?? Infinity) > s.start_ms);
-    if (idx >= 0 && !sectionAt.has(idx)) sectionAt.set(idx, PILLARS.find((p) => p.key === s.pillar)?.label ?? s.pillar);
-  }
   const [open, setOpen] = useState<string | null>(null);
-  const player = useRef<CallPlayerHandle>(null);
-  const [nowMs, setNowMs] = useState(-1);
-  const canSeek = !!audioUrl;
-  const activeIdx = nowMs < 0 ? -1 : segments.findIndex((seg, i) => seg.start <= nowMs && (segments[i + 1]?.start ?? Infinity) > nowMs);
+  const driveUrl = driveFileId ? `https://drive.google.com/file/d/${driveFileId}/view` : null;
   return (
     <div className="space-y-4">
       <div className="grid gap-4 lg:grid-cols-[1fr_1.4fr]">
@@ -108,11 +100,21 @@ function Scorecard({ review: r, audioUrl, driveFileId }: { review: any; audioUrl
           <div className="flex flex-col items-center gap-4 text-center">
             <ScoreRing value={r.overall} size={128} />
             {r.summary && <p className="text-[14px] leading-relaxed">{r.summary}</p>}
-            <CallPlayer ref={player} src={audioUrl} driveFileId={driveFileId} onTime={setNowMs} />
           </div>
         </Panel>
         <Panel title="Pillars"><PillarBars scores={scores} /></Panel>
       </div>
+      <Panel title="Recording">
+        <VantageMedia
+          directSrc={audioUrl}
+          url={audioUrl ? null : driveUrl}
+          kind="audio"
+          title={r.title}
+          segments={segments}
+          fallbackText={r.transcript_text}
+          transcriptHeight={320}
+        />
+      </Panel>
       {Array.isArray(r.improvements) && r.improvements.length > 0 && (
         <Panel title="Top 3 fixes">
           <ol className="space-y-2">
@@ -145,25 +147,6 @@ function Scorecard({ review: r, audioUrl, driveFileId }: { review: any; audioUrl
           );
         })}
       </Panel>
-      {segments.length > 0 && (
-        <Panel title="Transcript">
-          <div className="max-h-[480px] space-y-2 overflow-auto pr-1 text-[13px]">
-            {segments.map((seg, i) => (
-              <div key={i}>
-                {sectionAt.has(i) && <div className="mb-1 mt-3"><Badge tone="gold">{sectionAt.get(i)}</Badge></div>}
-                <div className={`flex gap-3 rounded px-1 ${i === activeIdx ? "bg-primary/10" : ""}`}>
-                  {canSeek ? (
-                    <button type="button" onClick={() => player.current?.seek(seg.start)} className="w-12 shrink-0 text-left tabular-nums text-primary hover:underline" aria-label={`Play from ${fmt(seg.start)}`}>{fmt(seg.start)}</button>
-                  ) : (
-                    <span className="w-12 shrink-0 tabular-nums text-muted-foreground">{fmt(seg.start)}</span>
-                  )}
-                  <p><span className="font-medium">{seg.speaker ? `${seg.speaker}: ` : ""}</span>{seg.text}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Panel>
-      )}
     </div>
   );
 }

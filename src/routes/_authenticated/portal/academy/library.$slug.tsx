@@ -6,7 +6,7 @@ import { PageBody, Panel, Button, Badge, EmptyState, ErrorState, CardSkeleton } 
 import { getLibraryResource } from "@/lib/academy.functions";
 import { ChevronLeft, Video, Headphones, FileText, Link2, Download, ExternalLink } from "lucide-react";
 import { resolveMedia, isPreviewableDocument } from "@/lib/academy/media";
-import { AudioBlock } from "@/components/vantage/academy/audio-block";
+import { VantageMedia } from "@/components/media/VantageMedia";
 import { DocPreview, DocPreviewModal } from "@/components/vantage/academy/doc-preview";
 import { useState } from "react";
 
@@ -77,19 +77,8 @@ function ResourceDetail() {
             {r.is_required && <Badge tone="gold" className="shrink-0">Required</Badge>}
           </div>
 
-          {r.type === "video" && (
-            <div className="p-panel overflow-hidden">
-              {!r.url ? (
-                <div className="grid aspect-video place-items-center" style={{ background: "var(--p-raised)", color: "var(--p-text-3)" }}>No media</div>
-              ) : resolveMedia(r.url).embedUrl ? (
-                <iframe src={resolveMedia(r.url).embedUrl!} title={r.title} allow="autoplay; fullscreen; picture-in-picture" allowFullScreen className="aspect-video w-full" style={{ border: 0, background: "var(--p-raised)" }} />
-              ) : (
-                <video controls src={r.url} className="aspect-video w-full" style={{ background: "var(--p-raised)" }} />
-              )}
-            </div>
-          )}
-          {r.type === "audio" && (
-            <Panel><AudioBlock url={r.url} title={r.title} /></Panel>
+          {(r.type === "video" || r.type === "audio") && (
+            <Panel><VantageMedia url={r.url} kind={r.type} title={r.title} /></Panel>
           )}
 
           {r.type === "file" && (

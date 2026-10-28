@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      academy_media_cache: {
+        Row: {
+          content_type: string | null
+          created_at: string
+          failed_at: string | null
+          source_url: string
+          storage_path: string | null
+        }
+        Insert: {
+          content_type?: string | null
+          created_at?: string
+          failed_at?: string | null
+          source_url: string
+          storage_path?: string | null
+        }
+        Update: {
+          content_type?: string | null
+          created_at?: string
+          failed_at?: string | null
+          source_url?: string
+          storage_path?: string | null
+        }
+        Relationships: []
+      }
       academy_templates: {
         Row: {
           created_at: string

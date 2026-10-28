@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { PortalShell } from "@/components/vantage/portal-shell";
 import { Loader2 } from "lucide-react";
-import { CallPlayer } from "@/components/coach/CallPlayer";
+import { VantageMedia } from "@/components/media/VantageMedia";
 import { PillarBars, ScoreRing } from "@/components/vantage/coach";
 import { Badge, Button, EmptyState, Field, Input, PageBody, PageHeader, Panel, Tabs, TextSkeleton, Textarea, Toggle, notify } from "@/components/portal/ui";
 import { listTrainingDaysAdmin, listTrainingReview, reviewSubmission, saveTrainingDay, type TrainingDay } from "@/lib/training.functions";
@@ -131,7 +131,7 @@ function ReviewCard({ s }: { s: any }) {
         {!isRelease && (
           <div className="grid gap-4 md:grid-cols-[1fr_1.2fr]">
             <div className="space-y-3">
-              {s.file_url ? <video src={s.file_url} controls className="w-full rounded" /> : <CallPlayer src={cr?.audioUrl ?? null} driveFileId={s.drive_file_id} />}
+              {s.file_url ? <video src={s.file_url} controls className="w-full rounded" /> : <VantageMedia kind="audio" directSrc={cr?.audioUrl ?? null} url={cr?.audioUrl ? null : s.drive_file_id ? `https://drive.google.com/file/d/${s.drive_file_id}/view` : null} hideTranscript />}
               {s.note && <p className="text-[13px] text-muted-foreground">Agent note: {s.note}</p>}
             </div>
             <div>
