@@ -36,12 +36,49 @@ async function mediaFor(row: { media_path: string | null; media_url: string | nu
   throw new Error("This call has no recording attached.");
 }
 
+const MAX_IMPORT_BYTES = 100 * 1024 * 1024;
+const EXT: Record<string, string> = { "audio/mp4": "m4a", "audio/x-m4a": "m4a", "audio/m4a": "m4a", "audio/mpeg": "mp3", "audio/wav": "wav", "audio/x-wav": "wav", "audio/webm": "webm", "audio/ogg": "ogg", "video/mp4": "mp4", "video/quicktime": "mov" };
+
+/** Copy a Drive-linked recording into our own storage so it plays fast in the
+ *  Vantage player. Returns the new media_path, or null when Drive won't serve it. */
+export async function importDriveRecording(row: { id: string; profile_id?: string; media_path: string | null; media_url: string | null }): Promise<string | null> {
+  if (row.media_path || !row.media_url || !/drive\.google\.com|docs\.google\.com/.test(row.media_url)) return row.media_path;
+  try {
+    const sb = await admin();
+    let owner = row.profile_id;
+    if (!owner) {
+      const { data } = await sb.from("call_reviews").select("profile_id").eq("id", row.id).maybeSingle();
+      owner = data?.profile_id;
+    }
+    if (!owner) return null;
+    const res = await fetch(directMediaUrl(row.media_url), { redirect: "follow" });
+    const type = (res.headers.get("content-type") ?? "").split(";")[0].trim().toLowerCase();
+    const len = Number(res.headers.get("content-length") ?? 0);
+    if (!res.ok || type.startsWith("text/") || type.includes("html") || len > MAX_IMPORT_BYTES) {
+      await res.body?.cancel();
+      return null;
+    }
+    const buf = await res.arrayBuffer();
+    if (buf.byteLength === 0 || buf.byteLength > MAX_IMPORT_BYTES) return null;
+    const ctype = type && type !== "application/octet-stream" ? type : "audio/mp4";
+    const path = `${owner}/${row.id}.${EXT[ctype] ?? "m4a"}`;
+    const { error } = await sb.storage.from("call-recordings").upload(path, buf, { contentType: ctype, upsert: true });
+    if (error) { console.warn("[coach] recording import upload failed", error.message); return null; }
+    await sb.from("call_reviews").update({ media_path: path, updated_at: new Date().toISOString() }).eq("id", row.id);
+    return path;
+  } catch (e) {
+    console.warn("[coach] recording import failed", e);
+    return null;
+  }
+}
+
 /** Start processing a queued review: submit transcription and move it to transcribing.
  *  Exported so training homework submissions can kick off analysis immediately. */
-export async function kickReviewProcessing(row: { id: string; media_path: string | null; media_url: string | null }) {
+export async function kickReviewProcessing(row: { id: string; profile_id?: string; media_path: string | null; media_url: string | null }) {
   const sb = await admin();
   const tx = await import("@/lib/academy/transcribe.server");
-  const jobId = await tx.submitTranscription(await mediaFor(row));
+  const path = await importDriveRecording(row);
+  const jobId = await tx.submitTranscription(await mediaFor({ ...row, media_path: path }));
   await sb.from("call_reviews").update({ status: "transcribing", provider_job_id: jobId, error: null, updated_at: new Date().toISOString() }).eq("id", row.id);
 }
 
@@ -245,8 +282,13 @@ export const getReview = createServerFn({ method: "GET" })
     const { data: names } = await supabase.rpc("profile_display_names", { _ids: ids });
     const nameMap = new Map((names ?? []).map((n: any) => [n.id, n.name]));
     let audioUrl: string | null = null;
+    // Older Drive-linked calls get copied into storage on first open.
+    if (!row.media_path && (row as any).media_url) {
+      row.media_path = await importDriveRecording(row as any);
+    }
     if (row.media_path) {
-      const { data: s } = await supabase.storage.from("call-recordings").createSignedUrl(row.media_path, 60 * 60);
+      const sb = await admin();
+      const { data: s } = await sb.storage.from("call-recordings").createSignedUrl(row.media_path, 60 * 60);
       audioUrl = s?.signedUrl ?? null;
     }
     const mu = (row as any).media_url as string | null;
