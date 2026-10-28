@@ -218,7 +218,8 @@ export const submitHomework = createServerFn({ method: "POST" })
           .select("id, profile_id, media_path, media_url")
           .single();
         if (rErr) throw new Error(rErr.message);
-        await supabase.from("training_submissions").update({ review_id: review.id }).eq("id", sub.id);
+        // Agents can't update their own submissions under RLS; link it privileged.
+        await (await admin()).from("training_submissions").update({ review_id: review.id }).eq("id", sub.id);
         const { kickReviewProcessing } = await import("@/lib/coach.functions");
         await kickReviewProcessing(review);
       } catch (e) {
@@ -542,6 +543,12 @@ export const getAgentTrainingReview = createServerFn({ method: "GET" })
       // Make sure the caller can actually see this agent before returning anything.
       const { data: vis } = await supabase.from("applicants").select("id").eq("id", a.id).maybeSingle();
       if (!vis) throw new Error("You don't have access to this agent.");
+    }
+    // Older submissions may not be linked to their Call Coach review; match by recording link.
+    const unlinked = t.submissions.filter((s) => !s.review_id && s.link_url);
+    if (unlinked.length) {
+      const { data: byUrl } = await supabase.from("call_reviews").select("id, media_url").eq("profile_id", data.profileId).in("media_url", unlinked.map((s) => s.link_url!));
+      for (const s of unlinked) s.review_id = ((byUrl ?? []) as any[]).find((r) => r.media_url === s.link_url)?.id ?? null;
     }
     const rids = t.submissions.map((s) => s.review_id).filter((x): x is string => !!x);
     const { data: revs } = rids.length
