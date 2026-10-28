@@ -378,7 +378,7 @@ export function ApplicantRecord({
               ))}
             </EditSelectField>
             <EditSelectField
-              label="Assigned recruiter"
+              label="Recruiter"
               value={a.assigned_recruiter_id ?? ""}
               onChange={(v) => save({ assigned_recruiter_id: v || null })}
             >
@@ -388,7 +388,7 @@ export function ApplicantRecord({
               ))}
             </EditSelectField>
             <EditSelectField
-              label="Referring recruiter (signed up under)"
+              label="Upline (team they join)"
               value={a.referred_by_profile_id ?? ""}
               onChange={(v) => save({ referred_by_profile_id: v || null })}
             >
