@@ -4,6 +4,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   getAssignableRecruiters,
+  listUplineLeaders,
   createApplicantManual,
   checkApplicantDuplicate,
   type ApplicantDuplicate,
@@ -20,9 +21,11 @@ export function AddApplicantModal({
   onCreated: (id: string) => void;
 }) {
   const ctxFn = useServerFn(getAssignableRecruiters);
+  const leadersFn = useServerFn(listUplineLeaders);
   const createFn = useServerFn(createApplicantManual);
   const dupeFn = useServerFn(checkApplicantDuplicate);
   const ctxQ = useQuery({ queryKey: ["assignable"], queryFn: () => ctxFn() });
+  const leadersQ = useQuery({ queryKey: ["upline-leaders"], queryFn: () => leadersFn() });
 
   const [f, setF] = useState({
     first_name: "",
@@ -164,7 +167,7 @@ export function AddApplicantModal({
               onChange={(e) => set("referred_by_profile_id", e.target.value)}
             >
               <option value="">— same as assigned —</option>
-              {(ctx?.recruiters ?? []).map((r) => (
+              {(leadersQ.data?.users ?? []).map((r) => (
                 <option key={r.id} value={r.id}>
                   {r.name}
                 </option>

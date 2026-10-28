@@ -1344,6 +1344,31 @@ export const listAssignableUsers = createServerFn({ method: "GET" })
     return { users };
   });
 
+/** Upline candidates: only leaders (plus managers/admins) count as uplines. */
+export const listUplineLeaders = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase } = context;
+    const LEADER_ROLES = ["leader", "manager", "admin", "super_admin"] as const;
+    const { data: roleRows } = await supabase
+      .from("user_roles")
+      .select("user_id")
+      .in("role", LEADER_ROLES);
+    const leaderIds = [...new Set((roleRows ?? []).map((r: any) => r.user_id as string))];
+    if (!leaderIds.length) return { users: [] };
+    const { data: profs } = await supabase
+      .from("profiles")
+      .select("id, first_name, last_name, email")
+      .eq("is_active", true)
+      .in("id", leaderIds)
+      .order("first_name");
+    const users = ((profs ?? []) as any[]).map((p) => ({
+      id: p.id,
+      name: [p.first_name, p.last_name].filter(Boolean).join(" ") || p.email || "Unnamed",
+    }));
+    return { users };
+  });
+
 /* ============================================================
    Admin functions
    ============================================================ */

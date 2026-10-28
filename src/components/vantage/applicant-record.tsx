@@ -18,6 +18,7 @@ import {
   setDiscordConfirmed,
   setCourseConfirmed,
   listAssignableUsers,
+  listUplineLeaders,
   sendApplicantEmail,
   setApplicantExam,
   markExamResult,
@@ -142,6 +143,7 @@ export function ApplicantRecord({
   const addNote = useServerFn(addApplicantNote);
   const setOverview = useServerFn(setOverviewStatus);
   const usersFn = useServerFn(listAssignableUsers);
+  const leadersFn = useServerFn(listUplineLeaders);
 
   const recordQ = useQuery({
     queryKey: ["applicant", applicantId],
@@ -149,6 +151,7 @@ export function ApplicantRecord({
   });
   const { data, isLoading } = recordQ;
   const usersQ = useQuery({ queryKey: ["assignable-users"], queryFn: () => usersFn() });
+  const leadersQ = useQuery({ queryKey: ["upline-leaders"], queryFn: () => leadersFn() });
 
   const a = data?.applicant as any;
   const currentStage = data?.stages.find((s) => s.id === a?.current_stage_id);
@@ -393,7 +396,7 @@ export function ApplicantRecord({
               onChange={(v) => save({ referred_by_profile_id: v || null })}
             >
               <option value="">— none —</option>
-              {(usersQ.data?.users ?? []).map((u) => (
+              {(leadersQ.data?.users ?? []).map((u) => (
                 <option key={u.id} value={u.id}>{u.name}</option>
               ))}
             </EditSelectField>
