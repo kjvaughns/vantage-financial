@@ -6,7 +6,7 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ExternalLink, Loader2, Maximize, Pause, Play, RotateCcw, RotateCw } from "lucide-react";
+import { AudioLines, ExternalLink, Loader2, Maximize, Pause, Play, RotateCcw, RotateCw } from "lucide-react";
 import { resolveMedia } from "@/lib/academy/media";
 import { ensureAcademyMediaCached } from "@/lib/media-cache.functions";
 import { TranscriptViewer, useMediaSeek, type Segment } from "@/components/vantage/academy/transcript-viewer";
@@ -220,7 +220,7 @@ function NativePlayer({
           </div>
           <div className="flex w-28 items-center justify-end gap-1">
             <button type="button" onClick={cycle} aria-label="Playback speed" className="p-focus rounded-md px-2 py-1 text-[12px] font-semibold tabular-nums hover:bg-[var(--p-hover)]">{speed}x</button>
-            {kind === "video" && (
+            {kind === "video" && !audioOnly && (
               <button type="button" onClick={fullscreen} aria-label="Full screen" className="p-focus rounded-md p-1.5 hover:bg-[var(--p-hover)]"><Maximize size={15} /></button>
             )}
           </div>
