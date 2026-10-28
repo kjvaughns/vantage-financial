@@ -2803,6 +2803,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      highest_leader_in_chain: { Args: { _chain: Json }; Returns: string }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_descendant: {
         Args: { _ancestor: string; _target: string }
@@ -2851,6 +2852,10 @@ export type Database = {
         Returns: undefined
       }
       resend_invitation: { Args: { _id: string }; Returns: Json }
+      resolve_applicant_upline: {
+        Args: { _recruiter: string }
+        Returns: string
+      }
       resolve_one_on_one_url: { Args: { _profile_id: string }; Returns: string }
       resolve_scheduling_context: { Args: { _token: string }; Returns: Json }
       search_recruiters: {
