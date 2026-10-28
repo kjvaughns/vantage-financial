@@ -1,3 +1,4 @@
+import { getMe } from "@/lib/portal.functions";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
