@@ -1510,6 +1510,7 @@ export const adminUpdateProfile = createServerFn({ method: "POST" })
         .maybeSingle();
       const { data: profile } = await supabase.from("profiles").select("parent_user_id, manager_id").eq("id", id).maybeSingle();
       const recruiterId = data.parent_user_id !== undefined ? data.parent_user_id : profile?.parent_user_id ?? profile?.manager_id;
+      if (!recruiterId) throw new Error("Set this agent's recruiting hierarchy before assigning a contracting link.");
       const { data: expectedOwner, error: ownerError } = await supabase.rpc("resolve_applicant_upline", { _recruiter: recruiterId });
       if (ownerError) throw new Error(ownerError.message);
       if (!link?.is_active || !expectedOwner || link.owner_id !== expectedOwner) {
