@@ -13,6 +13,7 @@
 - Reschedule applicant interviews through a confirmation-token page and Cal.com booking UID, because creating a second booking would leave the original calendar event active.
 - Keep AgentLink contracting URLs upline-owned and assign exactly one active link per agent; never restore a universal contracting URL.
 - Resolve applicant uplines centrally through the database assignment trigger into assigned_manager_id and use that same resolved leader for AgentLink options and onboarding, preserving referral columns; this keeps public, manual, MCP, and recruiter-edit paths consistent.
+- Persist manual applicant uplines separately from automatic defaults; hierarchy edits use a service-only database action validating actor roles, organization scope and loops, because direct profile writes must retain structural guards.
 - Keep agency applications on two active paths (`builder` and `owner`); retain `launch_pad` only as a readable legacy value so historical records remain intact.
 - Keep HyperAgent/external-assistant MCP tools in src/lib/mcp (OAuth, caller-scoped client) and verify RLS access before any privileged stage-engine call, so external agents never exceed the signed-in user's permissions.
 - Gate training days on onboarding completion (or a logged manual unlock) and on approval of the previous day via `computeTrack` (the release day opens on unlock and accepts repeat attempts) in src/lib/training.functions.ts; release passes move the applicant to Active Agent through the stage engine, so progress stays on one record.

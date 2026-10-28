@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { changeUpline, getHierarchyOptions } from "@/lib/hierarchy.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { ChevronDown, ChevronRight, Users } from "lucide-react";
 import { PortalShell } from "@/components/vantage/portal-shell";
@@ -15,12 +16,13 @@ import {
   ErrorState,
   ListSkeleton,
   IconButton,
+  Button, Modal, Select, notify,
   type BadgeTone,
 } from "@/components/portal/ui";
 
 export const Route = createFileRoute("/_authenticated/portal/organization")({
   head: () => ({
-    meta: [{ title: "Organization — Vantage Portal" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Organization — Vantage Portal" }, { name: "description", content: "Manage your Vantage Financial reporting hierarchy and downlines." }, { property: "og:title", content: "Organization — Vantage Portal" }, { property: "og:description", content: "Manage your Vantage Financial reporting hierarchy and downlines." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }],
   }),
   component: OrganizationPage,
 });
@@ -35,6 +37,21 @@ const ROLE_TONE: Record<string, BadgeTone> = {
 function OrganizationPage() {
   const fn = useServerFn(getOrganizationTree);
   const q = useQuery({ queryKey: ["org", "tree"], queryFn: () => fn() });
+  const qc = useQueryClient();
+  const optionsFn = useServerFn(getHierarchyOptions);
+  const moveFn = useServerFn(changeUpline);
+  const options = useQuery({ queryKey: ["hierarchy-options"], queryFn: () => optionsFn() });
+  const [moving, setMoving] = useState<OrgNode | null>(null);
+  const [uplineId, setUplineId] = useState("");
+  const move = useMutation({
+    mutationFn: () => {
+      if (!moving || !uplineId) throw new Error("Choose an upline.");
+      return moveFn({ data: { id: moving.id, kind: "profile", upline_id: uplineId } });
+    },
+    onSuccess: () => { setMoving(null); qc.invalidateQueries(); notify.success("Hierarchy updated"); },
+    onError: (error) => notify.error("Could not move this agent", error.message),
+  });
+  const onMove = options.data?.canManage ? (node: OrgNode) => { setMoving(node); setUplineId(""); } : undefined;
 
   const nodes = q.data?.nodes ?? [];
   const rootId = q.data?.rootId ?? null;
@@ -84,11 +101,17 @@ function OrganizationPage() {
           >
             <div className="flex flex-col gap-0.5">
               {roots.map((r) => (
-                <TreeNode key={r.id} node={r} childrenOf={childrenOf} depth={0} />
+                <TreeNode key={r.id} node={r} childrenOf={childrenOf} depth={0} onMove={onMove} />
               ))}
             </div>
           </Panel>
         )}
+        {moving && <Modal title={`Change upline — ${moving.name}`} onClose={() => setMoving(null)} footer={<Button variant="primary" disabled={!uplineId || move.isPending} onClick={() => move.mutate()}>{move.isPending ? "Saving…" : "Save upline"}</Button>}>
+          <Select value={uplineId} onChange={(e) => setUplineId(e.target.value)}>
+            <option value="">Choose a leader</option>
+            {(options.data?.leaders ?? []).filter((leader) => leader.id !== moving.id).map((leader) => <option key={leader.id} value={leader.id}>{leader.name}</option>)}
+          </Select>
+        </Modal>}
       </PageBody>
     </PortalShell>
   );
@@ -98,10 +121,12 @@ function TreeNode({
   node,
   childrenOf,
   depth,
+  onMove,
 }: {
   node: OrgNode;
   childrenOf: Record<string, OrgNode[]>;
   depth: number;
+  onMove?: (node: OrgNode) => void;
 }) {
   const kids = childrenOf[node.id] ?? [];
   const [open, setOpen] = useState(depth < 2);
@@ -143,9 +168,10 @@ function TreeNode({
         {kids.length > 0 && (
           <span className="p-muted shrink-0 text-[11px]">{kids.length} direct</span>
         )}
+        {onMove && <Button size="sm" variant="ghost" onClick={() => onMove(node)}>Change upline</Button>}
       </div>
       {open &&
-        kids.map((k) => <TreeNode key={k.id} node={k} childrenOf={childrenOf} depth={depth + 1} />)}
+        kids.map((k) => <TreeNode key={k.id} node={k} childrenOf={childrenOf} depth={depth + 1} onMove={onMove} />)}
     </div>
   );
 }
