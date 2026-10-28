@@ -430,6 +430,7 @@ export type Database = {
           training_unlock_override_by: string | null
           training_unlocked_at: string | null
           updated_at: string
+          upline_override_id: string | null
           vsl_watched_at: string | null
           wants_one_on_one: boolean
           why_text: string | null
@@ -528,6 +529,7 @@ export type Database = {
           training_unlock_override_by?: string | null
           training_unlocked_at?: string | null
           updated_at?: string
+          upline_override_id?: string | null
           vsl_watched_at?: string | null
           wants_one_on_one?: boolean
           why_text?: string | null
@@ -626,6 +628,7 @@ export type Database = {
           training_unlock_override_by?: string | null
           training_unlocked_at?: string | null
           updated_at?: string
+          upline_override_id?: string | null
           vsl_watched_at?: string | null
           wants_one_on_one?: boolean
           why_text?: string | null
@@ -714,6 +717,13 @@ export type Database = {
             columns: ["team_id"]
             isOneToOne: false
             referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applicants_upline_override_id_fkey"
+            columns: ["upline_override_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -2738,6 +2748,15 @@ export type Database = {
         Returns: boolean
       }
       cancel_invitation: { Args: { _id: string }; Returns: Json }
+      change_reporting_upline: {
+        Args: {
+          _actor: string
+          _kind: string
+          _target: string
+          _upline: string
+        }
+        Returns: undefined
+      }
       company_leaderboard: {
         Args: { payload: Json }
         Returns: {

@@ -169,6 +169,13 @@
       "when": 1793222224079,
       "tag": "0023_verify_nearest_contracting_upline",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1793222423352,
+      "tag": "0024_manual_upline_and_scoped_hierarchy",
+      "breakpoints": true
     }
   ]
 }
