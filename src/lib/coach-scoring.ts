@@ -13,8 +13,14 @@ export const PILLARS = [
 
 export type PillarKey = (typeof PILLARS)[number]["key"];
 
+export type PillarStatus = "performed" | "partial" | "not_attempted";
+
 export type PillarScore = {
-  score: number;
+  /** null when the agent never attempted this section — it isn't graded. */
+  score: number | null;
+  status: PillarStatus;
+  /** Short transcript evidence the grader used to decide the status. */
+  evidence?: string;
   went_well: string;
   to_fix: string;
   better_line: string;
@@ -44,12 +50,12 @@ export function clampScore(n: unknown): number {
 }
 
 /** Weighted average of pillar scores scaled to 0–100. Missing/invalid weights count as 1; zero weights are excluded. */
-export function overallScore(scores: Partial<Record<PillarKey, { score: number }>>, weights: Partial<Record<string, number>> = {}): number {
+export function overallScore(scores: Partial<Record<PillarKey, { score: number | null; status?: string }>>, weights: Partial<Record<string, number>> = {}): number {
   let total = 0;
   let weightSum = 0;
   for (const p of PILLARS) {
-    const s = scores[p.key];
-    if (!s) continue;
+    const s = scores[p.key] as { score: number | null; status?: string } | undefined;
+    if (!s || s.status === "not_attempted" || typeof s.score !== "number") continue;
     const raw = weights[p.key];
     const w = typeof raw === "number" && Number.isFinite(raw) && raw >= 0 ? raw : DEFAULT_WEIGHTS[p.key] ?? DEFAULT_WEIGHT;
     if (w === 0) continue;
@@ -66,8 +72,11 @@ export function normalizePillars(raw: unknown): PillarScores {
   const out = {} as PillarScores;
   for (const p of PILLARS) {
     const r = src[p.key] ?? {};
+    const status: PillarStatus = r.status === "not_attempted" || r.status === "partial" ? r.status : "performed";
     out[p.key] = {
-      score: clampScore(r.score),
+      status,
+      score: status === "not_attempted" ? null : clampScore(r.score),
+      evidence: String(r.evidence ?? "").slice(0, 600),
       went_well: String(r.went_well ?? "").slice(0, 1200),
       to_fix: String(r.to_fix ?? "").slice(0, 1200),
       better_line: String(r.better_line ?? "").slice(0, 1200),
@@ -79,4 +88,14 @@ export function normalizePillars(raw: unknown): PillarScores {
 export function scoreTone(n: number, outOf = 10): "green" | "amber" | "red" {
   const pct = n / outOf;
   return pct >= 0.8 ? "green" : pct >= 0.6 ? "amber" : "red";
+}
+
+/** Which script sections a homework day expects, inferred from its label/title.
+ *  Monday: Intro + Needs Analysis. Tuesday: + Medical + Social. Later days: the full call. */
+export function expectedPillarsForDay(label: string | null | undefined): PillarKey[] {
+  const t = (label ?? "").toLowerCase();
+  const delivery: PillarKey[] = ["rapport", "tonality"];
+  if (/\bmon(day)?\b/.test(t)) return ["intro", "needs_analysis", ...delivery];
+  if (/\btue(s|sday)?\b/.test(t)) return ["intro", "needs_analysis", "medical", "social", ...delivery];
+  return PILLARS.map((p) => p.key);
 }

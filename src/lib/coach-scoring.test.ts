@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { clampScore, normalizePillars, overallScore } from "./coach-scoring";
+import { clampScore, expectedPillarsForDay, normalizePillars, overallScore } from "./coach-scoring";
 
 describe("coach scoring", () => {
   it("clamps pillar scores to 1–10", () => {
@@ -24,5 +24,18 @@ describe("coach scoring", () => {
   it("zero weight removes a pillar", () => {
     const s = normalizePillars({ intro: { score: 2 } }); // others default to 1
     expect(overallScore(s, { intro: 0 })).toBe(10);
+  });
+
+  it("skips pillars the agent never attempted", () => {
+    const s = normalizePillars({ intro: { status: "not_attempted", score: 1 }, needs_analysis: { status: "not_attempted" }, medical: { score: 8 }, social: { status: "not_attempted" }, bank: { score: 6 }, close: { status: "not_attempted" }, rapport: { score: 8 }, tonality: { score: 8 } });
+    expect(s.intro.score).toBeNull();
+    // medical 8*1 + bank 6*1 + rapport 8*1 + tonality 8*3 = 46 / 6 = 7.67 → 77
+    expect(overallScore(s)).toBe(77);
+  });
+
+  it("expected sections follow the training day", () => {
+    expect(expectedPillarsForDay("Monday Intro + Needs Analysis")).toEqual(["intro", "needs_analysis", "rapport", "tonality"]);
+    expect(expectedPillarsForDay("Tuesday Medical")).toContain("social");
+    expect(expectedPillarsForDay("Wednesday Full call")).toHaveLength(8);
   });
 });

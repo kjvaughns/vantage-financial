@@ -189,6 +189,7 @@ async function runScoring(sb: any, row: any) {
     references: (refs ?? []).map((r: any) => ({ title: r.title, transcript: r.transcript_text ?? "" })),
     rubricNotes: (settings?.rubric_notes ?? {}) as Record<string, string>,
     callType: row.call_type,
+    expectedPillars: row.source === "homework" ? expectedPillarsForDay(row.title) : undefined,
   });
   const overall = overallScore(result.pillars, (settings?.weights ?? {}) as Record<string, number>);
   await sb

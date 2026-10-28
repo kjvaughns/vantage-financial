@@ -55,6 +55,8 @@ export async function scoreCall(input: {
   references: { title: string; transcript: string }[];
   rubricNotes: Record<string, string>;
   callType: string;
+  /** Sections this homework is meant to cover; others are optional. */
+  expectedPillars?: string[];
 }): Promise<CoachResult> {
   const apiKey = process.env["LOVABLE_API_KEY"];
   if (!apiKey) throw new Error("AI isn't configured.");
@@ -64,7 +66,15 @@ export async function scoreCall(input: {
 
   const system = `You are the Vantage Financial call coach for final expense / veteran life insurance agents.
 The GOLD STANDARD below (the official Vantage scripts and the manager's own model calls) is the single source of truth for how a call SHOULD go. Judge the agent ONLY against it — never against generic sales advice.
-Score each pillar 1–10 (10 = matches the Gold Standard perfectly). If a section never happened on the call, score it 1–3 and say it was skipped.
+Think in two steps.
+STEP 1 — MAP THE CALL: read the whole transcript and decide which script sections the agent actually performed. Roleplays often cover only part of the script (e.g. only medical + bank). For each pillar set status:
+- "performed": the agent clearly ran this section.
+- "partial": they started it but cut it short.
+- "not_attempted": it never happened on this recording (including when the recording simply starts later or ends earlier).
+Put a short quote or timestamp in "evidence" for your decision. Never assume a section happened off-recording.
+STEP 2 — GRADE ONLY WHAT HAPPENED: score performed/partial pillars 1–10 (10 = matches the Gold Standard perfectly), comparing each ONLY to the matching section of the Gold Standard. For not_attempted pillars set score to 0 and leave went_well/to_fix/better_line empty — do NOT penalize them or mention them in improvements. Rapport and tonality are judged across whatever portion was performed.
+The summary and top improvements must only cover sections that were performed.${input.expectedPillars?.length ? `
+This is training homework that is expected to cover: ${input.expectedPillars.join(", ")}. If an expected section is not_attempted, add one short note at the end of the summary: "Missing from today's homework: …". Sections outside this list are optional.` : ""}
 Pillars:
 ${rubric}
 Tonality: judge pace, confidence, energy and control as evidenced by wording, interruptions, filler and flow in the transcript.
@@ -77,8 +87,8 @@ Also return sections: where each pillar starts in the call, using the [mm:ss] ti
     PILLARS.map((p) => [p.key, {
       type: "object",
       additionalProperties: false,
-      properties: { score: { type: "integer" }, went_well: { type: "string" }, to_fix: { type: "string" }, better_line: { type: "string" } },
-      required: ["score", "went_well", "to_fix", "better_line"],
+      properties: { status: { type: "string", enum: ["performed", "partial", "not_attempted"] }, evidence: { type: "string" }, score: { type: "integer" }, went_well: { type: "string" }, to_fix: { type: "string" }, better_line: { type: "string" } },
+      required: ["status", "evidence", "score", "went_well", "to_fix", "better_line"],
     }]),
   );
   const schema = {
