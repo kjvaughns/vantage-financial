@@ -1,3 +1,4 @@
+import { BackLink } from "@/components/portal/back-link";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { VantageMedia } from "@/components/media/VantageMedia";
@@ -49,7 +50,7 @@ function ReviewPage() {
   return (
     <PortalShell>
       <PageBody>
-        <Link to="/portal/training" search={{ tab: "coach" }} className="mb-3 inline-flex items-center gap-1 text-[13px] text-muted-foreground hover:text-foreground"><ArrowLeft size={14} aria-hidden /> Call Coach</Link>
+        <BackLink to="/portal/training" search={{ tab: "coach" }} className="mb-3 inline-flex items-center gap-1 text-[13px] text-muted-foreground hover:text-foreground"><ArrowLeft size={14} aria-hidden /> Call Coach</BackLink>
         {q.isLoading ? <Panel><TextSkeleton lines={6} /></Panel> : q.error || !r ? (
           <Panel><EmptyState title="Couldn't load this call" description={(q.error as Error)?.message} /></Panel>
         ) : (

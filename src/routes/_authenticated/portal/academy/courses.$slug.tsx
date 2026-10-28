@@ -1,3 +1,4 @@
+import { BackLink } from "@/components/portal/back-link";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -107,9 +108,9 @@ function CoursePlayer() {
     <PortalShell>
       <PageBody>
         <div className="mb-4 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
-          <Link to="/portal/academy" className="p-focus inline-flex min-w-0 items-center gap-1 text-[13px]" style={{ color: "var(--p-text-2)" }}>
+          <BackLink to="/portal/academy" className="p-focus inline-flex min-w-0 items-center gap-1 text-[13px]" style={{ color: "var(--p-text-2)" }}>
             <ChevronLeft size={15} className="shrink-0" /> <span className="truncate">Academy</span>
-          </Link>
+          </BackLink>
           <div className="flex shrink-0 items-center gap-2">
             <div className="h-1.5 w-24 overflow-hidden rounded-full" style={{ background: "var(--p-hover)" }}>
               <div className="h-full rounded-full" style={{ width: `${Math.max(3, pct)}%`, background: "var(--p-gold)" }} />
