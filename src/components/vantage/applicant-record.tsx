@@ -443,20 +443,47 @@ export function ApplicantRecord({
         {/* State exam */}
         <StateExamCard applicant={a} onDone={invalidate} />
 
-        {/* Onboarding progress */}
-        {currentStage?.slug === "onboarding" && !a.assigned_agentlink_link_id && (
-          <Panel title="Contracting link needed">
-            <p className="p-secondary">
-              This recruit is in Onboarding but doesn&apos;t have an AgentLink contracting link yet.
-              Assign one so step 1 of their checklist works.
-            </p>
-            <div className="mt-3">
+        {/* AgentLink contracting link — assign or change from the profile card at any time */}
+        <Panel
+          title="AgentLink contracting"
+          description="The upline's contracting link this recruit uses for step 1 of onboarding."
+        >
+          {data?.assignedLink ? (
+            <div className="space-y-2">
+              <div
+                className="rounded-[10px] border p-3"
+                style={{ borderColor: "var(--p-border)", background: "var(--p-raised)" }}
+              >
+                <div className="text-[13.5px] font-semibold" style={{ color: "var(--p-text)" }}>
+                  {data.assignedLink.label}
+                </div>
+                <div className="p-muted truncate text-[12px]">{data.assignedLink.url}</div>
+                {data.assignedLink.ownerName && (
+                  <div className="p-muted mt-1 text-[11.5px]">
+                    From upline: {data.assignedLink.ownerName}
+                  </div>
+                )}
+              </div>
+              <Button size="sm" variant="secondary" onClick={() => setLinkPromptOpen(true)}>
+                Change contracting link
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="p-secondary">
+                No contracting link assigned yet.
+                {currentStage?.slug === "onboarding"
+                  ? " Assign one so step 1 of their checklist works."
+                  : " Assign one from their upline whenever you're ready."}
+              </p>
               <Button size="sm" variant="primary" onClick={() => setLinkPromptOpen(true)}>
                 Assign contracting link
               </Button>
             </div>
-          </Panel>
-        )}
+          )}
+        </Panel>
+
+        {/* Onboarding progress */}
         {currentStage?.slug === "onboarding" && (
           <OnboardingProgressCard steps={a.onboarding_steps} applicantId={a.id} />
         )}
