@@ -10,15 +10,12 @@ import {
   EmptyState,
   ErrorState,
   CardSkeleton,
-  Tabs,
 } from "@/components/portal/ui";
 import { getRecordingLearner } from "@/lib/academy-content.functions";
-import { resolveMedia } from "@/lib/academy/media";
-import { AudioBlock } from "@/components/vantage/academy/audio-block";
+import { VantageMedia, type VantageMediaHandle } from "@/components/media/VantageMedia";
 import { NotesPreview } from "@/components/vantage/academy/media-fields";
-import { TranscriptViewer, useMediaSeek } from "@/components/vantage/academy/transcript-viewer";
 import { ChevronLeft } from "lucide-react";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 
 export const Route = createFileRoute("/_authenticated/portal/academy/presentations/$slug")({
   head: () => ({
@@ -35,26 +32,9 @@ function RecordingPage() {
   const { slug } = Route.useParams();
   const getFn = useServerFn(getRecordingLearner);
   const q = useQuery({ queryKey: ["academy", "recording", slug], queryFn: () => getFn({ data: { slug } }) });
-  const [tab, setTab] = useState<"notes" | "transcript">("notes");
 
-  // Hooks must run on every render, so keep media refs/seek above the early returns.
-  const nativeRef = useRef<HTMLMediaElement | null>(null);
-  const frameRef = useRef<HTMLIFrameElement | null>(null);
-  const recData = q.data && q.data.found ? (q.data as any) : null;
-  const recPre = recData?.recording as any;
-  const mediaPre = resolveMedia(recPre?.video_url);
-  const isAudioPre = recPre?.format === "audio";
-  const isNativePre =
-    (isAudioPre && !mediaPre.embedUrl) || mediaPre.kind === "direct" || (!!recPre?.video_url && !mediaPre.embedUrl);
-
-  const target = isNativePre
-    ? ({ kind: "element", ref: nativeRef } as const)
-    : mediaPre.kind === "youtube"
-      ? ({ kind: "youtube", ref: frameRef } as const)
-      : mediaPre.kind === "vimeo"
-        ? ({ kind: "vimeo", ref: frameRef } as const)
-        : ({ kind: "none" } as const);
-  const { seek, canSeek, currentMs } = useMediaSeek(target);
+  const playerRef = useRef<VantageMediaHandle>(null);
+  const seek = (ms: number) => playerRef.current?.seek(ms);
 
   if (q.isError)
     return (
@@ -94,8 +74,6 @@ function RecordingPage() {
 
   const rec = data.recording as any;
   const transcript = data.transcript as any;
-  const media = mediaPre;
-  const isAudio = isAudioPre;
 
   return (
     <PortalShell>
@@ -111,43 +89,17 @@ function RecordingPage() {
 
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] lg:items-start">
           <div className="min-w-0 space-y-4">
-            {isAudio ? (
-              <Panel>
-                <AudioBlock
-                  url={rec.video_url}
-                  title={rec.title}
-                  nativeRef={nativeRef as React.Ref<HTMLAudioElement>}
-                  frameRef={frameRef}
-                />
-              </Panel>
-            ) : (
-
-              <div className="p-panel overflow-hidden">
-                {!rec.video_url ? (
-                  <div className="grid aspect-video place-items-center" style={{ background: "var(--p-raised)", color: "var(--p-text-3)" }}>
-                    No video attached yet
-                  </div>
-                ) : media.kind === "direct" ? (
-                  <video
-                    ref={nativeRef as React.RefObject<HTMLVideoElement>}
-                    controls
-                    src={rec.video_url}
-                    className="aspect-video w-full"
-                    style={{ background: "var(--p-raised)" }}
-                  />
-                ) : (
-                  <iframe
-                    ref={frameRef}
-                    src={media.embedUrl ?? rec.video_url}
-                    title={rec.title}
-                    allow="autoplay; fullscreen; picture-in-picture"
-                    allowFullScreen
-                    className="aspect-video w-full"
-                    style={{ border: 0, background: "var(--p-raised)" }}
-                  />
-                )}
-              </div>
-            )}
+            <Panel>
+              <VantageMedia
+                ref={playerRef}
+                url={rec.video_url}
+                kind={rec.format === "audio" ? "audio" : "video"}
+                title={rec.title}
+                segments={transcript?.transcript_segments}
+                fallbackText={transcript?.transcript_text}
+                speakerNames={transcript?.speaker_names}
+              />
+            </Panel>
 
             <Panel
               title={rec.title}
@@ -168,34 +120,11 @@ function RecordingPage() {
           </div>
 
           <Panel title="Training notes" padded={false}>
-            <div className="px-4 pt-3">
-              <Tabs<"notes" | "transcript">
-                value={tab}
-                onChange={setTab}
-                tabs={[
-                  { value: "notes", label: "AI notes" },
-                  { value: "transcript", label: "Transcript" },
-                ]}
-              />
-            </div>
             <div className="p-4">
-              {tab === "notes" ? (
-                transcript?.notes ? (
-                  <NotesPreview notes={transcript.notes} onSeek={canSeek ? seek : undefined} />
-                ) : (
-                  <p className="p-muted leading-snug">
-                    Training notes appear here once this recording has been transcribed.
-                  </p>
-                )
+              {transcript?.notes ? (
+                <NotesPreview notes={transcript.notes} onSeek={seek} />
               ) : (
-                <TranscriptViewer
-                  segments={transcript?.transcript_segments}
-                  fallbackText={transcript?.transcript_text}
-                  speakerNames={transcript?.speaker_names}
-                  onSeek={seek}
-                  canSeek={canSeek}
-                  currentMs={currentMs}
-                />
+                <p className="p-muted leading-snug">Training notes appear here once this recording has been transcribed.</p>
               )}
             </div>
           </Panel>

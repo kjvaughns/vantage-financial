@@ -228,7 +228,7 @@ export function TranscriptViewer({
           type="button"
           onClick={() => setPaused(false)}
           className="p-focus absolute bottom-2 right-3 rounded-full px-3 py-1 text-[12px] font-semibold shadow"
-          style={{ background: "var(--p-gold)", color: "var(--p-bg, #000)" }}
+          style={{ background: "var(--p-gold)", color: "var(--p-bg)" }}
         >
           Back to live
         </button>
