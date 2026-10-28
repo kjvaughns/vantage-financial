@@ -5,6 +5,7 @@ import { PublicShell } from "@/components/vantage/brand";
 import { StateCombobox } from "@/components/vantage/state-combobox";
 import { getAgentJoinContext, registerAgentViaLink } from "@/lib/agent-join.functions";
 import { supabase } from "@/integrations/supabase/client";
+import { NPN_LOOKUP_URL } from "@/lib/next-steps";
 
 export const Route = createFileRoute("/join/$slug")({
   head: () => ({
@@ -193,6 +194,14 @@ function JoinPage() {
               value={f.npn}
               onChange={(e) => set("npn", e.target.value)}
             />
+            <a
+              href={NPN_LOOKUP_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 text-[13px] font-medium text-vantage-gold underline-offset-4 transition-colors hover:text-vantage-gold/80 hover:underline"
+            >
+              Don't know your NPN? Look it up on NIPR →
+            </a>
           </Field>
           <Field label="Instagram handle">
             <input
