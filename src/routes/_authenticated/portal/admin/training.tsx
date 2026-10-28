@@ -28,12 +28,12 @@ function AdminTrainingPage() {
   return (
     <PortalShell>
       <PageBody>
-        <PageHeader title="Training Review" description="Pick an agent, see their whole week, then approve or send back." />
+        <PageHeader title="Training Admin" description="Click a trainee to see every attempt and review it." />
         <Tabs
           value={view}
           onChange={setView}
           tabs={[
-            { value: "agents", label: `Review by agent${total ? ` (${total})` : ""}` },
+            { value: "agents", label: `Trainees${total ? ` (${total} to review)` : ""}` },
             { value: "cleared", label: "Cleared to call" },
             { value: "content", label: "Training content" },
           ]}
@@ -64,51 +64,51 @@ function ClearedList() {
   );
 }
 
-type Agent = { profile_id: string; name: string; waiting: number; release: number; oldest: string };
+type Agent = { profile_id: string; name: string; waiting: number; release: number; attempts: number; approved: number; oldest: string; last: string };
 
 function AgentReview({ agents, loading }: { agents: Agent[]; loading: boolean }) {
-  const [onlyRelease, setOnlyRelease] = useState(false);
   const [picked, setPicked] = useState<string | null>(null);
-  const list = onlyRelease ? agents.filter((a) => a.release > 0) : agents;
-  const selected = picked && agents.some((a) => a.profile_id === picked) ? picked : picked ?? list[0]?.profile_id ?? null;
-  const nextAgent = () => {
-    const i = list.findIndex((a) => a.profile_id === selected);
-    const n = list[i + 1] ?? list.find((a) => a.profile_id !== selected);
-    if (n) setPicked(n.profile_id);
-  };
+  const [search, setSearch] = useState("");
   if (loading) return <Panel><TextSkeleton lines={4} /></Panel>;
-  return (
-    <div className="grid gap-4 lg:grid-cols-[260px_1fr]">
-      <div className="space-y-2">
-        <label className="flex items-center gap-2 text-[12.5px] text-muted-foreground">
-          <input type="checkbox" className="accent-primary" checked={onlyRelease} onChange={(e) => setOnlyRelease(e.target.checked)} /> Release calls only
-        </label>
-        <div className="lg:hidden">
-          <Select value={selected ?? ""} onChange={(e) => setPicked(e.target.value)} aria-label="Choose agent">
-            {list.map((a) => <option key={a.profile_id} value={a.profile_id}>{a.name} — {a.waiting + a.release} waiting</option>)}
-          </Select>
-        </div>
-        <Panel padded={false} className="hidden lg:block">
-          {!list.length ? (
-            <p className="p-4 text-[13px] text-muted-foreground">{onlyRelease ? "No release calls waiting." : "All caught up — nothing waiting."}</p>
-          ) : (
-            <ul>
-              {list.map((a) => (
-                <li key={a.profile_id}>
-                  <button type="button" onClick={() => setPicked(a.profile_id)} className={`flex w-full items-center gap-2 border-b border-border px-3 py-2.5 text-left text-[13.5px] last:border-0 ${selected === a.profile_id ? "bg-primary/10 text-primary" : "hover:bg-muted/40"}`}>
-                    <span className="flex-1 truncate font-medium">{a.name}</span>
-                    {a.release > 0 && <Badge tone="gold">Release</Badge>}
-                    {a.waiting > 0 && <Badge>{a.waiting}</Badge>}
-                  </button>
-                  <div className="sr-only">waiting since {ago(a.oldest)}</div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Panel>
+  if (picked) {
+    const i = agents.findIndex((a) => a.profile_id === picked);
+    const next = agents.slice(i + 1).find((a) => a.waiting + a.release > 0) ?? agents.find((a) => a.profile_id !== picked && a.waiting + a.release > 0);
+    return (
+      <div className="space-y-3">
+        <Button variant="ghost" onClick={() => setPicked(null)}>← All trainees</Button>
+        <AgentPanel key={picked} profileId={picked} onDoneAll={() => setPicked(next?.profile_id ?? null)} />
       </div>
-      {selected ? <AgentPanel key={selected} profileId={selected} onDoneAll={nextAgent} /> : <Panel><EmptyState title="All caught up" description="New homework and release calls will show up here." /></Panel>}
-    </div>
+    );
+  }
+  const list = agents.filter((a) => a.name.toLowerCase().includes(search.trim().toLowerCase()));
+  return (
+    <Panel padded={false}>
+      <div className="border-b border-border p-3">
+        <Input placeholder="Search trainees" value={search} onChange={(e) => setSearch(e.target.value)} aria-label="Search trainees" />
+      </div>
+      {!list.length ? (
+        <p className="p-4 text-[13px] text-muted-foreground">{agents.length ? "No trainees match." : "No trainees have submitted anything yet."}</p>
+      ) : (
+        <ul>
+          {list.map((a) => {
+            const waiting = a.waiting + a.release;
+            return (
+              <li key={a.profile_id}>
+                <button type="button" onClick={() => setPicked(a.profile_id)} className="flex w-full items-center gap-3 border-b border-border px-4 py-3 text-left last:border-0 hover:bg-muted/40">
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-[14.5px] font-medium">{a.name}</div>
+                    <div className="text-[12.5px] text-muted-foreground">{a.attempts} attempt{a.attempts === 1 ? "" : "s"} · {a.approved} approved · last {ago(a.last)}</div>
+                  </div>
+                  {a.release > 0 && <Badge tone="gold">Release call</Badge>}
+                  {waiting > 0 ? <Badge tone="amber">{waiting} to review</Badge> : <Badge tone="neutral">Up to date</Badge>}
+                  <span className="text-muted-foreground" aria-hidden>›</span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </Panel>
   );
 }
 

@@ -1,3 +1,4 @@
+import { getMe } from "@/lib/portal.functions";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -101,6 +102,9 @@ function TrainingPage() {
   const q = useQuery({ queryKey: ["my-training"], queryFn: () => fetchFn() });
   const [openId, setOpenId] = useState<string | null>(null);
   const { tab } = Route.useSearch();
+  const meFn = useServerFn(getMe);
+  const meQ = useQuery({ queryKey: ["me"], queryFn: () => meFn() });
+  const canReview = (meQ.data?.roles ?? []).some((r: string) => ["super_admin", "admin", "manager", "leader"].includes(r));
 
   const track = q.data?.track ?? [];
   const approvedCount = track.filter((e) => e.state === "approved").length;
@@ -119,6 +123,7 @@ function TrainingPage() {
               <p className="p-secondary mt-1 max-w-xl">Monday–Thursday reps, then your Friday release call. Each day unlocks when the one before it is approved.</p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
+              {canReview && <Link to="/portal/admin/training" className="rounded-md border border-primary px-3 py-1.5 text-[13px] font-medium text-primary hover:bg-primary/10">Training Admin</Link>}
               {currentEntry && tab === "days" && <Button variant="primary" onClick={() => setOpenId(currentEntry.day.id)}>Continue {currentEntry.day.day_label ?? "training"}</Button>}
               <div className="flex rounded-md border border-border p-0.5" role="tablist" aria-label="Training Hub sections">
                 <Link
