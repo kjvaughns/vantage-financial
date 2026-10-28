@@ -7,7 +7,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { PILLARS, overallScore, type PillarScores } from "@/lib/coach-scoring";
+import { PILLARS, expectedPillarsForDay, overallScore, type PillarScores } from "@/lib/coach-scoring";
 
 async function admin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

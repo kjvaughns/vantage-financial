@@ -8,6 +8,7 @@ import { Badge, Button, EmptyState, Field, Input, PageBody, Panel, TextSkeleton,
 import { STATE_LABEL, STATE_TONE } from "@/components/vantage/training-panel";
 import { getMyTraining, submitHomework, type TrainingDay } from "@/lib/training.functions";
 import { isGoogleDriveRecordingLink } from "@/lib/training-homework";
+import { VantageMedia } from "@/components/media/VantageMedia";
 import { NewContentBadge } from "@/components/vantage/new-content-badge";
 import { PillarBars, ScoreRing, StatusBadge, SubmitCallForm, useReviewPolling } from "@/components/vantage/coach";
 import { listMyReviews } from "@/lib/coach.functions";
@@ -227,12 +228,14 @@ function DayBody({ day, state, latest }: { day: TrainingDay; state: string; late
   };
   return (
     <div className="space-y-4 text-[14px]">
-      {embed ? (
-        <div className="aspect-video w-full overflow-hidden rounded-md border border-border">
-          <iframe src={embed} title={day.title} className="h-full w-full" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen />
-        </div>
-      ) : day.video_url ? (
-        <a href={day.video_url} target="_blank" rel="noreferrer" className="text-primary underline">Watch today's lesson</a>
+      {day.video_url ? (
+        /loom\.com\/share\//.test(day.video_url) && embed ? (
+          <div className="aspect-video w-full overflow-hidden rounded-md border border-border">
+            <iframe src={embed} title={day.title} className="h-full w-full" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen />
+          </div>
+        ) : (
+          <VantageMedia url={day.video_url} kind="video" title={day.title} hideTranscript />
+        )
       ) : null}
       {day.objective && <div><div className="p-label mb-1">Objective</div>{day.objective}</div>}
       {day.instructions && <div><div className="p-label mb-1">How to do it</div><p className="whitespace-pre-line">{day.instructions}</p></div>}
