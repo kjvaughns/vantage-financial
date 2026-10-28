@@ -53,7 +53,14 @@ export const VantageMedia = forwardRef<VantageMediaHandle, Props>(function Vanta
     retry: false,
   });
 
-  const nativeSrc = directSrc ?? (needsCache ? cache.data?.url ?? null : media.kind === "direct" || media.kind === "unknown" ? media.playbackUrl : null);
+  // Files too large to copy into storage stream straight from Drive into the
+  // Vantage player (Drive supports byte ranges); the Drive embed is only a last resort.
+  const [streamFailed, setStreamFailed] = useState(false);
+  const driveId = media.kind === "drive" ? media.fetchUrl?.match(/id=([\w-]+)/)?.[1] ?? null : null;
+  const driveStream = needsCache && cache.isFetched && !cache.data?.url && driveId && !streamFailed
+    ? `https://drive.usercontent.google.com/download?id=${driveId}&export=download&confirm=t`
+    : null;
+  const nativeSrc = directSrc ?? (needsCache ? cache.data?.url ?? driveStream : media.kind === "direct" || media.kind === "unknown" ? media.playbackUrl : null);
   const embedUrl = !nativeSrc && !(needsCache && cache.isLoading) ? media.embedUrl : null;
 
   const el = useRef<HTMLMediaElement | null>(null);
@@ -86,7 +93,7 @@ export const VantageMedia = forwardRef<VantageMediaHandle, Props>(function Vanta
       </Empty>
     );
   } else if (nativeSrc) {
-    player = <NativePlayer src={nativeSrc} kind={kind} elRef={el} onMs={setNativeMs} title={title} />;
+    player = <NativePlayer src={nativeSrc} kind={kind} elRef={el} onMs={setNativeMs} title={title} onError={nativeSrc === driveStream ? () => setStreamFailed(true) : undefined} />;
   } else if (embedUrl) {
     player = (
       <div className="space-y-1">
@@ -148,8 +155,8 @@ function Empty({ children }: { children: React.ReactNode }) {
 }
 
 function NativePlayer({
-  src, kind, elRef, onMs, title,
-}: { src: string; kind: "audio" | "video"; elRef: React.MutableRefObject<HTMLMediaElement | null>; onMs: (ms: number) => void; title?: string }) {
+  src, kind, elRef, onMs, title, onError,
+}: { src: string; kind: "audio" | "video"; elRef: React.MutableRefObject<HTMLMediaElement | null>; onMs: (ms: number) => void; title?: string; onError?: () => void }) {
   const wrap = useRef<HTMLDivElement>(null);
   const [playing, setPlaying] = useState(false);
   const [t, setT] = useState(0);
@@ -166,6 +173,7 @@ function NativePlayer({
     onPlay: () => setPlaying(true),
     onPause: () => setPlaying(false),
     onWaiting: () => setLoading(true),
+    onError: () => onError?.(),
     onCanPlay: () => setLoading(false),
     onLoadedMetadata: (e: React.SyntheticEvent<HTMLMediaElement>) => {
       setDur(e.currentTarget.duration); setLoading(false);
