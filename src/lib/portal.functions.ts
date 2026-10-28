@@ -303,7 +303,7 @@ export const assignAgentLink = createServerFn({ method: "POST" })
     }
     const { data: agent } = await admin
       .from("profiles")
-      .select("parent_user_id")
+      .select("parent_user_id, manager_id")
       .eq("id", data.agent_id)
       .maybeSingle();
     if (data.link_id) {
@@ -312,7 +312,11 @@ export const assignAgentLink = createServerFn({ method: "POST" })
         .select("id, owner_id, is_active")
         .eq("id", data.link_id)
         .maybeSingle();
-      if (!link?.is_active || link.owner_id !== agent?.parent_user_id) {
+      const { data: uplineId, error: uplineError } = await admin.rpc("resolve_applicant_upline", {
+        _recruiter: agent?.parent_user_id ?? agent?.manager_id,
+      });
+      if (uplineError) throw new Error(uplineError.message);
+      if (!link?.is_active || !uplineId || link.owner_id !== uplineId) {
         throw new Error("The assigned link must belong to this agent's upline.");
       }
     }
@@ -321,13 +325,11 @@ export const assignAgentLink = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-/** Resolve an applicant's upline: assigned recruiter, then original recruiter, then referrer. */
+/** Contracting ownership comes from the centrally resolved leader, not the recruiter. */
 function applicantUplineId(a: {
-  assigned_recruiter_id: string | null;
-  original_recruiter_id: string | null;
-  referred_by_profile_id: string | null;
+  assigned_manager_id: string | null;
 }): string | null {
-  return a.assigned_recruiter_id ?? a.original_recruiter_id ?? a.referred_by_profile_id ?? null;
+  return a.assigned_manager_id ?? null;
 }
 
 /** Links available for an applicant's upline, for the onboarding assign popup. */
@@ -341,7 +343,7 @@ export const getApplicantAgentLinkOptions = createServerFn({ method: "POST" })
     const admin = supabaseAdmin as any;
     const { data: applicant } = await admin
       .from("applicants")
-      .select("id, assigned_recruiter_id, original_recruiter_id, referred_by_profile_id, assigned_agentlink_link_id")
+      .select("id, assigned_recruiter_id, original_recruiter_id, referred_by_profile_id, assigned_manager_id, assigned_agentlink_link_id")
       .eq("id", data.applicant_id)
       .maybeSingle();
     if (!applicant) throw new Error("Applicant not found");
@@ -399,7 +401,7 @@ export const assignApplicantAgentLink = createServerFn({ method: "POST" })
     const admin = supabaseAdmin as any;
     const { data: applicant } = await admin
       .from("applicants")
-      .select("id, assigned_recruiter_id, original_recruiter_id, referred_by_profile_id")
+      .select("id, assigned_recruiter_id, original_recruiter_id, referred_by_profile_id, assigned_manager_id")
       .eq("id", data.applicant_id)
       .maybeSingle();
     if (!applicant) throw new Error("Applicant not found");
@@ -1410,8 +1412,15 @@ export const adminListUsers = createServerFn({ method: "GET" })
     for (const r of rolesRes.data ?? []) {
       (roleMap[r.user_id] ??= []).push(r.role);
     }
+    const users = await Promise.all((profilesRes.data ?? []).map(async (p: any) => {
+      const { data: contractingUplineId, error } = await supabase.rpc("resolve_applicant_upline", {
+        _recruiter: p.parent_user_id ?? p.manager_id,
+      });
+      if (error) throw new Error(error.message);
+      return { ...p, roles: roleMap[p.id] ?? [], contracting_upline_id: contractingUplineId };
+    }));
     return {
-      users: (profilesRes.data ?? []).map((p: any) => ({ ...p, roles: roleMap[p.id] ?? [] })),
+      users,
       teams: teamsRes.data ?? [],
       agentLinks: agentLinksRes.data ?? [],
     };
@@ -1499,7 +1508,11 @@ export const adminUpdateProfile = createServerFn({ method: "POST" })
         .select("id, owner_id, is_active")
         .eq("id", data.assigned_agentlink_link_id)
         .maybeSingle();
-      const expectedOwner = data.parent_user_id ?? (await supabase.from("profiles").select("parent_user_id").eq("id", id).maybeSingle()).data?.parent_user_id;
+      const { data: profile } = await supabase.from("profiles").select("parent_user_id, manager_id").eq("id", id).maybeSingle();
+      const recruiterId = data.parent_user_id !== undefined ? data.parent_user_id : profile?.parent_user_id ?? profile?.manager_id;
+      if (!recruiterId) throw new Error("Set this agent's recruiting hierarchy before assigning a contracting link.");
+      const { data: expectedOwner, error: ownerError } = await supabase.rpc("resolve_applicant_upline", { _recruiter: recruiterId });
+      if (ownerError) throw new Error(ownerError.message);
       if (!link?.is_active || !expectedOwner || link.owner_id !== expectedOwner) {
         throw new Error("The AgentLink link must be active and owned by this agent's upline.");
       }
@@ -2688,30 +2701,25 @@ export const getOnboardingContext = createServerFn({ method: "POST" })
       };
     };
 
-    // Whoever they signed up under, in order of confidence: recruiter on the
-    // applicant record, referring agent, assigned manager, then the reporting
-    // hierarchy. Never leaves the step blank when any name is known.
-    let upline: { id: string; name: string; role: string | null } | null =
-      (await profileUpline(app?.assigned_recruiter_id as string | null)) ??
-      (await profileUpline(app?.original_recruiter_id as string | null)) ??
-      (await profileUpline(app?.referred_by_profile_id as string | null)) ??
-      (await profileUpline(app?.assigned_manager_id as string | null)) ??
-      (await profileUpline(meFull?.manager_id as string | null)) ??
-      (await profileUpline((meFull?.parent_user_id ?? me?.parent_user_id) as string | null));
-
-    if (!upline) {
-      const snapshot =
-        ((app?.referred_by_name_snapshot as string | null) ||
-          (app?.referred_by_name as string | null) ||
-          "").trim() || null;
-      if (snapshot) upline = { id: "", name: snapshot, role: null };
+    // The applicant's resolved leader owns contracting; non-applicant accounts
+    // resolve the same nearest leader from their reporting ancestry.
+    let resolvedUplineId = app?.assigned_manager_id as string | null;
+    if (!app) {
+      const recruiterId = meFull?.parent_user_id ?? meFull?.manager_id;
+      if (recruiterId) {
+        const { data: id, error } = await admin.rpc("resolve_applicant_upline", { _recruiter: recruiterId });
+        if (error) throw new Error(error.message);
+        resolvedUplineId = id;
+      }
     }
+    const upline = await profileUpline(resolvedUplineId);
 
     const { data: assignedLink } = await admin
       .from("agentlink_links")
       .select("id, label, url")
       .eq("id", meFull?.assigned_agentlink_link_id ?? "00000000-0000-0000-0000-000000000000")
       .eq("is_active", true)
+      .eq("owner_id", upline?.id ?? "00000000-0000-0000-0000-000000000000")
       .maybeSingle();
 
 

@@ -13,7 +13,7 @@ import {
 type LinkRow = { id: string; owner_id: string; label: string; url: string; is_active: boolean };
 
 export const Route = createFileRoute("/_authenticated/portal/admin/users")({
-  head: () => ({ meta: [{ title: "Users — Vantage Admin" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Users — Vantage Admin" }, { name: "description", content: "Manage Vantage Financial agents, leaders and contracting assignments." }, { property: "og:title", content: "Users — Vantage Admin" }, { property: "og:description", content: "Manage Vantage Financial agents, leaders and contracting assignments." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] }),
   component: UsersPage,
 });
 
@@ -66,7 +66,7 @@ function UsersPage() {
     <AgentLinkCell
       user={u}
       links={agentLinks}
-      uplineName={displayName(u.parent_user_id)}
+      uplineName={displayName(u.contracting_upline_id)}
       canManageSelf={isUpline(u)}
       onAssign={(linkId) => profileMut.mutate({ id: u.id, assigned_agentlink_link_id: linkId })}
       onManage={(ownerId) => setManageOwnerId(ownerId)}
@@ -358,7 +358,7 @@ function AgentLinkCell({
   onAssign: (linkId: string | null) => void;
   onManage: (ownerId: string) => void;
 }) {
-  const parentLinks = links.filter((link) => link.owner_id === user.parent_user_id && link.is_active);
+  const parentLinks = links.filter((link) => link.owner_id === user.contracting_upline_id && link.is_active);
   const ownLinks = links.filter((link) => link.owner_id === user.id);
   return (
     <div className="space-y-1.5">
@@ -366,18 +366,18 @@ function AgentLinkCell({
         className="h-9 w-full text-[13px]"
         value={user.assigned_agentlink_link_id ?? ""}
         onChange={(e) => onAssign(e.target.value || null)}
-        disabled={!user.parent_user_id}
+        disabled={!user.contracting_upline_id}
       >
-        <option value="">{user.parent_user_id ? "— not assigned —" : "No upline set"}</option>
+        <option value="">{user.contracting_upline_id ? "— not assigned —" : "No upline set"}</option>
         {parentLinks.map((link) => (
           <option key={link.id} value={link.id}>{link.label}</option>
         ))}
       </Select>
       <div className="flex flex-wrap gap-2">
-        {user.parent_user_id && (
+        {user.contracting_upline_id && (
           <button
             type="button"
-            onClick={() => onManage(user.parent_user_id)}
+            onClick={() => onManage(user.contracting_upline_id)}
             className="p-focus text-left text-[12px] font-semibold"
             style={{ color: "var(--p-gold)" }}
           >

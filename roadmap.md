@@ -1,7 +1,7 @@
 # Roadmap
 
-- [x] Automatically assign applicant upline to the highest leader in recruiter ancestry
-- [x] Verify three-level selection rules and signed-in applicant profile display
+- [x] Correct applicant upline to the nearest qualifying leader and align AgentLink ownership
+- [x] Verify Benjamin → Jaden → Pranav → KJ resolves to Pranav and test hierarchy edge cases
 
 - [x] Automatically show New badges for company content and expire after seven days
 - [x] Verify seven-day expiry rules and signed-in badge display
