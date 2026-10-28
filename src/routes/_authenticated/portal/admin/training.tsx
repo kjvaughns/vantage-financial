@@ -49,7 +49,7 @@ function ReviewQueue({ filter }: { filter: "waiting" | "release" | "cleared" }) 
   const q = useQuery({
     queryKey: ["training-review", filter],
     queryFn: () => listFn({ data: { filter } }),
-    refetchInterval: (query) => ((query.state.data?.submissions ?? []).some((s: any) => s.call_review && !["completed", "failed"].includes(s.call_review.status)) ? 5000 : false),
+    refetchInterval: (query) => ((query.state.data?.submissions ?? []).some((s: any) => s.call_review && !["done", "failed"].includes(s.call_review.status)) ? 5000 : false),
   });
   if (q.isLoading) return <Panel><TextSkeleton lines={4} /></Panel>;
   if (q.error) return <Panel><EmptyState title="Couldn't load" description={(q.error as Error).message} /></Panel>;
@@ -131,7 +131,7 @@ function ReviewCard({ s }: { s: any }) {
         {!isRelease && (
           <div className="grid gap-4 md:grid-cols-[1fr_1.2fr]">
             <div className="space-y-3">
-              {s.file_url ? <video src={s.file_url} controls className="w-full rounded" /> : <VantageMedia kind="audio" directSrc={cr?.audioUrl ?? null} url={cr?.audioUrl ? null : s.drive_file_id ? `https://drive.google.com/file/d/${s.drive_file_id}/view` : null} hideTranscript />}
+              {s.file_url ? <video src={s.file_url} controls className="w-full rounded" /> : <VantageMedia kind="video" directSrc={cr?.audioUrl ?? null} url={cr?.audioUrl ? null : s.drive_file_id ? `https://drive.google.com/file/d/${s.drive_file_id}/view` : null} hideTranscript />}
               {s.note && <p className="text-[13px] text-muted-foreground">Agent note: {s.note}</p>}
             </div>
             <div>
@@ -139,7 +139,7 @@ function ReviewCard({ s }: { s: any }) {
                 <p className="text-[13px] text-muted-foreground">No AI score for this submission.</p>
               ) : cr.status === "failed" ? (
                 <p className="text-[13px] text-muted-foreground">AI analysis couldn't run (check the Drive link is shared).</p>
-              ) : cr.status !== "completed" ? (
+              ) : cr.status !== "done" ? (
                 <p className="flex items-center gap-2 text-[13px] text-muted-foreground"><Loader2 size={14} className="animate-spin" /> Analyzing the call…</p>
               ) : (
                 <div className="space-y-3">

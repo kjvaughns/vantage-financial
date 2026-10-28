@@ -35,11 +35,12 @@ export function ScoreRing({ value, size = 88, label = "Overall" }: { value: numb
   );
 }
 
-export function PillarBars({ scores }: { scores: Record<string, number | { score: number }> }) {
+export function PillarBars({ scores }: { scores: Record<string, number | { score: number | null; status?: string } | null> }) {
   return (
     <div className="space-y-2">
       {PILLARS.map((p) => {
         const raw = scores[p.key];
+        const skipped = !!raw && typeof raw === "object" && raw.status === "not_attempted";
         const v = raw == null ? null : typeof raw === "number" ? raw : raw.score;
         return (
           <div key={p.key} className="flex items-center gap-3 text-[13px]">
@@ -47,7 +48,7 @@ export function PillarBars({ scores }: { scores: Record<string, number | { score
             <div className="h-2 flex-1 overflow-hidden rounded-full" style={{ background: "var(--p-border)" }}>
               <div className="h-full rounded-full transition-all" style={{ width: `${((v ?? 0) / 10) * 100}%`, background: v == null ? "transparent" : `var(--p-${scoreTone(v)})` }} />
             </div>
-            <span className="w-10 text-right tabular-nums">{v == null ? "—" : `${Math.round(v * 10) / 10}`}</span>
+            <span className="w-10 text-right tabular-nums">{skipped ? <span className="text-[11px] text-muted-foreground">N/A</span> : v == null ? "—" : `${Math.round(v * 10) / 10}`}</span>
           </div>
         );
       })}

@@ -108,7 +108,7 @@ function Scorecard({ review: r, audioUrl, driveFileId }: { review: any; audioUrl
         <VantageMedia
           directSrc={audioUrl}
           url={audioUrl ? null : driveUrl}
-          kind="audio"
+          kind="video"
           title={r.title}
           segments={segments}
           fallbackText={r.transcript_text}
@@ -132,12 +132,13 @@ function Scorecard({ review: r, audioUrl, driveFileId }: { review: any; audioUrl
           return (
             <div key={p.key} className="border-b border-border last:border-0">
               <button type="button" onClick={() => setOpen(isOpen ? null : p.key)} className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-muted/30" aria-expanded={isOpen}>
-                <Badge tone={scoreTone(s.score)}>{s.score}/10</Badge>
+                {s.status === "not_attempted" || typeof s.score !== "number" ? <Badge tone="neutral">Not attempted</Badge> : <Badge tone={scoreTone(s.score)}>{s.score}/10{s.status === "partial" ? " · partial" : ""}</Badge>}
                 <span className="flex-1 text-[14px] font-medium">{p.label}</span>
                 <ChevronDown size={16} className={`transition ${isOpen ? "rotate-180" : ""}`} aria-hidden />
               </button>
               {isOpen && (
                 <div className="space-y-3 px-4 pb-4 text-[13.5px]">
+                  {s.status === "not_attempted" && <p className="text-muted-foreground">This section wasn't on the recording, so it isn't graded or counted in the overall score.</p>}
                   {s.went_well && <div><div className="p-label mb-1">What went well</div>{s.went_well}</div>}
                   {s.to_fix && <div><div className="p-label mb-1">What to fix</div>{s.to_fix}</div>}
                   {s.better_line && <div className="rounded-md border border-primary/30 bg-primary/5 p-3"><div className="p-label mb-1 text-primary">Say it like the script</div>“{s.better_line}”</div>}
