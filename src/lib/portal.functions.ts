@@ -1432,12 +1432,18 @@ export const adminListUsers = createServerFn({ method: "GET" })
       supabase.from("teams").select("*").order("name"),
       supabase.from("agentlink_links").select("id, owner_id, label, url, is_active").order("label"),
     ]);
+    for (const result of [profilesRes, rolesRes, teamsRes, agentLinksRes]) {
+      if (result.error) throw new Error(result.error.message);
+    }
     const roleMap: Record<string, string[]> = {};
     for (const r of rolesRes.data ?? []) {
       (roleMap[r.user_id] ??= []).push(r.role);
     }
+    // This resolver is service-only; assertAdmin above authorizes this privileged lookup.
+    // Keep ordinary profile/role/link reads scoped to the caller's RLS client.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const users = await Promise.all((profilesRes.data ?? []).map(async (p: any) => {
-      const { data: contractingUplineId, error } = await supabase.rpc("resolve_applicant_upline", {
+      const { data: contractingUplineId, error } = await supabaseAdmin.rpc("resolve_applicant_upline", {
         _recruiter: p.parent_user_id ?? p.manager_id,
       });
       if (error) throw new Error(error.message);
