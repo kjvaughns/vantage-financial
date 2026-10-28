@@ -3,6 +3,9 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { PortalShell } from "@/components/vantage/portal-shell";
+import { Loader2 } from "lucide-react";
+import { CallPlayer } from "@/components/coach/CallPlayer";
+import { PillarBars, ScoreRing } from "@/components/vantage/coach";
 import { Badge, Button, EmptyState, Field, Input, PageBody, PageHeader, Panel, Tabs, TextSkeleton, Textarea, Toggle, notify } from "@/components/portal/ui";
 import { listTrainingDaysAdmin, listTrainingReview, reviewSubmission, saveTrainingDay, type TrainingDay } from "@/lib/training.functions";
 
@@ -17,16 +20,19 @@ type View = "waiting" | "release" | "cleared" | "content";
 
 function AdminTrainingPage() {
   const [view, setView] = useState<View>("waiting");
+  const listFn = useServerFn(listTrainingReview);
+  const counts = useQuery({ queryKey: ["training-review", "waiting"], queryFn: () => listFn({ data: { filter: "waiting" } }) }).data?.counts;
+  const c = (n?: number) => (n ? ` (${n})` : "");
   return (
     <PortalShell>
       <PageBody>
-        <PageHeader title="Training Review" description="Approve homework, run release calls, and edit each training day." />
+        <PageHeader title="Training Review" description="Listen, check the AI score, then approve or send back — oldest first." />
         <Tabs
           value={view}
           onChange={setView}
           tabs={[
-            { value: "waiting", label: "Waiting on review" },
-            { value: "release", label: "Ready for release" },
+            { value: "waiting", label: `Waiting on review${c(counts?.waiting)}` },
+            { value: "release", label: `Ready for release${c(counts?.release)}` },
             { value: "cleared", label: "Cleared to call" },
             { value: "content", label: "Training content" },
           ]}
@@ -39,7 +45,12 @@ function AdminTrainingPage() {
 
 function ReviewQueue({ filter }: { filter: "waiting" | "release" | "cleared" }) {
   const listFn = useServerFn(listTrainingReview);
-  const q = useQuery({ queryKey: ["training-review", filter], queryFn: () => listFn({ data: { filter } }) });
+  const [agent, setAgent] = useState("all");
+  const q = useQuery({
+    queryKey: ["training-review", filter],
+    queryFn: () => listFn({ data: { filter } }),
+    refetchInterval: (query) => ((query.state.data?.submissions ?? []).some((s: any) => s.call_review && !["completed", "failed"].includes(s.call_review.status)) ? 5000 : false),
+  });
   if (q.isLoading) return <Panel><TextSkeleton lines={4} /></Panel>;
   if (q.error) return <Panel><EmptyState title="Couldn't load" description={(q.error as Error).message} /></Panel>;
   if (filter === "cleared") {
@@ -58,9 +69,31 @@ function ReviewQueue({ filter }: { filter: "waiting" | "release" | "cleared" }) 
       </Panel>
     );
   }
-  const subs = q.data!.submissions;
-  if (!subs.length) return <Panel><EmptyState title={filter === "release" ? "No release calls requested" : "Nothing waiting on review"} /></Panel>;
-  return <div className="space-y-3">{subs.map((s: any) => <ReviewCard key={s.id} s={s} />)}</div>;
+  const all = q.data!.submissions as any[];
+  if (!all.length) return <Panel><EmptyState title={filter === "release" ? "No release calls requested" : "All caught up — nothing waiting on review"} /></Panel>;
+  const agents = [...new Map(all.map((s) => [s.profile_id, s.agent_name])).entries()];
+  const subs = agent === "all" ? all : all.filter((s) => s.profile_id === agent);
+  return (
+    <div className="space-y-3">
+      {agents.length > 1 && (
+        <div className="flex flex-wrap gap-2">
+          {[["all", "All agents"], ...agents].map(([id, name]) => (
+            <button key={id} type="button" onClick={() => setAgent(id)} className={`rounded-full border px-3 py-1 text-[12.5px] ${agent === id ? "border-primary bg-primary/15 text-primary" : "border-border text-muted-foreground hover:bg-muted"}`}>{name}</button>
+          ))}
+        </div>
+      )}
+      {subs.map((s) => <ReviewCard key={s.id} s={s} />)}
+    </div>
+  );
+}
+
+const CHIPS = ["Great intro", "Slow down", "Dig deeper on needs analysis", "Follow the script", "Missed the close", "More confident tone"];
+
+function ago(iso: string) {
+  const m = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+  if (m < 60) return `${Math.max(m, 1)}m ago`;
+  const h = Math.round(m / 60);
+  return h < 24 ? `${h}h ago` : `${Math.round(h / 24)}d ago`;
 }
 
 function ReviewCard({ s }: { s: any }) {
@@ -68,6 +101,7 @@ function ReviewCard({ s }: { s: any }) {
   const reviewFn = useServerFn(reviewSubmission);
   const [feedback, setFeedback] = useState("");
   const isRelease = !!s.day?.is_release;
+  const cr = s.call_review;
   const m = useMutation({
     mutationFn: (decision: "approve" | "redo") => reviewFn({ data: { id: s.id, decision, feedback: feedback.trim() || null } }),
     onSuccess: (_r, d) => {
@@ -76,32 +110,64 @@ function ReviewCard({ s }: { s: any }) {
     },
     onError: (e: Error) => notify.error("Couldn't save review", e.message),
   });
+  const addChip = (c: string) => setFeedback((f) => (f.includes(c) ? f : f ? `${f.trim()}\n• ${c}` : `• ${c}`));
+  const lastRedo = s.prior_redos?.[0];
   return (
     <Panel
       title={
         <span>
-          {s.applicant_id ? (
-            <Link to="/portal/applicants/$applicantId" params={{ applicantId: s.applicant_id }} className="hover:underline">{s.agent_name}</Link>
-          ) : s.agent_name}
-          {" · "}{s.day?.day_label ? `${s.day.day_label} ` : ""}{s.day?.title}
+          {s.applicant_id ? <Link to="/portal/applicants/$applicantId" params={{ applicantId: s.applicant_id }} className="hover:underline">{s.agent_name}</Link> : s.agent_name}
+          <span className="text-muted-foreground">{" · "}{s.day?.day_label ? `${s.day.day_label} · ` : ""}{s.day?.title}</span>
         </span>
       }
-      actions={<span className="text-[12px] text-muted-foreground">{new Date(s.created_at).toLocaleString()}</span>}
+      actions={<span className="text-[12px] text-muted-foreground">{ago(s.created_at)}</span>}
     >
-      <div className="space-y-3 text-[14px]">
-        {s.file_url && <video src={s.file_url} controls className="w-full max-w-xl rounded" />}
-        {s.link_url && <a href={s.link_url} target="_blank" rel="noreferrer" className="text-primary underline">Open homework recording / link</a>}
-        {s.review_id && (
-          <div>
-            <Link to="/portal/coach/$id" params={{ id: s.review_id }} className="text-primary underline">View Call Coach scorecard</Link>
-            <span className="text-[12px] text-muted-foreground"> — auto-analyzed against the Gold Standard</span>
+      <div className="space-y-4 text-[14px]">
+        {s.prior_redos?.length > 0 && (
+          <div className="rounded-md border border-border bg-muted/30 px-3 py-2 text-[12.5px] text-muted-foreground">
+            Previous attempts: sent back {s.prior_redos.length}× {lastRedo?.feedback ? <>— last note: “{lastRedo.feedback}”</> : null}
           </div>
         )}
-        {s.note && <p>{s.note}</p>}
-        <Field label="Feedback for the agent"><Textarea rows={2} value={feedback} onChange={(e) => setFeedback(e.target.value)} /></Field>
+        {!isRelease && (
+          <div className="grid gap-4 md:grid-cols-[1fr_1.2fr]">
+            <div className="space-y-3">
+              {s.file_url ? <video src={s.file_url} controls className="w-full rounded" /> : <CallPlayer src={cr?.audioUrl ?? null} driveFileId={s.drive_file_id} />}
+              {s.note && <p className="text-[13px] text-muted-foreground">Agent note: {s.note}</p>}
+            </div>
+            <div>
+              {!cr ? (
+                <p className="text-[13px] text-muted-foreground">No AI score for this submission.</p>
+              ) : cr.status === "failed" ? (
+                <p className="text-[13px] text-muted-foreground">AI analysis couldn't run (check the Drive link is shared).</p>
+              ) : cr.status !== "completed" ? (
+                <p className="flex items-center gap-2 text-[13px] text-muted-foreground"><Loader2 size={14} className="animate-spin" /> Analyzing the call…</p>
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-4">
+                    <ScoreRing value={cr.overall} size={72} />
+                    <Link to="/portal/coach/$id" params={{ id: cr.id }} className="text-[13px] text-primary underline">Full scorecard</Link>
+                  </div>
+                  <PillarBars scores={cr.pillar_scores ?? {}} />
+                  {Array.isArray(cr.improvements) && cr.improvements.length > 0 && (
+                    <ol className="list-decimal space-y-1 pl-5 text-[13px]">{cr.improvements.slice(0, 3).map((t: string, i: number) => <li key={i}>{t}</li>)}</ol>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        {isRelease && s.note && <p>{s.note}</p>}
+        <div>
+          <div className="mb-2 flex flex-wrap gap-1.5">
+            {CHIPS.map((c) => (
+              <button key={c} type="button" onClick={() => addChip(c)} className="rounded-full border border-border px-2.5 py-1 text-[12px] hover:border-primary hover:text-primary">+ {c}</button>
+            ))}
+          </div>
+          <Textarea rows={3} placeholder="Feedback for the agent (required to send back)" value={feedback} onChange={(e) => setFeedback(e.target.value)} />
+        </div>
         <div className="flex gap-2">
-          <Button variant="primary" loading={m.isPending} onClick={() => m.mutate("approve")}>{isRelease ? "Passed — clear to call" : "Approve"}</Button>
-          <Button variant="secondary" disabled={m.isPending} onClick={() => m.mutate("redo")}>{isRelease ? "Not yet" : "Send back"}</Button>
+          <Button variant="primary" className="flex-1" loading={m.isPending && m.variables === "approve"} disabled={m.isPending} onClick={() => m.mutate("approve")}>{isRelease ? "Passed — clear to call" : "Approve"}</Button>
+          <Button variant="secondary" className="flex-1" loading={m.isPending && m.variables === "redo"} disabled={m.isPending || !feedback.trim()} onClick={() => m.mutate("redo")}>{isRelease ? "Not yet" : "Send back"}</Button>
         </div>
       </div>
     </Panel>
