@@ -68,12 +68,14 @@ export function computeTrack(
       .sort((a, b) => b.created_at.localeCompare(a.created_at));
     const latest = mine[0] ?? null;
     let state: DayState;
+    // The release call is open as soon as training unlocks; agents may attempt it anytime.
+    const gateOpen = day.is_release ? unlocked : prevDone;
     if (approved.has(day.id)) state = "approved";
-    else if (!prevDone) state = "locked";
+    else if (!gateOpen) state = "locked";
     else if (latest?.status === "submitted") state = "submitted";
     else if (latest?.status === "redo") state = "redo";
     else state = "open";
-    prevDone = state === "approved";
+    if (!day.is_release) prevDone = state === "approved";
     return { day, state, latest };
   });
 }
@@ -191,7 +193,7 @@ export const submitHomework = createServerFn({ method: "POST" })
     if (!entry) throw new Error("That training day isn't available.");
     if (entry.state === "locked") throw new Error("This day is still locked.");
     if (entry.state === "approved") throw new Error("This day is already approved.");
-    if (entry.state === "submitted") throw new Error("You already submitted this — wait for review.");
+    if (entry.state === "submitted" && !entry.day.is_release) throw new Error("You already submitted this — wait for review.");
     if (data.filePath && !data.filePath.startsWith(`${userId}/`)) throw new Error("Invalid upload.");
     validateHomeworkRecording(entry.day.is_release, data.linkUrl, data.filePath);
 
@@ -208,11 +210,11 @@ export const submitHomework = createServerFn({ method: "POST" })
 
     // Every homework recording gets a Call Coach review, analyzed automatically.
     const driveLink = data.linkUrl?.trim() || null;
-    if (driveLink && !entry.day.is_release) {
+    if (driveLink) {
       try {
         const { data: review, error: rErr } = await supabase
           .from("call_reviews")
-          .insert({ profile_id: userId, title: label, call_type: "roleplay", source: "homework", media_url: driveLink })
+          .insert({ profile_id: userId, title: entry.day.is_release ? `Release call — ${label}` : label, call_type: "roleplay", source: "homework", media_url: driveLink })
           .select("id, profile_id, media_path, media_url")
           .single();
         if (rErr) throw new Error(rErr.message);
@@ -234,7 +236,7 @@ export const submitHomework = createServerFn({ method: "POST" })
       await emailProfile(
         a.assigned_recruiter_id,
         "training-review-needed",
-        { agent_name: `${a.first_name ?? ""} ${a.last_name ?? ""}`.trim(), day_title: label, request_type: entry.day.is_release ? "release call request" : "homework" },
+        { agent_name: `${a.first_name ?? ""} ${a.last_name ?? ""}`.trim(), day_title: label, request_type: entry.day.is_release ? "release call recording" : "homework" },
         `${userId}-${data.dayId}-${Date.now()}`,
       );
     }
@@ -497,4 +499,71 @@ export const saveTrainingDay = createServerFn({ method: "POST" })
     const { data: ins, error } = await context.supabase.from("training_days").insert({ ...payload, slug }).select("id").single();
     if (error) throw new Error(error.message);
     return { id: ins.id };
+  });
+
+/* ------------------------- Agent-by-agent review ------------------------- */
+
+const driveFileId = (u: string | null) => (u ? (u.match(/drive\.google\.com\/file\/d\/([\w-]{10,})/)?.[1] ?? u.match(/[?&]id=([\w-]{10,})/)?.[1] ?? null) : null);
+
+/** Agents with work waiting for review (RLS limits this to the caller's org). */
+export const listReviewAgents = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const [{ data: days }, { data: subs }] = await Promise.all([
+      supabase.from("training_days").select("id, is_release"),
+      supabase.from("training_submissions").select("profile_id, day_id, created_at").eq("status", "submitted").neq("profile_id", userId).order("created_at", { ascending: true }).limit(1000),
+    ]);
+    const rel = new Set((days ?? []).filter((d: any) => d.is_release).map((d: any) => d.id));
+    const groups = new Map<string, { profile_id: string; waiting: number; release: number; oldest: string }>();
+    for (const s of (subs ?? []) as any[]) {
+      const g = groups.get(s.profile_id) ?? { profile_id: s.profile_id, waiting: 0, release: 0, oldest: s.created_at };
+      if (rel.has(s.day_id)) g.release++; else g.waiting++;
+      groups.set(s.profile_id, g);
+    }
+    const ids = [...groups.keys()];
+    const { data: names } = ids.length ? await supabase.rpc("profile_display_names", { _ids: ids }) : { data: [] as any[] };
+    const nameMap = new Map((names ?? []).map((n: any) => [n.id, n.name]));
+    return {
+      agents: [...groups.values()].map((g) => ({ ...g, name: (nameMap.get(g.profile_id) as string) ?? "Agent" })).sort((a, b) => a.oldest.localeCompare(b.oldest)),
+    };
+  });
+
+/** One agent's full training record for review: every day, every attempt, AI scores. */
+export const getAgentTrainingReview = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ profileId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    if (data.profileId === userId) throw new Error("You can't review your own training.");
+    const a = await applicantForProfile(data.profileId);
+    const t = await loadTrack(supabase, data.profileId, true);
+    if (!t.submissions.length && a) {
+      // Make sure the caller can actually see this agent before returning anything.
+      const { data: vis } = await supabase.from("applicants").select("id").eq("id", a.id).maybeSingle();
+      if (!vis) throw new Error("You don't have access to this agent.");
+    }
+    const rids = t.submissions.map((s) => s.review_id).filter((x): x is string => !!x);
+    const { data: revs } = rids.length
+      ? await supabase.from("call_reviews").select("id, status, overall, pillar_scores, improvements, summary, media_path").in("id", rids)
+      : { data: [] as any[] };
+    const revMap = new Map<string, any>();
+    for (const r of (revs ?? []) as any[]) {
+      const audioUrl = r.media_path ? (await supabase.storage.from("call-recordings").createSignedUrl(r.media_path, 60 * 60 * 6)).data?.signedUrl ?? null : null;
+      revMap.set(r.id, { id: r.id, status: r.status, overall: r.overall, pillar_scores: r.pillar_scores, improvements: r.improvements, summary: r.summary, audioUrl });
+    }
+    const { data: names } = await supabase.rpc("profile_display_names", { _ids: [data.profileId] });
+    const track = computeTrack(t.days, t.progress, t.submissions, isUnlocked(a));
+    return {
+      name: ((names ?? [])[0] as any)?.name ?? "Agent",
+      applicantId: a?.id ?? null,
+      clearedAt: a?.cleared_to_call_at ?? null,
+      days: track.map((e) => ({
+        day: e.day,
+        state: e.state,
+        attempts: t.submissions
+          .filter((s) => s.day_id === e.day.id)
+          .map((s: any) => ({ ...s, drive_file_id: driveFileId(s.link_url), call_review: s.review_id ? revMap.get(s.review_id) ?? null : null })),
+      })),
+    };
   });
