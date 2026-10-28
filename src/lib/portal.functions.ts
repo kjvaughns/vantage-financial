@@ -1412,8 +1412,15 @@ export const adminListUsers = createServerFn({ method: "GET" })
     for (const r of rolesRes.data ?? []) {
       (roleMap[r.user_id] ??= []).push(r.role);
     }
+    const users = await Promise.all((profilesRes.data ?? []).map(async (p: any) => {
+      const { data: contractingUplineId, error } = await supabase.rpc("resolve_applicant_upline", {
+        _recruiter: p.parent_user_id ?? p.manager_id,
+      });
+      if (error) throw new Error(error.message);
+      return { ...p, roles: roleMap[p.id] ?? [], contracting_upline_id: contractingUplineId };
+    }));
     return {
-      users: (profilesRes.data ?? []).map((p: any) => ({ ...p, roles: roleMap[p.id] ?? [] })),
+      users,
       teams: teamsRes.data ?? [],
       agentLinks: agentLinksRes.data ?? [],
     };
@@ -1501,7 +1508,10 @@ export const adminUpdateProfile = createServerFn({ method: "POST" })
         .select("id, owner_id, is_active")
         .eq("id", data.assigned_agentlink_link_id)
         .maybeSingle();
-      const expectedOwner = data.parent_user_id ?? (await supabase.from("profiles").select("parent_user_id").eq("id", id).maybeSingle()).data?.parent_user_id;
+      const { data: profile } = await supabase.from("profiles").select("parent_user_id, manager_id").eq("id", id).maybeSingle();
+      const recruiterId = data.parent_user_id !== undefined ? data.parent_user_id : profile?.parent_user_id ?? profile?.manager_id;
+      const { data: expectedOwner, error: ownerError } = await supabase.rpc("resolve_applicant_upline", { _recruiter: recruiterId });
+      if (ownerError) throw new Error(ownerError.message);
       if (!link?.is_active || !expectedOwner || link.owner_id !== expectedOwner) {
         throw new Error("The AgentLink link must be active and owned by this agent's upline.");
       }

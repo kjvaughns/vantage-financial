@@ -1,7 +1,7 @@
 # Roadmap
 
-- [ ] Correct applicant upline to the nearest qualifying leader and align AgentLink ownership
-- [ ] Verify Benjamin → Jaden → Pranav → KJ resolves to Pranav and test hierarchy edge cases
+- [x] Correct applicant upline to the nearest qualifying leader and align AgentLink ownership
+- [x] Verify Benjamin → Jaden → Pranav → KJ resolves to Pranav and test hierarchy edge cases
 
 - [x] Automatically show New badges for company content and expire after seven days
 - [x] Verify seven-day expiry rules and signed-in badge display
