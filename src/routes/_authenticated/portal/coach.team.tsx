@@ -1,3 +1,4 @@
+import { BackLink } from "@/components/portal/back-link";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -29,7 +30,7 @@ function TeamPage() {
   return (
     <PortalShell>
       <PageBody>
-        <Link to="/portal/training" search={{ tab: "coach" }} className="mb-3 inline-flex items-center gap-1 text-[13px] text-muted-foreground hover:text-foreground"><ArrowLeft size={14} aria-hidden /> Call Coach</Link>
+        <BackLink to="/portal/training" search={{ tab: "coach" }} className="mb-3 inline-flex items-center gap-1 text-[13px] text-muted-foreground hover:text-foreground"><ArrowLeft size={14} aria-hidden /> Call Coach</BackLink>
         <PageHeader title="Team Coaching" description="Every call your downline submits, with averages and the pillar each agent needs most help on." />
         <Panel padded={false}>
           {q.isLoading ? <div className="p-4"><TextSkeleton lines={5} /></div> : !q.data?.agents.length ? (

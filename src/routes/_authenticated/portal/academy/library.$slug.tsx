@@ -1,3 +1,4 @@
+import { BackLink } from "@/components/portal/back-link";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -61,9 +62,9 @@ function ResourceDetail() {
   return (
     <PortalShell>
       <PageBody>
-        <Link to="/portal/academy" className="p-focus mb-4 inline-flex items-center gap-1 text-[13px]" style={{ color: "var(--p-text-2)" }}>
+        <BackLink to="/portal/academy" className="p-focus mb-4 inline-flex items-center gap-1 text-[13px]" style={{ color: "var(--p-text-2)" }}>
           <ChevronLeft size={15} /> Academy
-        </Link>
+        </BackLink>
 
         <div className="mx-auto max-w-3xl space-y-4">
           <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">

@@ -1,3 +1,4 @@
+import { BackLink } from "@/components/portal/back-link";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -78,14 +79,14 @@ function RecordingPage() {
   return (
     <PortalShell>
       <PageBody>
-        <Link
+        <BackLink
           to="/portal/academy"
-          search={{ section: "presentations" }}
+          search={{ section: "presentations", speaker: rec.presenter?.slug ?? undefined }}
           className="p-focus mb-4 inline-flex items-center gap-1 text-[13px]"
           style={{ color: "var(--p-text-2)" }}
         >
-          <ChevronLeft size={15} /> Recorded presentations
-        </Link>
+          <ChevronLeft size={15} /> {rec.presenter?.name ?? "Recorded presentations"}
+        </BackLink>
 
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] lg:items-start">
           <div className="min-w-0 space-y-4">
