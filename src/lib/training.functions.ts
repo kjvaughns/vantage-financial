@@ -213,7 +213,7 @@ export const submitHomework = createServerFn({ method: "POST" })
         const { data: review, error: rErr } = await supabase
           .from("call_reviews")
           .insert({ profile_id: userId, title: label, call_type: "roleplay", source: "homework", media_url: driveLink })
-          .select("id, media_path, media_url")
+          .select("id, profile_id, media_path, media_url")
           .single();
         if (rErr) throw new Error(rErr.message);
         await supabase.from("training_submissions").update({ review_id: review.id }).eq("id", sub.id);
