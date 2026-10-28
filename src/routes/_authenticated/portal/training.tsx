@@ -28,7 +28,7 @@ function CoachTab() {
     <div className="grid gap-4 lg:grid-cols-[1.3fr_1fr]">
       <div className="space-y-4">
         <Panel title="Analyze a call">
-          <p className="mb-4 text-[13.5px] text-muted-foreground">Upload a roleplay or live call. It's scored 1–10 on all 8 pillars against the Vantage script and model calls.</p>
+          <p className="mb-4 text-[13.5px] text-muted-foreground">Upload a roleplay or live call. It's scored 1–10 on every pillar it covers — including how closely you stayed on script — against the Vantage script and model calls.</p>
           <SubmitCallForm onCreated={(id) => navigate({ to: "/portal/coach/$id", params: { id } })} />
         </Panel>
         <Panel title="Call history" padded={false}>
