@@ -18,3 +18,4 @@
 - Keep homework link validation in the browser-safe training-homework module and enforce it on submission server-side; preserve existing file submissions for historical review.
 - Derive content novelty from creation timestamps through the shared new-content helper and expiring badge component, never the legacy manual is_new flag; navigation reads only caller-visible published content.
 - Score Call Coach reviews only against the stored Gold Standard (coach_reference_scripts + active reference calls) and advance processing via client polling in src/lib/coach.functions.ts, so scoring stays consistent and no request runs long on the worker.
+- Play every audio/video recording through the shared VantageMedia player (src/components/media) with its synced transcript; Drive links are copied once into private storage via media-cache, so playback is fast and transcript sync works everywhere.
