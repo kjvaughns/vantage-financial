@@ -13,6 +13,9 @@ export const STATE_REQUIREMENTS_URL = "https://getlicensed.insuracloud.ai/state-
 /** Where applicants formally apply for their state license. */
 export const NIPR_URL = "https://nipr.com";
 
+/** Public NIPR lookup for agents who don't know their NPN. */
+export const NPN_LOOKUP_URL = "https://nipr.com/licensing/license-look-up";
+
 export const DISCORD_INVITE_URL = "https://discord.gg/sFgEEPRSmw";
 
 /** Team Instagram — shown on the public site and in every email footer. */
