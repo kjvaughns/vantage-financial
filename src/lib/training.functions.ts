@@ -255,13 +255,13 @@ export const listTrainingReview = createServerFn({ method: "GET" })
         .not("cleared_to_call_at", "is", null)
         .order("cleared_to_call_at", { ascending: false })
         .limit(200);
-      return { submissions: [] as any[], cleared: rows ?? [] };
+      return { submissions: [] as any[], cleared: rows ?? [], counts: null };
     }
     const { data: days } = await supabase.from("training_days").select("id, title, day_label, is_release");
     const dayMap = new Map((days ?? []).map((d: any) => [d.id, d]));
     const wantRelease = data.filter === "release";
     const ids = (days ?? []).filter((d: any) => d.is_release === wantRelease).map((d: any) => d.id);
-    if (!ids.length) return { submissions: [], cleared: [] };
+    if (!ids.length) return { submissions: [] as any[], cleared: [] as any[], counts: null };
     const { data: subs } = await supabase
       .from("training_submissions")
       .select("*")
@@ -282,9 +282,30 @@ export const listTrainingReview = createServerFn({ method: "GET" })
       ? await sb.from("applicants").select("id, portal_profile_id").in("portal_profile_id", pids)
       : { data: [] as any[] };
     const appMap = new Map((apps ?? []).map((x: any) => [x.portal_profile_id, x.id]));
+    const rids = list.map((s: any) => s.review_id).filter(Boolean);
+    const { data: revs } = rids.length
+      ? await supabase.from("call_reviews").select("id, status, overall, pillar_scores, improvements, media_path, media_url").in("id", rids)
+      : { data: [] as any[] };
+    const revMap = new Map<string, any>();
+    for (const r of revs ?? []) {
+      let audioUrl: string | null = null;
+      if (r.media_path) audioUrl = (await supabase.storage.from("call-recordings").createSignedUrl(r.media_path, 60 * 60 * 6)).data?.signedUrl ?? null;
+      revMap.set(r.id, { id: r.id, status: r.status, overall: r.overall, pillar_scores: r.pillar_scores, improvements: r.improvements, audioUrl });
+    }
+    const { data: past } = pids.length
+      ? await supabase.from("training_submissions").select("profile_id, day_id, feedback, reviewed_at").eq("status", "redo").in("profile_id", pids).in("day_id", ids).order("reviewed_at", { ascending: false })
+      : { data: [] as any[] };
+    const { data: allSubs } = await supabase.from("training_submissions").select("day_id").eq("status", "submitted").neq("profile_id", userId);
+    let waiting = 0, release = 0;
+    for (const x of allSubs ?? []) (dayMap.get((x as any).day_id) as any)?.is_release ? release++ : waiting++;
+    const driveId = (u: string | null) => (u ? (u.match(/drive\.google\.com\/file\/d\/([\w-]{10,})/)?.[1] ?? u.match(/[?&]id=([\w-]{10,})/)?.[1] ?? null) : null);
     return {
-      submissions: list.map((s) => ({
+      counts: { waiting, release },
+      submissions: list.map((s: any) => ({
         ...s,
+        drive_file_id: driveId(s.link_url),
+        call_review: s.review_id ? (revMap.get(s.review_id) ?? null) : null,
+        prior_redos: (past ?? []).filter((p: any) => p.profile_id === s.profile_id && p.day_id === s.day_id),
         agent_name: (nameMap.get(s.profile_id) as string) ?? "Agent",
         applicant_id: (appMap.get(s.profile_id) as string) ?? null,
         day: dayMap.get(s.day_id) ?? null,
@@ -328,6 +349,7 @@ export const reviewSubmission = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    if (data.decision === "redo" && !data.feedback?.trim()) throw new Error("Add a note so the agent knows what to fix.");
     const { data: sub } = await supabase.from("training_submissions").select("*").eq("id", data.id).maybeSingle();
     if (!sub) throw new Error("Submission not found or you don't have access.");
     if (sub.profile_id === userId) throw new Error("You can't review your own training.");
