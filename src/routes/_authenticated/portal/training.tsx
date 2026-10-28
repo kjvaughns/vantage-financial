@@ -210,7 +210,7 @@ function DayCard({
       actions={<div className="flex items-center gap-2"><NewContentBadge createdAt={day.created_at} /><Badge tone={STATE_TONE[state]}>{STATE_LABEL[state]}</Badge></div>}
     >
       {locked ? (
-        <p className="text-[13px] text-muted-foreground">{day.is_release ? "Unlocks when Monday–Thursday are approved." : "Unlocks when the previous day is approved."}</p>
+        <p className="text-[13px] text-muted-foreground">{day.is_release ? "Unlocks once your training starts." : "Unlocks when the previous day is approved."}</p>
       ) : !open ? (
         <button type="button" onClick={onToggle} className="text-[13px] text-primary underline">Open</button>
       ) : (
@@ -256,8 +256,9 @@ function DayBody({ day, state, latest }: { day: TrainingDay; state: string; late
       )}
       {state === "approved" ? null : state === "submitted" ? (
         <div className="space-y-3">
-          <p className="text-muted-foreground">{day.is_release ? "Release call requested — your trainer will reach out to schedule it." : "Submitted. Your trainer will review it soon."}</p>
+          <p className="text-muted-foreground">{day.is_release ? "Release call submitted — your trainer will review it. You can upload another attempt anytime." : "Submitted. Your trainer will review it soon."}</p>
           {latest?.review_id && latest?.review && <CoachAnalysis reviewId={latest.review_id} review={latest.review} />}
+          {day.is_release && <SubmitForm day={day} />}
         </div>
       ) : (
         <SubmitForm day={day} />
@@ -297,25 +298,17 @@ function SubmitForm({ day }: { day: TrainingDay }) {
   const m = useMutation({
     mutationFn: () => submitFn({ data: { dayId: day.id, linkUrl: link.trim() || null, note: note.trim() || null } }),
     onSuccess: () => {
-      notify.success(day.is_release ? "Release call requested" : "Homework submitted");
+      notify.success(day.is_release ? "Release call submitted" : "Homework submitted"); setLink(""); setNote("");
       qc.invalidateQueries({ queryKey: ["my-training"] });
     },
     onError: (e: Error) => notify.error("Couldn't submit", e.message),
   });
 
-  if (day.is_release) {
-    return (
-      <div className="space-y-3">
-        <Field label="Anything your trainer should know? (optional)"><Textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)} /></Field>
-        <Button variant="primary" loading={m.isPending} onClick={() => m.mutate()}>Request my release call</Button>
-      </div>
-    );
-  }
   return (
     <div className="space-y-3 rounded-md border border-border p-3">
-      <div className="p-label">Submit your homework</div>
+      <div className="p-label">{day.is_release ? "Upload a release call attempt" : "Submit your homework"}</div>
       <ol className="list-decimal space-y-2 pl-5 text-[13px]">
-        <li>Copy today's prompt into ChatGPT and start the roleplay in voice mode.</li>
+        <li>{day.is_release ? "Run the full call from intro to close — you can attempt your release call anytime." : "Copy today's prompt into ChatGPT and start the roleplay in voice mode."}</li>
         <li>Use Voice Memos on a separate device to record the full roleplay. Make sure both your voice and ChatGPT's voice can be heard clearly.</li>
         <li>Upload the voice memo recording to Google Drive.</li>
         <li>In Google Drive, open Share, set General access to “Anyone with the link” and the role to “Viewer,” then copy the link.</li>
@@ -324,7 +317,7 @@ function SubmitForm({ day }: { day: TrainingDay }) {
       <Field label="Google Drive recording link" hint="Share the recording file, not a folder or ChatGPT conversation."><Input type="url" placeholder="https://drive.google.com/file/d/.../view" value={link} onChange={(e) => setLink(e.target.value)} /></Field>
       {link.trim() && !isGoogleDriveRecordingLink(link) && <p role="alert" className="text-[13px] text-destructive">Enter a Google Drive recording file's shareable link.</p>}
       <Field label="Note (optional)"><Textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)} /></Field>
-      <Button variant="primary" loading={m.isPending} disabled={!isGoogleDriveRecordingLink(link)} onClick={() => m.mutate()}>Submit for review</Button>
+      <Button variant="primary" loading={m.isPending} disabled={!isGoogleDriveRecordingLink(link)} onClick={() => m.mutate()}>{day.is_release ? "Submit release call" : "Submit for review"}</Button>
     </div>
   );
 }
