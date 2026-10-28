@@ -396,7 +396,7 @@ export function ApplicantRecord({
               onChange={(v) => save({ referred_by_profile_id: v || null })}
             >
               <option value="">— none —</option>
-              {(usersQ.data?.users ?? []).map((u) => (
+              {(leadersQ.data?.users ?? []).map((u) => (
                 <option key={u.id} value={u.id}>{u.name}</option>
               ))}
             </EditSelectField>
