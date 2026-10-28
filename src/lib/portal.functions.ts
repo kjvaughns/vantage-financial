@@ -1349,7 +1349,7 @@ export const listUplineLeaders = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase } = context;
-    const LEADER_ROLES = ["leader", "manager", "admin", "super_admin"];
+    const LEADER_ROLES = ["leader", "manager", "admin", "super_admin"] as const;
     const { data: roleRows } = await supabase
       .from("user_roles")
       .select("user_id")
