@@ -28,6 +28,7 @@ export const CallPlayer = forwardRef<CallPlayerHandle, { src: string | null; dri
           <a href={`https://drive.google.com/file/d/${driveFileId}/view`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[12px] text-primary hover:underline">
             <ExternalLink size={12} aria-hidden /> Open in Drive
           </a>
+          <p className="text-[11px] text-muted-foreground">We couldn't copy this recording into Vantage, so it's playing from Google Drive. Make sure it's shared as "Anyone with the link."</p>
         </div>
       );
     }
