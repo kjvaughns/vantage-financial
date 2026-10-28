@@ -1,5 +1,8 @@
 # Roadmap
 
+- [ ] Add persistent manual applicant uplines and scoped organization moves
+- [ ] Verify super-admin control, leader scope, cycle prevention and saved assignments
+
 - [x] Correct applicant upline to the nearest qualifying leader and align AgentLink ownership
 - [x] Verify Benjamin → Jaden → Pranav → KJ resolves to Pranav and test hierarchy edge cases
 
