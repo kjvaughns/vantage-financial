@@ -674,9 +674,33 @@ export const getApplicant = createServerFn({ method: "POST" })
       const nm = ((recs ?? []) as any[])[0]?.name as string | undefined;
       if (nm) referringRecruiterName = nm;
     }
+    // Assigned AgentLink contracting link (label/url + owner name) for the profile card.
+    let assignedLink: { id: string; label: string; url: string; ownerName: string | null } | null =
+      null;
+    if (app.assigned_agentlink_link_id) {
+      const { data: link } = await supabase
+        .from("agentlink_links")
+        .select("id, label, url, owner_id")
+        .eq("id", app.assigned_agentlink_link_id)
+        .maybeSingle();
+      if (link) {
+        let ownerName: string | null = null;
+        const { data: owners } = await supabase.rpc("profile_display_names", {
+          _ids: [(link as any).owner_id],
+        });
+        ownerName = ((owners ?? []) as any[])[0]?.name ?? null;
+        assignedLink = {
+          id: (link as any).id,
+          label: (link as any).label,
+          url: (link as any).url,
+          ownerName,
+        };
+      }
+    }
     return {
       applicant: app,
       referringRecruiterName,
+      assignedLink,
       activities: actsRes.data ?? [],
       evaluations: evalRes.data ?? [],
       stages: stagesRes.data ?? [],
