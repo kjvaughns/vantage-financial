@@ -547,7 +547,7 @@ export const getAgentTrainingReview = createServerFn({ method: "GET" })
     // Older submissions may not be linked to their Call Coach review; match by recording link.
     const unlinked = t.submissions.filter((s) => !s.review_id && s.link_url);
     if (unlinked.length) {
-      const { data: byUrl } = await supabase.from("call_reviews").select("id, media_url").eq("profile_id", data.profileId).in("media_url", unlinked.map((s) => s.link_url!));
+      const { data: byUrl } = await supabase.from("call_reviews").select("id, media_url").eq("profile_id", data.profileId).eq("source", "homework").limit(500);
       for (const s of unlinked) s.review_id = ((byUrl ?? []) as any[]).find((r) => r.media_url === s.link_url)?.id ?? null;
     }
     const rids = t.submissions.map((s) => s.review_id).filter((x): x is string => !!x);
