@@ -158,7 +158,7 @@ export function AddApplicantModal({
               ))}
             </Select>
           </Field>
-          <Field label="Referring recruiter">
+          <Field label="Upline">
             <Select
               value={f.referred_by_profile_id}
               onChange={(e) => set("referred_by_profile_id", e.target.value)}
