@@ -9,6 +9,7 @@ export const PILLARS = [
   { key: "close", label: "Close" },
   { key: "rapport", label: "Rapport" },
   { key: "tonality", label: "Tonality" },
+  { key: "script", label: "On Script" },
 ] as const;
 
 export type PillarKey = (typeof PILLARS)[number]["key"];
@@ -40,6 +41,7 @@ export const DEFAULT_WEIGHTS: Record<PillarKey, number> = {
   bank: 1,
   close: 1,
   rapport: 1,
+  script: 1,
 };
 
 /** Clamp to an integer 1–10. Non-numbers become 1. */
@@ -94,7 +96,7 @@ export function scoreTone(n: number, outOf = 10): "green" | "amber" | "red" {
  *  Monday: Intro + Needs Analysis. Tuesday: + Medical + Social. Later days: the full call. */
 export function expectedPillarsForDay(label: string | null | undefined): PillarKey[] {
   const t = (label ?? "").toLowerCase();
-  const delivery: PillarKey[] = ["rapport", "tonality"];
+  const delivery: PillarKey[] = ["rapport", "tonality", "script"];
   if (/\bmon(day)?\b/.test(t)) return ["intro", "needs_analysis", ...delivery];
   if (/\btue(s|sday)?\b/.test(t)) return ["intro", "needs_analysis", "medical", "social", ...delivery];
   return PILLARS.map((p) => p.key);

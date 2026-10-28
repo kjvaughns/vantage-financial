@@ -72,11 +72,12 @@ STEP 1 — MAP THE CALL: read the whole transcript and decide which script secti
 - "partial": they started it but cut it short.
 - "not_attempted": it never happened on this recording (including when the recording simply starts later or ends earlier).
 Put a short quote or timestamp in "evidence" for your decision. Never assume a section happened off-recording.
-STEP 2 — GRADE ONLY WHAT HAPPENED: score performed/partial pillars 1–10 (10 = matches the Gold Standard perfectly), comparing each ONLY to the matching section of the Gold Standard. For not_attempted pillars set score to 0 and leave went_well/to_fix/better_line empty — do NOT penalize them or mention them in improvements. Rapport and tonality are judged across whatever portion was performed.
+STEP 2 — GRADE ONLY WHAT HAPPENED: score performed/partial pillars 1–10 (10 = matches the Gold Standard perfectly), comparing each ONLY to the matching section of the Gold Standard. For not_attempted pillars set score to 0 and leave went_well/to_fix/better_line empty — do NOT penalize them or mention them in improvements. Rapport, tonality and script are judged across whatever portion was performed.
 The summary and top improvements must only cover sections that were performed.${input.expectedPillars?.length ? `
 This is training homework that is expected to cover: ${input.expectedPillars.join(", ")}. If an expected section is not_attempted, add one short note at the end of the summary: "Missing from today's homework: …". Sections outside this list are optional.` : ""}
 Pillars:
 ${rubric}
+Script (On Script): judge how closely the agent followed the Gold Standard script wording, order and key lines across the sections they performed — 10 = near word-for-word in the right order, low = ad-libbing, skipping key lines, or reading stage directions aloud. In better_line quote the script line they drifted furthest from.
 Tonality: judge pace, confidence, energy and control as evidenced by wording, interruptions, filler and flow in the transcript.
 For each pillar give: went_well (specific), to_fix (specific), better_line (an exact line from the Gold Standard script they should have said). Be direct and practical.
 Also return sections: where each pillar starts in the call, using the [mm:ss] timestamps in the transcript, converted to milliseconds.`;
