@@ -143,6 +143,7 @@ export function ApplicantRecord({
   const addNote = useServerFn(addApplicantNote);
   const setOverview = useServerFn(setOverviewStatus);
   const usersFn = useServerFn(listAssignableUsers);
+  const leadersFn = useServerFn(listUplineLeaders);
 
   const recordQ = useQuery({
     queryKey: ["applicant", applicantId],
@@ -150,6 +151,7 @@ export function ApplicantRecord({
   });
   const { data, isLoading } = recordQ;
   const usersQ = useQuery({ queryKey: ["assignable-users"], queryFn: () => usersFn() });
+  const leadersQ = useQuery({ queryKey: ["upline-leaders"], queryFn: () => leadersFn() });
 
   const a = data?.applicant as any;
   const currentStage = data?.stages.find((s) => s.id === a?.current_stage_id);
