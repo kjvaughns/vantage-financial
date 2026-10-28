@@ -4,7 +4,6 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   getAssignableRecruiters,
-  listUplineLeaders,
   createApplicantManual,
   checkApplicantDuplicate,
   type ApplicantDuplicate,
@@ -21,11 +20,9 @@ export function AddApplicantModal({
   onCreated: (id: string) => void;
 }) {
   const ctxFn = useServerFn(getAssignableRecruiters);
-  const leadersFn = useServerFn(listUplineLeaders);
   const createFn = useServerFn(createApplicantManual);
   const dupeFn = useServerFn(checkApplicantDuplicate);
   const ctxQ = useQuery({ queryKey: ["assignable"], queryFn: () => ctxFn() });
-  const leadersQ = useQuery({ queryKey: ["upline-leaders"], queryFn: () => leadersFn() });
 
   const [f, setF] = useState({
     first_name: "",
@@ -36,7 +33,6 @@ export function AddApplicantModal({
     licensed: false,
     instagram_handle: "",
     assigned_recruiter_id: "",
-    referred_by_profile_id: "",
     team_id: "",
     source_id: "",
     stage_id: defaultStageId ?? "",
@@ -152,7 +148,7 @@ export function AddApplicantModal({
           <Field label="Instagram">
             <Input value={f.instagram_handle} onChange={(e) => set("instagram_handle", e.target.value)} />
           </Field>
-          <Field label="Assign to" required>
+          <Field label="Recruiter" required>
             <Select value={assigned} onChange={(e) => set("assigned_recruiter_id", e.target.value)}>
               {(ctx?.recruiters ?? []).map((r) => (
                 <option key={r.id} value={r.id}>
@@ -162,17 +158,7 @@ export function AddApplicantModal({
             </Select>
           </Field>
           <Field label="Upline">
-            <Select
-              value={f.referred_by_profile_id}
-              onChange={(e) => set("referred_by_profile_id", e.target.value)}
-            >
-              <option value="">— same as assigned —</option>
-              {(leadersQ.data?.users ?? []).map((r) => (
-                <option key={r.id} value={r.id}>
-                  {r.name}
-                </option>
-              ))}
-            </Select>
+            <Input value="Automatic" readOnly />
           </Field>
           <Field label="Team">
             <Select value={f.team_id} onChange={(e) => set("team_id", e.target.value)}>

@@ -390,16 +390,13 @@ export function ApplicantRecord({
                 <option key={u.id} value={u.id}>{u.name}</option>
               ))}
             </EditSelectField>
-            <EditSelectField
-              label="Upline (team they join)"
-              value={a.referred_by_profile_id ?? ""}
-              onChange={(v) => save({ referred_by_profile_id: v || null })}
-            >
-              <option value="">— none —</option>
-              {(leadersQ.data?.users ?? []).map((u) => (
-                <option key={u.id} value={u.id}>{u.name}</option>
-              ))}
-            </EditSelectField>
+            <div>
+              <div className="p-label mb-1">Upline</div>
+              <span className="p-body">
+                {leadersQ.isPending ? "Loading…" :
+                  leadersQ.data?.users.find((u) => u.id === a.assigned_manager_id)?.name ?? "— none —"}
+              </span>
+            </div>
             <EditDateTimeField
               label="Next follow-up"
               defaultValue={isoToLocalInput(a.next_follow_up_at)}
