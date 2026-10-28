@@ -148,6 +148,13 @@
       "when": 1793202453553,
       "tag": "0020_academy_media_cache",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1793221743297,
+      "tag": "0021_automatic_highest_applicant_upline",
+      "breakpoints": true
     }
   ]
 }

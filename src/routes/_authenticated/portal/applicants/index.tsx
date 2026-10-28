@@ -53,7 +53,15 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/_authenticated/portal/applicants/")({
   head: () => ({
-    meta: [{ title: "Applicants — Vantage Portal" }, { name: "robots", content: "noindex" }],
+    meta: [
+      { title: "Applicant CRM — Vantage Financial" },
+      { name: "description", content: "Manage applicants, recruiter assignments, uplines, and recruiting progress in Vantage Financial." },
+      { property: "og:title", content: "Applicant CRM — Vantage Financial" },
+      { property: "og:description", content: "Manage your organization’s applicants and recruiting progress in Vantage Financial." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { name: "robots", content: "noindex" },
+    ],
   }),
   validateSearch: (s) => searchSchema.parse(s),
   component: ApplicantsPage,
