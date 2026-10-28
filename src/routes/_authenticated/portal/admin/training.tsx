@@ -6,8 +6,9 @@ import { PortalShell } from "@/components/vantage/portal-shell";
 import { Loader2 } from "lucide-react";
 import { VantageMedia } from "@/components/media/VantageMedia";
 import { PillarBars, ScoreRing } from "@/components/vantage/coach";
-import { Badge, Button, EmptyState, Field, Input, PageBody, PageHeader, Panel, Tabs, TextSkeleton, Textarea, Toggle, notify } from "@/components/portal/ui";
-import { listTrainingDaysAdmin, listTrainingReview, reviewSubmission, saveTrainingDay, type TrainingDay } from "@/lib/training.functions";
+import { Badge, Button, EmptyState, Field, Input, PageBody, PageHeader, Panel, Select, Tabs, TextSkeleton, Textarea, Toggle, notify } from "@/components/portal/ui";
+import { scoreTone } from "@/lib/coach-scoring";
+import { getAgentTrainingReview, listReviewAgents, listTrainingDaysAdmin, listTrainingReview, reviewSubmission, saveTrainingDay, type TrainingDay } from "@/lib/training.functions";
 
 export const Route = createFileRoute("/_authenticated/portal/admin/training")({
   head: () => ({
@@ -16,73 +17,188 @@ export const Route = createFileRoute("/_authenticated/portal/admin/training")({
   component: AdminTrainingPage,
 });
 
-type View = "waiting" | "release" | "cleared" | "content";
+
+type View = "agents" | "cleared" | "content";
 
 function AdminTrainingPage() {
-  const [view, setView] = useState<View>("waiting");
-  const listFn = useServerFn(listTrainingReview);
-  const counts = useQuery({ queryKey: ["training-review", "waiting"], queryFn: () => listFn({ data: { filter: "waiting" } }) }).data?.counts;
-  const c = (n?: number) => (n ? ` (${n})` : "");
+  const [view, setView] = useState<View>("agents");
+  const agentsFn = useServerFn(listReviewAgents);
+  const agentsQ = useQuery({ queryKey: ["training-review", "agents"], queryFn: () => agentsFn(), refetchInterval: 30000 });
+  const total = (agentsQ.data?.agents ?? []).reduce((n, a) => n + a.waiting + a.release, 0);
   return (
     <PortalShell>
       <PageBody>
-        <PageHeader title="Training Review" description="Listen, check the AI score, then approve or send back — oldest first." />
+        <PageHeader title="Training Review" description="Pick an agent, see their whole week, then approve or send back." />
         <Tabs
           value={view}
           onChange={setView}
           tabs={[
-            { value: "waiting", label: `Waiting on review${c(counts?.waiting)}` },
-            { value: "release", label: `Ready for release${c(counts?.release)}` },
+            { value: "agents", label: `Review by agent${total ? ` (${total})` : ""}` },
             { value: "cleared", label: "Cleared to call" },
             { value: "content", label: "Training content" },
           ]}
         />
-        <div className="mt-4">{view === "content" ? <ContentEditor /> : <ReviewQueue filter={view} />}</div>
+        <div className="mt-4">{view === "content" ? <ContentEditor /> : view === "cleared" ? <ClearedList /> : <AgentReview agents={agentsQ.data?.agents ?? []} loading={agentsQ.isLoading} />}</div>
       </PageBody>
     </PortalShell>
   );
 }
 
-function ReviewQueue({ filter }: { filter: "waiting" | "release" | "cleared" }) {
+function ClearedList() {
   const listFn = useServerFn(listTrainingReview);
-  const [agent, setAgent] = useState("all");
-  const q = useQuery({
-    queryKey: ["training-review", filter],
-    queryFn: () => listFn({ data: { filter } }),
-    refetchInterval: (query) => ((query.state.data?.submissions ?? []).some((s: any) => s.call_review && !["done", "failed"].includes(s.call_review.status)) ? 5000 : false),
-  });
+  const q = useQuery({ queryKey: ["training-review", "cleared"], queryFn: () => listFn({ data: { filter: "cleared" } }) });
   if (q.isLoading) return <Panel><TextSkeleton lines={4} /></Panel>;
-  if (q.error) return <Panel><EmptyState title="Couldn't load" description={(q.error as Error).message} /></Panel>;
-  if (filter === "cleared") {
-    const rows = q.data!.cleared as any[];
-    if (!rows.length) return <Panel><EmptyState title="Nobody cleared yet" /></Panel>;
-    return (
-      <Panel>
-        <ul className="divide-y divide-border">
-          {rows.map((r) => (
-            <li key={r.id} className="flex items-center justify-between py-2 text-[14px]">
-              <Link to="/portal/applicants/$applicantId" params={{ applicantId: r.id }} className="hover:underline">{r.first_name} {r.last_name}</Link>
-              <Badge tone="green">{new Date(r.cleared_to_call_at).toLocaleDateString()}</Badge>
-            </li>
-          ))}
-        </ul>
-      </Panel>
-    );
-  }
-  const all = q.data!.submissions as any[];
-  if (!all.length) return <Panel><EmptyState title={filter === "release" ? "No release calls requested" : "All caught up — nothing waiting on review"} /></Panel>;
-  const agents = [...new Map(all.map((s) => [s.profile_id, s.agent_name])).entries()];
-  const subs = agent === "all" ? all : all.filter((s) => s.profile_id === agent);
+  const rows = (q.data?.cleared ?? []) as any[];
+  if (!rows.length) return <Panel><EmptyState title="Nobody cleared yet" /></Panel>;
   return (
-    <div className="space-y-3">
-      {agents.length > 1 && (
-        <div className="flex flex-wrap gap-2">
-          {[["all", "All agents"], ...agents].map(([id, name]) => (
-            <button key={id} type="button" onClick={() => setAgent(id)} className={`rounded-full border px-3 py-1 text-[12.5px] ${agent === id ? "border-primary bg-primary/15 text-primary" : "border-border text-muted-foreground hover:bg-muted"}`}>{name}</button>
-          ))}
+    <Panel>
+      <ul className="divide-y divide-border">
+        {rows.map((r) => (
+          <li key={r.id} className="flex items-center justify-between py-2 text-[14px]">
+            <Link to="/portal/applicants/$applicantId" params={{ applicantId: r.id }} className="hover:underline">{r.first_name} {r.last_name}</Link>
+            <Badge tone="green">{new Date(r.cleared_to_call_at).toLocaleDateString()}</Badge>
+          </li>
+        ))}
+      </ul>
+    </Panel>
+  );
+}
+
+type Agent = { profile_id: string; name: string; waiting: number; release: number; oldest: string };
+
+function AgentReview({ agents, loading }: { agents: Agent[]; loading: boolean }) {
+  const [onlyRelease, setOnlyRelease] = useState(false);
+  const [picked, setPicked] = useState<string | null>(null);
+  const list = onlyRelease ? agents.filter((a) => a.release > 0) : agents;
+  const selected = picked && agents.some((a) => a.profile_id === picked) ? picked : picked ?? list[0]?.profile_id ?? null;
+  const nextAgent = () => {
+    const i = list.findIndex((a) => a.profile_id === selected);
+    const n = list[i + 1] ?? list.find((a) => a.profile_id !== selected);
+    if (n) setPicked(n.profile_id);
+  };
+  if (loading) return <Panel><TextSkeleton lines={4} /></Panel>;
+  return (
+    <div className="grid gap-4 lg:grid-cols-[260px_1fr]">
+      <div className="space-y-2">
+        <label className="flex items-center gap-2 text-[12.5px] text-muted-foreground">
+          <input type="checkbox" className="accent-primary" checked={onlyRelease} onChange={(e) => setOnlyRelease(e.target.checked)} /> Release calls only
+        </label>
+        <div className="lg:hidden">
+          <Select value={selected ?? ""} onChange={(e) => setPicked(e.target.value)} aria-label="Choose agent">
+            {list.map((a) => <option key={a.profile_id} value={a.profile_id}>{a.name} — {a.waiting + a.release} waiting</option>)}
+          </Select>
         </div>
+        <Panel padded={false} className="hidden lg:block">
+          {!list.length ? (
+            <p className="p-4 text-[13px] text-muted-foreground">{onlyRelease ? "No release calls waiting." : "All caught up — nothing waiting."}</p>
+          ) : (
+            <ul>
+              {list.map((a) => (
+                <li key={a.profile_id}>
+                  <button type="button" onClick={() => setPicked(a.profile_id)} className={`flex w-full items-center gap-2 border-b border-border px-3 py-2.5 text-left text-[13.5px] last:border-0 ${selected === a.profile_id ? "bg-primary/10 text-primary" : "hover:bg-muted/40"}`}>
+                    <span className="flex-1 truncate font-medium">{a.name}</span>
+                    {a.release > 0 && <Badge tone="gold">Release</Badge>}
+                    {a.waiting > 0 && <Badge>{a.waiting}</Badge>}
+                  </button>
+                  <div className="sr-only">waiting since {ago(a.oldest)}</div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Panel>
+      </div>
+      {selected ? <AgentPanel key={selected} profileId={selected} onDoneAll={nextAgent} /> : <Panel><EmptyState title="All caught up" description="New homework and release calls will show up here." /></Panel>}
+    </div>
+  );
+}
+
+const STATE_STYLE: Record<string, { label: string; tone: "green" | "amber" | "red" | "neutral" | "gold" }> = {
+  approved: { label: "Approved", tone: "green" },
+  submitted: { label: "Waiting", tone: "amber" },
+  redo: { label: "Sent back", tone: "red" },
+  open: { label: "Not started", tone: "neutral" },
+  locked: { label: "Locked", tone: "neutral" },
+};
+
+function AgentPanel({ profileId, onDoneAll }: { profileId: string; onDoneAll: () => void }) {
+  const fn = useServerFn(getAgentTrainingReview);
+  const q = useQuery({
+    queryKey: ["training-review", "agent", profileId],
+    queryFn: () => fn({ data: { profileId } }),
+    refetchInterval: (query) => ((query.state.data?.days ?? []).some((d: any) => d.attempts.some((s: any) => s.call_review && !["done", "failed"].includes(s.call_review.status))) ? 5000 : false),
+  });
+  const firstWaiting = q.data?.days.find((d) => d.state === "submitted")?.day.id ?? null;
+  const [dayId, setDayId] = useState<string | null>(null);
+  const active = q.data?.days.find((d) => d.day.id === (dayId ?? firstWaiting)) ?? q.data?.days.find((d) => d.attempts.length) ?? q.data?.days[0];
+  if (q.isLoading) return <Panel><TextSkeleton lines={6} /></Panel>;
+  if (q.error || !q.data) return <Panel><EmptyState title="Couldn't load this agent" description={(q.error as Error)?.message} /></Panel>;
+  const waitingCount = q.data.days.reduce((n, d) => n + d.attempts.filter((s: any) => s.status === "submitted").length, 0);
+  const afterReview = async () => {
+    const r = await q.refetch();
+    const next = r.data?.days.find((d) => d.state === "submitted" || d.attempts.some((s: any) => s.status === "submitted"));
+    if (next) setDayId(next.day.id);
+    else onDoneAll();
+  };
+  return (
+    <div className="space-y-4">
+      <Panel>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <div className="text-[16px] font-semibold">
+              {q.data.applicantId ? <Link to="/portal/applicants/$applicantId" params={{ applicantId: q.data.applicantId }} className="hover:underline">{q.data.name}</Link> : q.data.name}
+            </div>
+            <div className="text-[12.5px] text-muted-foreground">{q.data.clearedAt ? "Cleared to call" : `${waitingCount} waiting on review`}</div>
+          </div>
+        </div>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {q.data.days.map((d) => {
+            const st = STATE_STYLE[d.state] ?? STATE_STYLE.open;
+            const on = active?.day.id === d.day.id;
+            return (
+              <button key={d.day.id} type="button" onClick={() => setDayId(d.day.id)} className={`flex min-w-[96px] flex-col items-start rounded-md border px-3 py-2 text-left text-[12.5px] ${on ? "border-primary bg-primary/10" : "border-border hover:bg-muted/40"}`}>
+                <span className="font-medium">{d.day.is_release ? "Release" : d.day.day_label ?? d.day.title}</span>
+                <Badge tone={st.tone}>{st.label}{d.attempts.length > 1 ? ` · ${d.attempts.length}` : ""}</Badge>
+              </button>
+            );
+          })}
+        </div>
+      </Panel>
+      {active && <DayAttempts key={active.day.id} entry={active} onReviewed={afterReview} />}
+    </div>
+  );
+}
+
+function DayAttempts({ entry, onReviewed }: { entry: any; onReviewed: () => void }) {
+  const attempts: any[] = entry.attempts;
+  if (!attempts.length) return <Panel><EmptyState title="Nothing submitted for this day yet" /></Panel>;
+  const pending = attempts.filter((s) => s.status === "submitted");
+  const history = attempts.filter((s) => s.status !== "submitted");
+  return (
+    <div className="space-y-4">
+      {pending.map((s, i) => <ReviewCard key={s.id} s={s} day={entry.day} attemptNo={attempts.length - attempts.indexOf(s)} onReviewed={onReviewed} highlight={i === 0} />)}
+      {history.length > 0 && (
+        <Panel title="Past attempts">
+          <div className="grid gap-3 md:grid-cols-2">
+            {history.map((s) => {
+              const cr = s.call_review;
+              return (
+                <div key={s.id} className="space-y-2 rounded-md border border-border p-3 text-[13px]">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-medium">Attempt #{attempts.length - attempts.indexOf(s)}</span>
+                    <div className="flex items-center gap-2">
+                      {cr?.status === "done" && <Badge tone={scoreTone(cr.overall ?? 0, 100)}>{cr.overall}/100</Badge>}
+                      <Badge tone={s.status === "approved" ? "green" : "red"}>{s.status === "approved" ? "Approved" : "Sent back"}</Badge>
+                    </div>
+                  </div>
+                  <div className="text-[12px] text-muted-foreground">{new Date(s.created_at).toLocaleString()}</div>
+                  {s.feedback && <p className="whitespace-pre-line">“{s.feedback}”</p>}
+                  {cr && <Link to="/portal/coach/$id" params={{ id: cr.id }} className="text-primary underline">Scorecard</Link>}
+                </div>
+              );
+            })}
+          </div>
+        </Panel>
       )}
-      {subs.map((s) => <ReviewCard key={s.id} s={s} />)}
     </div>
   );
 }
@@ -96,67 +212,54 @@ function ago(iso: string) {
   return h < 24 ? `${h}h ago` : `${Math.round(h / 24)}d ago`;
 }
 
-function ReviewCard({ s }: { s: any }) {
+function ReviewCard({ s, day, attemptNo, onReviewed, highlight }: { s: any; day: any; attemptNo: number; onReviewed: () => void; highlight: boolean }) {
   const qc = useQueryClient();
   const reviewFn = useServerFn(reviewSubmission);
   const [feedback, setFeedback] = useState("");
-  const isRelease = !!s.day?.is_release;
+  const isRelease = !!day?.is_release;
   const cr = s.call_review;
   const m = useMutation({
     mutationFn: (decision: "approve" | "redo") => reviewFn({ data: { id: s.id, decision, feedback: feedback.trim() || null } }),
     onSuccess: (_r, d) => {
       notify.success(d === "approve" ? (isRelease ? "Release passed — cleared to call" : "Approved") : "Sent back with feedback");
-      qc.invalidateQueries({ queryKey: ["training-review"] });
+      qc.invalidateQueries({ queryKey: ["training-review", "agents"] });
+      onReviewed();
     },
     onError: (e: Error) => notify.error("Couldn't save review", e.message),
   });
   const addChip = (c: string) => setFeedback((f) => (f.includes(c) ? f : f ? `${f.trim()}\n• ${c}` : `• ${c}`));
-  const lastRedo = s.prior_redos?.[0];
   return (
     <Panel
-      title={
-        <span>
-          {s.applicant_id ? <Link to="/portal/applicants/$applicantId" params={{ applicantId: s.applicant_id }} className="hover:underline">{s.agent_name}</Link> : s.agent_name}
-          <span className="text-muted-foreground">{" · "}{s.day?.day_label ? `${s.day.day_label} · ` : ""}{s.day?.title}</span>
-        </span>
-      }
-      actions={<span className="text-[12px] text-muted-foreground">{ago(s.created_at)}</span>}
+      title={<span>{isRelease ? "Release call" : `${day?.day_label ? `${day.day_label} · ` : ""}${day?.title ?? ""}`}<span className="text-muted-foreground"> · Attempt #{attemptNo}</span></span>}
+      actions={<span className="text-[12px] text-muted-foreground">{highlight ? <Badge tone="amber">Up next</Badge> : null} {ago(s.created_at)}</span>}
     >
       <div className="space-y-4 text-[14px]">
-        {s.prior_redos?.length > 0 && (
-          <div className="rounded-md border border-border bg-muted/30 px-3 py-2 text-[12.5px] text-muted-foreground">
-            Previous attempts: sent back {s.prior_redos.length}× {lastRedo?.feedback ? <>— last note: “{lastRedo.feedback}”</> : null}
+        <div className="grid gap-4 md:grid-cols-[1fr_1.2fr]">
+          <div className="space-y-3">
+            {s.file_url ? <video src={s.file_url} controls className="w-full rounded" /> : (s.drive_file_id || cr?.audioUrl) ? <VantageMedia kind="video" directSrc={cr?.audioUrl ?? null} url={cr?.audioUrl ? null : `https://drive.google.com/file/d/${s.drive_file_id}/view`} hideTranscript /> : <p className="text-[13px] text-muted-foreground">No recording attached.</p>}
+            {s.note && <p className="text-[13px] text-muted-foreground">Agent note: {s.note}</p>}
           </div>
-        )}
-        {!isRelease && (
-          <div className="grid gap-4 md:grid-cols-[1fr_1.2fr]">
-            <div className="space-y-3">
-              {s.file_url ? <video src={s.file_url} controls className="w-full rounded" /> : <VantageMedia kind="video" directSrc={cr?.audioUrl ?? null} url={cr?.audioUrl ? null : s.drive_file_id ? `https://drive.google.com/file/d/${s.drive_file_id}/view` : null} hideTranscript />}
-              {s.note && <p className="text-[13px] text-muted-foreground">Agent note: {s.note}</p>}
-            </div>
-            <div>
-              {!cr ? (
-                <p className="text-[13px] text-muted-foreground">No AI score for this submission.</p>
-              ) : cr.status === "failed" ? (
-                <p className="text-[13px] text-muted-foreground">AI analysis couldn't run (check the Drive link is shared).</p>
-              ) : cr.status !== "done" ? (
-                <p className="flex items-center gap-2 text-[13px] text-muted-foreground"><Loader2 size={14} className="animate-spin" /> Analyzing the call…</p>
-              ) : (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-4">
-                    <ScoreRing value={cr.overall} size={72} />
-                    <Link to="/portal/coach/$id" params={{ id: cr.id }} className="text-[13px] text-primary underline">Full scorecard</Link>
-                  </div>
-                  <PillarBars scores={cr.pillar_scores ?? {}} />
-                  {Array.isArray(cr.improvements) && cr.improvements.length > 0 && (
-                    <ol className="list-decimal space-y-1 pl-5 text-[13px]">{cr.improvements.slice(0, 3).map((t: string, i: number) => <li key={i}>{t}</li>)}</ol>
-                  )}
+          <div>
+            {!cr ? (
+              <p className="text-[13px] text-muted-foreground">No AI score for this submission.</p>
+            ) : cr.status === "failed" ? (
+              <p className="text-[13px] text-muted-foreground">AI analysis couldn't run (check the Drive link is shared).</p>
+            ) : cr.status !== "done" ? (
+              <p className="flex items-center gap-2 text-[13px] text-muted-foreground"><Loader2 size={14} className="animate-spin" /> Analyzing the call…</p>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center gap-4">
+                  <ScoreRing value={cr.overall} size={72} />
+                  <Link to="/portal/coach/$id" params={{ id: cr.id }} className="text-[13px] text-primary underline">Full scorecard</Link>
                 </div>
-              )}
-            </div>
+                <PillarBars scores={cr.pillar_scores ?? {}} />
+                {Array.isArray(cr.improvements) && cr.improvements.length > 0 && (
+                  <ol className="list-decimal space-y-1 pl-5 text-[13px]">{cr.improvements.slice(0, 3).map((t: string, i: number) => <li key={i}>{t}</li>)}</ol>
+                )}
+              </div>
+            )}
           </div>
-        )}
-        {isRelease && s.note && <p>{s.note}</p>}
+        </div>
         <div>
           <div className="mb-2 flex flex-wrap gap-1.5">
             {CHIPS.map((c) => (

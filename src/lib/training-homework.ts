@@ -11,7 +11,7 @@ export function isGoogleDriveRecordingLink(value: string): boolean {
 }
 
 export function validateHomeworkRecording(isRelease: boolean, link: string | null | undefined, filePath?: string | null): void {
-  if (isRelease) return;
+  void isRelease; // Release calls need a recording too.
   if (filePath || !link || !isGoogleDriveRecordingLink(link)) {
     throw new Error("Paste a Google Drive shareable link to your recording. Direct uploads and ChatGPT share links are not accepted.");
   }

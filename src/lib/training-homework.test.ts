@@ -19,7 +19,8 @@ describe("daily recording homework", () => {
       expect(isGoogleDriveRecordingLink(link)).toBe(false);
     }
   });
-  it("keeps release call requests free of homework requirements", () => {
-    expect(() => validateHomeworkRecording(true, null)).not.toThrow();
+  it("requires a Drive recording for release calls too", () => {
+    expect(() => validateHomeworkRecording(true, null)).toThrow();
+    expect(() => validateHomeworkRecording(true, "https://drive.google.com/file/d/abc123/view")).not.toThrow();
   });
 });
