@@ -86,7 +86,7 @@ export const VantageMedia = forwardRef<VantageMediaHandle, Props>(function Vanta
       </Empty>
     );
   } else if (nativeSrc) {
-    player = <NativePlayer src={nativeSrc} kind={kind} elRef={el} onMs={setNativeMs} />;
+    player = <NativePlayer src={nativeSrc} kind={kind} elRef={el} onMs={setNativeMs} title={title} />;
   } else if (embedUrl) {
     player = (
       <div className="space-y-1">
@@ -148,14 +148,17 @@ function Empty({ children }: { children: React.ReactNode }) {
 }
 
 function NativePlayer({
-  src, kind, elRef, onMs,
-}: { src: string; kind: "audio" | "video"; elRef: React.MutableRefObject<HTMLMediaElement | null>; onMs: (ms: number) => void }) {
+  src, kind, elRef, onMs, title,
+}: { src: string; kind: "audio" | "video"; elRef: React.MutableRefObject<HTMLMediaElement | null>; onMs: (ms: number) => void; title?: string }) {
   const wrap = useRef<HTMLDivElement>(null);
   const [playing, setPlaying] = useState(false);
   const [t, setT] = useState(0);
   const [dur, setDur] = useState(0);
   const [speed, setSpeed] = useState(1);
   const [loading, setLoading] = useState(true);
+  // Files labelled "video" can still be audio-only (e.g. an MP3 mislabelled in
+  // the admin). Drop the video frame whenever the media has no video track.
+  const [audioOnly, setAudioOnly] = useState(false);
 
   const common = {
     src,
