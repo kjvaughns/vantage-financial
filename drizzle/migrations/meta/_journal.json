@@ -155,6 +155,13 @@
       "when": 1793221743297,
       "tag": "0021_automatic_highest_applicant_upline",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1793222106172,
+      "tag": "0022_nearest_contracting_upline",
+      "breakpoints": true
     }
   ]
 }
