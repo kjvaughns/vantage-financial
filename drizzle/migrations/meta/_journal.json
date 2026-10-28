@@ -176,6 +176,13 @@
       "when": 1793222423352,
       "tag": "0024_manual_upline_and_scoped_hierarchy",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1793222550783,
+      "tag": "0025_refresh_uplines_after_hierarchy_move",
+      "breakpoints": true
     }
   ]
 }
