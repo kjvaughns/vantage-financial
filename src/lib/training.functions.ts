@@ -506,27 +506,39 @@ export const saveTrainingDay = createServerFn({ method: "POST" })
 
 const driveFileId = (u: string | null) => (u ? (u.match(/drive\.google\.com\/file\/d\/([\w-]{10,})/)?.[1] ?? u.match(/[?&]id=([\w-]{10,})/)?.[1] ?? null) : null);
 
-/** Agents with work waiting for review (RLS limits this to the caller's org). */
+/** Every trainee who has submitted anything (RLS limits this to the caller's org), with waiting counts. */
 export const listReviewAgents = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     const [{ data: days }, { data: subs }] = await Promise.all([
       supabase.from("training_days").select("id, is_release"),
-      supabase.from("training_submissions").select("profile_id, day_id, created_at").eq("status", "submitted").neq("profile_id", userId).order("created_at", { ascending: true }).limit(1000),
+      supabase.from("training_submissions").select("profile_id, day_id, status, created_at").neq("profile_id", userId).order("created_at", { ascending: true }).limit(5000),
     ]);
     const rel = new Set((days ?? []).filter((d: any) => d.is_release).map((d: any) => d.id));
-    const groups = new Map<string, { profile_id: string; waiting: number; release: number; oldest: string }>();
+    const groups = new Map<string, { profile_id: string; waiting: number; release: number; attempts: number; approved: number; oldest: string; last: string }>();
     for (const s of (subs ?? []) as any[]) {
-      const g = groups.get(s.profile_id) ?? { profile_id: s.profile_id, waiting: 0, release: 0, oldest: s.created_at };
-      if (rel.has(s.day_id)) g.release++; else g.waiting++;
+      const g = groups.get(s.profile_id) ?? { profile_id: s.profile_id, waiting: 0, release: 0, attempts: 0, approved: 0, oldest: "", last: s.created_at };
+      g.attempts++;
+      g.last = s.created_at;
+      if (s.status === "approved") g.approved++;
+      if (s.status === "submitted") {
+        if (!g.oldest) g.oldest = s.created_at;
+        if (rel.has(s.day_id)) g.release++; else g.waiting++;
+      }
       groups.set(s.profile_id, g);
     }
     const ids = [...groups.keys()];
     const { data: names } = ids.length ? await supabase.rpc("profile_display_names", { _ids: ids }) : { data: [] as any[] };
     const nameMap = new Map((names ?? []).map((n: any) => [n.id, n.name]));
     return {
-      agents: [...groups.values()].map((g) => ({ ...g, name: (nameMap.get(g.profile_id) as string) ?? "Agent" })).sort((a, b) => a.oldest.localeCompare(b.oldest)),
+      agents: [...groups.values()]
+        .map((g) => ({ ...g, name: (nameMap.get(g.profile_id) as string) ?? "Agent" }))
+        .sort((a, b) => {
+          const aw = a.waiting + a.release > 0, bw = b.waiting + b.release > 0;
+          if (aw !== bw) return aw ? -1 : 1;
+          return aw ? a.oldest.localeCompare(b.oldest) : b.last.localeCompare(a.last);
+        }),
     };
   });
 
