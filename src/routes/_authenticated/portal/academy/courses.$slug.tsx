@@ -21,7 +21,7 @@ import { resolveMedia, isPreviewableDocument } from "@/lib/academy/media";
 import { ReferenceLinksCard } from "@/components/vantage/academy/reference-links";
 import { DocPreview } from "@/components/vantage/academy/doc-preview";
 
-import { AudioBlock } from "@/components/vantage/academy/audio-block";
+import { VantageMedia, type VantageMediaHandle } from "@/components/media/VantageMedia";
 import { NotesPreview } from "@/components/vantage/academy/media-fields";
 import { TranscriptViewer, useMediaSeek } from "@/components/vantage/academy/transcript-viewer";
 import { ChevronLeft, CheckCircle2, Circle, Lock, HelpCircle, Trophy } from "lucide-react";
@@ -236,59 +236,23 @@ function LessonView({
     onError: () => notify.error("Couldn't mark this lesson complete. Please try again."),
   });
   const kind = lesson.kind === "lesson" ? (lesson.media_type ?? "video") : lesson.kind;
-  const media = resolveMedia(lesson.video_url);
-  const nativeRef = useRef<HTMLMediaElement | null>(null);
-  const frameRef = useRef<HTMLIFrameElement | null>(null);
-  const isNative = (kind === "audio" && !media.embedUrl) || (kind === "video" && media.kind === "direct");
-  const target = isNative
-    ? ({ kind: "element", ref: nativeRef } as const)
-    : media.kind === "youtube"
-      ? ({ kind: "youtube", ref: frameRef } as const)
-      : media.kind === "vimeo"
-        ? ({ kind: "vimeo", ref: frameRef } as const)
-        : ({ kind: "none" } as const);
-  const { seek, canSeek, currentMs } = useMediaSeek(target);
+  const playerRef = useRef<VantageMediaHandle>(null);
+  const seek = (ms: number) => playerRef.current?.seek(ms);
 
   return (
     <>
-      {kind === "audio" && (
+      {(kind === "audio" || kind === "video") && (
         <Panel>
-          <AudioBlock
+          <VantageMedia
+            ref={playerRef}
             url={lesson.video_url}
+            kind={kind}
             title={lesson.title}
-            nativeRef={nativeRef as React.Ref<HTMLAudioElement>}
-            frameRef={frameRef}
+            segments={transcript?.transcript_segments}
+            fallbackText={transcript?.transcript_text}
+            speakerNames={transcript?.speaker_names}
           />
         </Panel>
-      )}
-
-
-      {kind === "video" && (
-        <div className="p-panel overflow-hidden">
-          {!lesson.video_url ? (
-            <div className="grid aspect-video w-full place-items-center" style={{ background: "var(--p-raised)", color: "var(--p-text-3)" }}>
-              No media attached
-            </div>
-          ) : media.kind === "direct" ? (
-            <video
-              ref={nativeRef as React.RefObject<HTMLVideoElement>}
-              controls
-              src={lesson.video_url}
-              className="aspect-video w-full"
-              style={{ background: "var(--p-raised)" }}
-            />
-          ) : (
-            <iframe
-              ref={frameRef}
-              src={media.embedUrl ?? lesson.video_url}
-              title={lesson.title}
-              allow="autoplay; fullscreen; picture-in-picture"
-              allowFullScreen
-              className="aspect-video w-full"
-              style={{ border: 0, background: "var(--p-raised)" }}
-            />
-          )}
-        </div>
       )}
 
       <Panel title={lesson.title} description={lesson.duration || undefined}>
@@ -318,27 +282,9 @@ function LessonView({
         </div>
       </Panel>
 
-      {(transcript?.notes || transcript?.transcript_text) && (
+      {transcript?.notes && (
         <Panel title="Training notes" description="Generated from this lesson's recording.">
-          {transcript?.notes && <NotesPreview notes={transcript.notes} onSeek={canSeek ? seek : undefined} />}
-          {(transcript?.transcript_text || transcript?.transcript_segments) && (
-            <details className="mt-3">
-              <summary className="p-focus cursor-pointer text-[13px]" style={{ color: "var(--p-text-2)" }}>
-                Read the full transcript
-              </summary>
-              <div className="mt-2">
-                <TranscriptViewer
-                  segments={transcript?.transcript_segments}
-                  fallbackText={transcript?.transcript_text}
-                  speakerNames={transcript?.speaker_names}
-                  onSeek={seek}
-                  canSeek={canSeek}
-                  currentMs={currentMs}
-                  maxHeight={320}
-                />
-              </div>
-            </details>
-          )}
+          <NotesPreview notes={transcript.notes} onSeek={seek} />
         </Panel>
       )}
     </>
