@@ -17,13 +17,12 @@ import {
   notify,
 } from "@/components/portal/ui";
 import { getCourseLearner, markLessonComplete, submitQuiz } from "@/lib/academy.functions";
-import { resolveMedia, isPreviewableDocument } from "@/lib/academy/media";
+import { isPreviewableDocument } from "@/lib/academy/media";
 import { ReferenceLinksCard } from "@/components/vantage/academy/reference-links";
 import { DocPreview } from "@/components/vantage/academy/doc-preview";
 
 import { VantageMedia, type VantageMediaHandle } from "@/components/media/VantageMedia";
 import { NotesPreview } from "@/components/vantage/academy/media-fields";
-import { TranscriptViewer, useMediaSeek } from "@/components/vantage/academy/transcript-viewer";
 import { ChevronLeft, CheckCircle2, Circle, Lock, HelpCircle, Trophy } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/portal/academy/courses/$slug")({
