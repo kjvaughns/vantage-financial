@@ -39,6 +39,7 @@ function CoachTab() {
             <ul>
               {q.data.reviews.map((r: any) => (
                 <li key={r.id} className="border-b border-border last:border-0">
+                  <PendingCoachReview review={r} onChange={() => { void q.refetch(); }} />
                   <Link to="/portal/coach/$id" params={{ id: r.id }} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30">
                     <div className="w-12 text-center text-[18px] font-semibold tabular-nums text-primary">{r.overall ?? "—"}</div>
                     <div className="min-w-0 flex-1">
@@ -76,6 +77,11 @@ function CoachTab() {
       </div>
     </div>
   );
+}
+
+function PendingCoachReview({ review, onChange }: { review: { id: string; status: string }; onChange: () => void }) {
+  useReviewPolling(review.id, review.status, onChange);
+  return null;
 }
 
 export const Route = createFileRoute("/_authenticated/portal/training")({
