@@ -288,13 +288,13 @@ export const listTrainingReview = createServerFn({ method: "GET" })
     const appMap = new Map((apps ?? []).map((x: any) => [x.portal_profile_id, x.id]));
     const rids = list.map((s: any) => s.review_id).filter(Boolean);
     const { data: revs } = rids.length
-      ? await supabase.from("call_reviews").select("id, status, overall, pillar_scores, improvements, media_path, media_url").in("id", rids)
+      ? await supabase.from("call_reviews").select("id, status, overall, pillar_scores, improvements, media_path, media_url, transcript, transcript_text").in("id", rids)
       : { data: [] as any[] };
     const revMap = new Map<string, any>();
     for (const r of revs ?? []) {
       let audioUrl: string | null = null;
       if (r.media_path) audioUrl = (await supabase.storage.from("call-recordings").createSignedUrl(r.media_path, 60 * 60 * 6)).data?.signedUrl ?? null;
-      revMap.set(r.id, { id: r.id, status: r.status, overall: r.overall, pillar_scores: r.pillar_scores, improvements: r.improvements, audioUrl });
+      revMap.set(r.id, { id: r.id, status: r.status, overall: r.overall, pillar_scores: r.pillar_scores, improvements: r.improvements, transcript: r.transcript, transcript_text: r.transcript_text, audioUrl });
     }
     const { data: past } = pids.length
       ? await supabase.from("training_submissions").select("profile_id, day_id, feedback, reviewed_at").eq("status", "redo").in("profile_id", pids).in("day_id", ids).order("reviewed_at", { ascending: false })
@@ -565,12 +565,12 @@ export const getAgentTrainingReview = createServerFn({ method: "GET" })
     }
     const rids = t.submissions.map((s) => s.review_id).filter((x): x is string => !!x);
     const { data: revs } = rids.length
-      ? await supabase.from("call_reviews").select("id, status, overall, pillar_scores, improvements, summary, media_path").in("id", rids)
+      ? await supabase.from("call_reviews").select("id, status, overall, pillar_scores, improvements, summary, media_path, transcript, transcript_text").in("id", rids)
       : { data: [] as any[] };
     const revMap = new Map<string, any>();
     for (const r of (revs ?? []) as any[]) {
       const audioUrl = r.media_path ? (await supabase.storage.from("call-recordings").createSignedUrl(r.media_path, 60 * 60 * 6)).data?.signedUrl ?? null : null;
-      revMap.set(r.id, { id: r.id, status: r.status, overall: r.overall, pillar_scores: r.pillar_scores, improvements: r.improvements, summary: r.summary, audioUrl });
+      revMap.set(r.id, { id: r.id, status: r.status, overall: r.overall, pillar_scores: r.pillar_scores, improvements: r.improvements, summary: r.summary, transcript: r.transcript, transcript_text: r.transcript_text, audioUrl });
     }
     const { data: names } = await supabase.rpc("profile_display_names", { _ids: [data.profileId] });
     const track = computeTrack(t.days, t.progress, t.submissions, isUnlocked(a));
