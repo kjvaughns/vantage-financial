@@ -16,9 +16,9 @@ describe("release track unlocking", () => {
     const p = [{ day_id: "mon", approved_at: "2026-01-01" }];
     expect(computeTrack(days, p, [], true).map((e) => e.state).slice(0, 3)).toEqual(["approved", "open", "open"]);
   });
-  it("opens the release call anytime once training unlocks, without opening skipped days", () => {
+  it("opens the release call anytime once training unlocks, with every day open", () => {
     const e = computeTrack(days, [{ day_id: "rel", approved_at: null }], [], true);
     expect(e[4].state).toBe("open");
-    expect(e[1].state).toBe("locked");
+    expect(e[1].state).toBe("open");
   });
 });
