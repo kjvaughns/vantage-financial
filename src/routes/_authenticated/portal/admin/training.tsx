@@ -191,6 +191,7 @@ function DayAttempts({ entry, onReviewed }: { entry: any; onReviewed: () => void
                     </div>
                   </div>
                   <div className="text-[12px] text-muted-foreground">{new Date(s.created_at).toLocaleString()}</div>
+                  <TrainingRecording submission={s} />
                   {s.feedback && <p className="whitespace-pre-line">“{s.feedback}”</p>}
                   {cr && <Link to="/portal/coach/$id" params={{ id: cr.id }} className="text-primary underline">Scorecard</Link>}
                 </div>
@@ -204,6 +205,29 @@ function DayAttempts({ entry, onReviewed }: { entry: any; onReviewed: () => void
 }
 
 const CHIPS = ["Great intro", "Slow down", "Dig deeper on needs analysis", "Follow the script", "Missed the close", "More confident tone"];
+
+function TrainingRecording({ submission: s }: { submission: any }) {
+  const cr = s.call_review;
+  const directSrc = cr?.audioUrl ?? s.file_url ?? null;
+  const url = s.link_url ?? (s.drive_file_id ? `https://drive.google.com/file/d/${s.drive_file_id}/view` : null);
+  if (!directSrc && !url) return <p className="text-[13px] text-muted-foreground">No recording attached.</p>;
+  const segments = cr?.transcript?.segments ?? [];
+  const hasTranscript = segments.length > 0 || !!cr?.transcript_text;
+  return (
+    <div className="min-w-0 space-y-2">
+      <VantageMedia
+        kind="video"
+        directSrc={directSrc}
+        url={directSrc ? null : url}
+        title="Training recording"
+        segments={segments}
+        fallbackText={cr?.transcript_text}
+        transcriptHeight={320}
+      />
+      {!hasTranscript && <p className="text-[13px] text-muted-foreground">{cr && !["done", "failed"].includes(cr.status) ? "Transcript is being prepared…" : "No transcript available for this recording yet."}</p>}
+    </div>
+  );
+}
 
 function ago(iso: string) {
   const m = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
@@ -236,7 +260,7 @@ function ReviewCard({ s, day, attemptNo, onReviewed, highlight }: { s: any; day:
       <div className="space-y-4 text-[14px]">
         <div className="grid gap-4 md:grid-cols-[1fr_1.2fr]">
           <div className="space-y-3">
-            {s.file_url ? <video src={s.file_url} controls className="w-full rounded" /> : (s.drive_file_id || cr?.audioUrl) ? <VantageMedia kind="video" directSrc={cr?.audioUrl ?? null} url={cr?.audioUrl ? null : `https://drive.google.com/file/d/${s.drive_file_id}/view`} hideTranscript /> : <p className="text-[13px] text-muted-foreground">No recording attached.</p>}
+            <TrainingRecording submission={s} />
             {s.note && <p className="text-[13px] text-muted-foreground">Agent note: {s.note}</p>}
           </div>
           <div>
