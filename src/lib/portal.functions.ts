@@ -5,6 +5,7 @@ import { writeAudit } from "@/lib/audit";
 import { queueEmail, firstNameFrom } from "@/lib/emails/send";
 import { ONBOARDING_STEP_ORDER } from "@/lib/onboarding";
 import { RECRUITING_STATUSES } from "@/lib/recruiting";
+import { effectiveApplicantScope } from "@/lib/applicant-scope";
 
 const APP_URL = () =>
   (process.env.VANTAGE_APP_URL || "https://vantage-financial.net").replace(/\/$/, "");
@@ -562,24 +563,32 @@ export const listApplicants = createServerFn({ method: "POST" })
       query = query.order("created_at", { ascending: false });
     }
 
-    // Scope: mine = own only; direct = self + direct reports; downline/all rely
-    // on hierarchy RLS (own + full downline; admins see everything).
-    if (data.scope === "mine") {
+    // An admin's organization includes unassigned company applications, too.
+    // Keep all reads on the authenticated client so RLS still governs access.
+    let scope = data.scope;
+    if (scope === "downline") {
+      const { data: isAdmin, error } = await supabase.rpc("is_admin", { _user_id: userId });
+      if (error) throw new Error(`Could not resolve applicant access: ${error.message}`);
+      scope = effectiveApplicantScope(scope, isAdmin === true);
+    }
+    if (scope === "mine") {
       query = query.or(
         `assigned_recruiter_id.eq.${userId},original_recruiter_id.eq.${userId},referred_by_profile_id.eq.${userId}`,
       );
-    } else if (data.scope === "direct") {
-      const { data: reports } = await supabase
+    } else if (scope === "direct") {
+      const { data: reports, error } = await supabase
         .from("profiles")
         .select("id")
         .eq("parent_user_id", userId);
+      if (error) throw new Error(`Could not load direct team: ${error.message}`);
       const ids = [userId, ...((reports ?? []) as { id: string }[]).map((r) => r.id)].join(",");
       query = query.or(
         `assigned_recruiter_id.in.(${ids}),original_recruiter_id.in.(${ids}),referred_by_profile_id.in.(${ids})`,
       );
-    } else if (data.scope === "downline") {
+    } else if (scope === "downline") {
       // Full tree: self + every level beneath. Admins otherwise see everything via RLS.
-      const { data: desc } = await (supabase as any).rpc("descendant_ids", { _root: userId });
+      const { data: desc, error } = await supabase.rpc("descendant_ids", { _root: userId });
+      if (error) throw new Error(`Could not load recruiting hierarchy: ${error.message}`);
       const ids = [userId, ...((desc ?? []) as { id: string }[]).map((r) => r.id)].join(",");
       query = query.or(
         `assigned_recruiter_id.in.(${ids}),original_recruiter_id.in.(${ids}),referred_by_profile_id.in.(${ids})`,
@@ -606,6 +615,9 @@ export const listApplicants = createServerFn({ method: "POST" })
         .eq("is_archived", false)
         .order("position"),
     ]);
+
+    if (aRes.error) throw new Error(`Could not load applicants: ${aRes.error.message}`);
+    if (stagesRes.error) throw new Error(`Could not load pipeline stages: ${stagesRes.error.message}`);
 
     // Resolve referring-recruiter display names in one pass.
     const applicants = (aRes.data ?? []) as any[];
