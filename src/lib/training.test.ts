@@ -10,15 +10,15 @@ describe("release track unlocking", () => {
     expect(computeTrack(days, [], [], false).map((e) => e.state)).toEqual(["locked", "locked", "locked", "locked", "locked"]);
   });
   it("opens only Monday once training is unlocked", () => {
-    expect(computeTrack(days, [], [], true).map((e) => e.state)).toEqual(["open", "locked", "locked", "locked", "open"]);
+    expect(computeTrack(days, [], [], true).map((e) => e.state)).toEqual(["open", "open", "open", "open", "open"]);
   });
   it("opens the next day only after the previous is approved", () => {
     const p = [{ day_id: "mon", approved_at: "2026-01-01" }];
-    expect(computeTrack(days, p, [], true).map((e) => e.state).slice(0, 3)).toEqual(["approved", "open", "locked"]);
+    expect(computeTrack(days, p, [], true).map((e) => e.state).slice(0, 3)).toEqual(["approved", "open", "open"]);
   });
-  it("opens the release call anytime once training unlocks, without opening skipped days", () => {
+  it("opens the release call anytime once training unlocks, with every day open", () => {
     const e = computeTrack(days, [{ day_id: "rel", approved_at: null }], [], true);
     expect(e[4].state).toBe("open");
-    expect(e[1].state).toBe("locked");
+    expect(e[1].state).toBe("open");
   });
 });
