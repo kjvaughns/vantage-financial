@@ -69,7 +69,8 @@ export function computeTrack(
     const latest = mine[0] ?? null;
     let state: DayState;
     // The release call is open as soon as training unlocks; agents may attempt it anytime.
-    const gateOpen = day.is_release ? unlocked : prevDone;
+    // All days open together once training unlocks (no day-by-day gating).
+    const gateOpen = unlocked;
     if (approved.has(day.id)) state = "approved";
     else if (!gateOpen) state = "locked";
     else if (latest?.status === "submitted") state = "submitted";
