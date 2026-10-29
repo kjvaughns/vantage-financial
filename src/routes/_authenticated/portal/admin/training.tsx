@@ -5,7 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { PortalShell } from "@/components/vantage/portal-shell";
 import { Loader2 } from "lucide-react";
 import { VantageMedia } from "@/components/media/VantageMedia";
-import { PillarBars, ScoreRing } from "@/components/vantage/coach";
+import { PillarBars, ScoreRing, useReviewPolling } from "@/components/vantage/coach";
 import { Badge, Button, EmptyState, Field, Input, PageBody, PageHeader, Panel, Select, Tabs, TextSkeleton, Textarea, Toggle, notify } from "@/components/portal/ui";
 import { scoreTone } from "@/lib/coach-scoring";
 import { getAgentTrainingReview, listReviewAgents, listTrainingDaysAdmin, listTrainingReview, reviewSubmission, saveTrainingDay, type TrainingDay } from "@/lib/training.functions";
@@ -141,6 +141,9 @@ function AgentPanel({ profileId, onDoneAll }: { profileId: string; onDoneAll: ()
   };
   return (
     <div className="space-y-4">
+      {q.data.days.flatMap((d) => d.attempts).filter((s: any) => s.call_review && !["done", "failed"].includes(s.call_review.status)).map((s: any) => (
+        <PendingReview key={s.call_review.id} review={s.call_review} onChange={() => { void q.refetch(); }} />
+      ))}
       <Panel>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
@@ -166,6 +169,11 @@ function AgentPanel({ profileId, onDoneAll }: { profileId: string; onDoneAll: ()
       {active && <DayAttempts key={active.day.id} entry={active} onReviewed={afterReview} />}
     </div>
   );
+}
+
+function PendingReview({ review, onChange }: { review: { id: string; status: string }; onChange: () => void }) {
+  useReviewPolling(review.id, review.status, onChange);
+  return null;
 }
 
 function DayAttempts({ entry, onReviewed }: { entry: any; onReviewed: () => void }) {
