@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Fix onboarding buttons to open their selected playbook, course, and recording; verify signed-in navigation
+
 - [x] Add persistent manual applicant uplines and scoped organization moves
 - [x] Verify super-admin saved assignments through the UI; leader scope and cycle prevention through permission tests and database checks
 

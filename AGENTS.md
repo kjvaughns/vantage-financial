@@ -10,6 +10,7 @@
 <!-- LOVABLE:END -->
 
 - Keep the applicant email catalog in `src/lib/email/catalog.ts` as the live delivery source, because the older JSX email templates are not used by the current dispatcher.
+- Resolve onboarding content buttons through the browser-safe onboarding-target helper and caller-visible content catalogs; selected resources/courses/recordings open their detail pages, including the legacy Closer Course Academy link, without changing completion rules.
 - Reschedule applicant interviews through a confirmation-token page and Cal.com booking UID, because creating a second booking would leave the original calendar event active.
 - Keep AgentLink contracting URLs upline-owned and assign exactly one active link per agent; never restore a universal contracting URL.
 - Resolve applicant uplines centrally through the database assignment trigger into assigned_manager_id and use that same resolved leader for AgentLink options and onboarding, preserving referral columns; this keeps public, manual, MCP, and recruiter-edit paths consistent. A user_roles trigger re-resolves automatic uplines (and clears stale AgentLink assignments) whenever someone gains or loses a leader/manager/admin role, so role changes alone re-route contracting to the new leader's link.
