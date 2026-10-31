@@ -27,7 +27,15 @@ import { NotesPreview } from "@/components/vantage/academy/media-fields";
 import { ChevronLeft, CheckCircle2, Circle, Lock, HelpCircle, Trophy } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/portal/academy/courses/$slug")({
-  head: () => ({ meta: [{ title: "Course — Vantage Academy" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [
+    { title: "Course — Vantage Academy" },
+    { name: "description", content: "Complete your Vantage Academy course lessons and track your progress." },
+    { property: "og:title", content: "Course — Vantage Academy" },
+    { property: "og:description", content: "Vantage agent course lessons and learning progress." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+    { name: "robots", content: "noindex" },
+  ] }),
   component: CoursePlayer,
 });
 
