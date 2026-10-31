@@ -29,6 +29,7 @@ import {
   type ScheduleItemRow,
 } from "@/lib/onboarding-content.functions";
 import type { OnboardingStepState } from "@/lib/onboarding";
+import { getOnboardingTarget, type OnboardingCatalog } from "@/lib/onboarding-target";
 
 export const Route = createFileRoute("/_authenticated/portal/onboarding")({
   head: () => ({
@@ -123,7 +124,11 @@ function OnboardingPage() {
   const defs = (contentQ.data?.steps ?? []) as OnboardingStepRow[];
   const schedule = (contentQ.data?.schedule ?? []) as ScheduleItemRow[];
   const links = contentQ.data?.links ?? {};
-  const courseById = contentQ.data?.courseById ?? {};
+  const catalog: OnboardingCatalog = {
+    courseById: contentQ.data?.courseById ?? {},
+    resourceById: contentQ.data?.resourceById ?? {},
+    recordingById: contentQ.data?.recordingById ?? {},
+  };
   const data = q.data;
 
   if (!data?.hasOnboarding) {
@@ -144,7 +149,7 @@ function OnboardingPage() {
                 defs={defs}
                 schedule={schedule}
                 links={links}
-                courseById={courseById}
+                catalog={catalog}
                 ctx={ctxQ.data}
               />
             </Panel>
@@ -192,7 +197,7 @@ function OnboardingPage() {
               defs={defs}
               schedule={schedule}
               links={links}
-              courseById={courseById}
+              catalog={catalog}
               steps={steps}
               currentIndex={currentIndex}
               pending={mut.isPending}
@@ -296,7 +301,7 @@ function StepChecklist({
   defs,
   schedule,
   links,
-  courseById,
+  catalog,
   steps,
   currentIndex = 0,
   onComplete,
@@ -311,7 +316,7 @@ function StepChecklist({
   defs: OnboardingStepRow[];
   schedule: ScheduleItemRow[];
   links: Record<string, string>;
-  courseById: Record<string, { slug: string; title: string; status: string }>;
+  catalog: OnboardingCatalog;
   steps?: Record<string, OnboardingStepState>;
   currentIndex?: number;
   onComplete?: (key: string, showUpline: boolean) => void;
@@ -361,7 +366,7 @@ function StepChecklist({
               def={def}
               schedule={schedule}
               links={links}
-              courseById={courseById}
+              catalog={catalog}
               ctx={ctx}
               status={preview ? "upcoming" : status}
               state={state}
@@ -390,16 +395,16 @@ function StepBody({
   def,
   schedule,
   links,
-  courseById,
+  catalog,
   ctx,
 }: {
   def: OnboardingStepRow;
   schedule: ScheduleItemRow[];
   links: Record<string, string>;
-  courseById: Record<string, { slug: string; title: string; status: string }>;
+  catalog: OnboardingCatalog;
   ctx?: OnboardingContext;
 }) {
-  const course = def.course_id ? courseById[def.course_id] : undefined;
+  const target = getOnboardingTarget(def, catalog);
   const href =
     def.step_key === "agent_cloud_onboarding"
       ? ctx?.agentLink?.url ?? null
@@ -470,29 +475,32 @@ function StepBody({
             </Button>
           </a>
         )}
-        {def.action_type === "internal" && def.internal_path && (
+        {def.action_type === "internal" && def.internal_path && !target &&
+          !(def.step_key === "complete_vantage_closer_course" && def.internal_path === "/portal/academy") && (
           <Link to={def.internal_path as any}>
             <Button variant="secondary" size="sm">
               {defaultButtonLabel(def)} →
             </Button>
           </Link>
         )}
-        {def.action_type === "course" &&
-          (course && course.status !== "draft" ? (
-            <Link to="/portal/academy/courses/$slug" params={{ slug: course.slug }}>
-              <Button variant="secondary" size="sm">
-                {defaultButtonLabel(def)} →
-              </Button>
-            </Link>
-          ) : (
-            <p className="p-muted">The course isn&apos;t published yet — contact your recruiter.</p>
-          ))}
-        {(def.action_type === "resource" || def.action_type === "presentation") && (
-          <Link to="/portal/academy">
-            <Button variant="secondary" size="sm">
-              {defaultButtonLabel(def)} →
-            </Button>
+        {target?.kind === "course" && (
+          <Link to="/portal/academy/courses/$slug" params={{ slug: target.slug }}>
+            <Button variant="secondary" size="sm">{defaultButtonLabel(def)} →</Button>
           </Link>
+        )}
+        {target?.kind === "resource" && (
+          <Link to="/portal/academy/library/$slug" params={{ slug: target.slug }}>
+            <Button variant="secondary" size="sm">{defaultButtonLabel(def)} →</Button>
+          </Link>
+        )}
+        {target?.kind === "presentation" && (
+          <Link to="/portal/academy/presentations/$slug" params={{ slug: target.slug }}>
+            <Button variant="secondary" size="sm">{defaultButtonLabel(def)} →</Button>
+          </Link>
+        )}
+        {!target && (["course", "resource", "presentation"].includes(def.action_type) ||
+          (def.step_key === "complete_vantage_closer_course" && def.action_type === "internal" && def.internal_path === "/portal/academy")) && (
+          <p className="p-muted">This linked item isn&apos;t available yet — contact your recruiter.</p>
         )}
       </div>
     </>
@@ -504,7 +512,7 @@ function StepRow({
   def,
   schedule,
   links,
-  courseById,
+  catalog,
   ctx,
   status,
   state,
@@ -522,7 +530,7 @@ function StepRow({
   def: OnboardingStepRow;
   schedule: ScheduleItemRow[];
   links: Record<string, string>;
-  courseById: Record<string, { slug: string; title: string; status: string }>;
+  catalog: OnboardingCatalog;
   ctx?: OnboardingContext;
   status: "done" | "current" | "upcoming";
   state: OnboardingStepState;
@@ -586,7 +594,7 @@ function StepRow({
             <p className="p-secondary mt-1">{def.description}</p>
           ) : (
             <div className="mt-1.5">
-              <StepBody def={def} schedule={schedule} links={links} courseById={courseById} ctx={ctx} />
+              <StepBody def={def} schedule={schedule} links={links} catalog={catalog} ctx={ctx} />
               {(def.substeps ?? []).length > 0 && (
                 <ul className="mt-3 space-y-1.5">
                   {def.substeps.map((x) => {
