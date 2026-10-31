@@ -1,5 +1,7 @@
 # Roadmap
 
+- [x] Fix onboarding buttons to open selected playbook, course, and recording; destination tests pass and signed-in admin preview opens the actual playbook and Closer Course (active trainee checklist not tested)
+
 - [x] Add persistent manual applicant uplines and scoped organization moves
 - [x] Verify super-admin saved assignments through the UI; leader scope and cycle prevention through permission tests and database checks
 

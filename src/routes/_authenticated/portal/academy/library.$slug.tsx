@@ -12,7 +12,15 @@ import { DocPreview, DocPreviewModal } from "@/components/vantage/academy/doc-pr
 import { useState } from "react";
 
 export const Route = createFileRoute("/_authenticated/portal/academy/library/$slug")({
-  head: () => ({ meta: [{ title: "Resource — Vantage Academy" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [
+    { title: "Resource — Vantage Academy" },
+    { name: "description", content: "Access Vantage agent playbooks, documents, and learning resources." },
+    { property: "og:title", content: "Resource — Vantage Academy" },
+    { property: "og:description", content: "Playbooks and learning resources for Vantage agents." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+    { name: "robots", content: "noindex" },
+  ] }),
   component: ResourceDetail,
 });
 

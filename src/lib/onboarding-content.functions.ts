@@ -63,13 +63,18 @@ export const getOnboardingContent = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const s = context.supabase as any;
-    const [sections, steps, schedule, links, courses] = await Promise.all([
+    const [sections, steps, schedule, links, courses, resources, recordings] = await Promise.all([
       s.from("onboarding_sections").select("id, title, description, position, is_published").order("position"),
       s.from("onboarding_steps").select(STEP_COLS).eq("is_published", true).order("position"),
       s.from("training_schedule_items").select("id, label, when_text, note, position, is_active").eq("is_active", true).order("position"),
       s.from("app_links").select("key, label, url, description"),
       s.from("courses").select("id, slug, title, status"),
+      s.from("library_resources").select("id, slug"),
+      s.from("recordings").select("id, slug"),
     ]);
+    for (const result of [sections, steps, schedule, links, courses, resources, recordings]) {
+      if (result.error) throw result.error;
+    }
     const courseById: Record<string, { slug: string; title: string; status: string }> = {};
     for (const c of courses.data ?? []) courseById[c.id] = { slug: c.slug, title: c.title, status: c.status };
     return {
@@ -78,6 +83,8 @@ export const getOnboardingContent = createServerFn({ method: "POST" })
       schedule: (schedule.data ?? []) as ScheduleItemRow[],
       links: Object.fromEntries((links.data ?? []).map((l: any) => [l.key, l.url])) as Record<string, string>,
       courseById,
+      resourceById: Object.fromEntries((resources.data ?? []).map((r: any) => [r.id, { slug: r.slug }])) as Record<string, { slug: string | null }>,
+      recordingById: Object.fromEntries((recordings.data ?? []).map((r: any) => [r.id, { slug: r.slug }])) as Record<string, { slug: string | null }>,
     };
   });
 
