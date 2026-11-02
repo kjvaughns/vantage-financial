@@ -27,12 +27,14 @@ async function resolveOnboardingPortalLink(
 ): Promise<string> {
   if (a.portal_profile_id) return `${APP_URL()}/portal/onboarding`;
   if (!a.email) throw new Error("Applicant has no email address.");
-  const { data: res, error } = await supabase.rpc("ensure_onboarding_invitation", {
-    _applicant_id: a.id,
+  const { ensureOnboardingInvitation } = await import("@/lib/onboarding-invitation.server");
+  const res = await ensureOnboardingInvitation(supabase, a.id, async () => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    return supabaseAdmin;
   });
-  if (error) throw new Error(error.message);
-  const token = res?.token as string | undefined;
-  if (!res?.ok || !token) throw new Error("Could not create an onboarding registration link.");
+  const result = res as { ok?: boolean; token?: string } | null;
+  const token = result?.token;
+  if (!result?.ok || !token) throw new Error("Could not create an onboarding registration link.");
   return `${APP_URL()}/portal-invite/${token}`;
 }
 
