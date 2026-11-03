@@ -116,9 +116,14 @@ function UnlicensedComplete() {
               Start your pre-licensing course
             </div>
             <p className="text-[13.5px] leading-relaxed text-vantage-dim">
-              Life insurance pre-licensing through our approved course — work through it at your own
-              pace and you'll be ready for the state exam.
+              Life insurance pre-licensing through our official partner, Agent Cloud: Licensing — work
+              through it at your own pace and you'll be ready for the state exam.
             </p>
+            <div className="rounded-md border border-vantage-gold/40 px-4 py-3 text-[13px] text-vantage-dim">
+              Partner code:{" "}
+              <span className="font-display text-[18px] tracking-wide text-vantage-gold">VANTAGE</span>
+              <div className="mt-1 text-[12px]">Enter it when you sign up.</div>
+            </div>
             <a
               href={XCEL_COURSE_URL}
               target="_blank"
