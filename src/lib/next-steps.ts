@@ -11,7 +11,7 @@ export const XCEL_PARTNER_CODE = "VANTAGE";
 export const PRELICENSING_PARTNER_NAME = "Agent Cloud: Licensing";
 
 /** State-by-state licensing requirements. */
-export const STATE_REQUIREMENTS_URL = "https://getlicensed.useagentcloud.com";
+export const STATE_REQUIREMENTS_URL = "https://getlicensed.useagentcloud.com/states";
 
 /** Where applicants formally apply for their state license. */
 export const NIPR_URL = "https://nipr.com";
