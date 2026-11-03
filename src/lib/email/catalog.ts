@@ -141,7 +141,7 @@ const applicantTemplates: EmailTemplateDef[] = [
       details: [{ label: "Booked date", value: "{{interview_date}}" }, { label: "Booked time", value: "{{interview_time}}" }],
       bullets: [
         "Watch the opportunity video before your 1:1",
-        "Start the pre-licensing course at getlicensed.insuracloud.ai",
+        "Start your pre-licensing course with Agent Cloud: Licensing at getlicensed.useagentcloud.com — use partner code VANTAGE",
         "Check the state requirements before you schedule your exam",
         "Join the Vantage Discord so you're plugged in",
       ],
@@ -340,11 +340,11 @@ const applicantTemplates: EmailTemplateDef[] = [
       intro: GREET,
       lines: [
         "Congratulations — you've been selected to join {{agency_name}}. Your recruiter will confirm the right next step for your licensing status.",
-        "If you're already licensed, skip pre-licensing and prepare your NPN, carrier appointments, and any downline details for onboarding. If you're not licensed yet, start your pre-licensing course and check your state requirements. Before your 1:1, watch {{vsl_link}}.",
+        "If you're already licensed, skip pre-licensing and prepare your NPN, carrier appointments, and any downline details for onboarding. If you're not licensed yet, start your pre-licensing course with Agent Cloud: Licensing (partner code VANTAGE) and check your state requirements. Before your 1:1, watch {{vsl_link}}.",
       ],
       bullets: [
         "Licensed: share your NPN with your recruiter and start AgentLink contracting from your portal when invited",
-        "Unlicensed: start your course at getlicensed.insuracloud.ai and review state requirements",
+        "Unlicensed: start your course with Agent Cloud: Licensing (getlicensed.useagentcloud.com, partner code VANTAGE) and review state requirements",
         "Join the Vantage Discord and follow the Start Here instructions for your status",
       ],
       details: [
@@ -396,10 +396,10 @@ const applicantTemplates: EmailTemplateDef[] = [
       intro: GREET,
       lines: [
         "Your licensing course is the gate to everything else, so start it today and work it daily.",
-        "Three steps, in this order: 1) start the Life Insurance Pre Licensing course, 2) check your State Requirements, 3) apply for your license on nipr.com.",
+        "Three steps, in this order: 1) start the Life Insurance Pre Licensing course with Agent Cloud: Licensing (partner code VANTAGE), 2) check your State Requirements, 3) apply for your license on nipr.com.",
       ],
       bullets: [
-        "Life Insurance Pre Licensing — enroll in the course",
+        "Life Insurance Pre Licensing — enroll with Agent Cloud: Licensing using partner code VANTAGE",
         "Study daily — most agents finish in two to three weeks",
         "State Requirements — check the exact steps for your state",
         "Apply for License — apply on nipr.com",
@@ -426,7 +426,7 @@ const applicantTemplates: EmailTemplateDef[] = [
       title: "Checking on your course",
       intro: GREET,
       lines: [
-        "Quick nudge on your licensing course. Consistent daily study is what gets people through fast.",
+        "Quick nudge on your Agent Cloud: Licensing course (partner code VANTAGE). Consistent daily study is what gets people through fast.",
         "The order stays the same: finish Life Insurance Pre Licensing, check your State Requirements, then apply for your license on nipr.com — including fingerprinting if your state requires it.",
       ],
       ctaLabel: "Back to your course",
@@ -1025,7 +1025,7 @@ const stageTemplates: EmailTemplateDef[] = [
       intro: GREET,
       lines: [
         "Your course is the only thing standing between you and getting paid, so treat it like a job.",
-        "Start your pre-licensing course at getlicensed.insuracloud.ai and check the state requirements before scheduling your exam. Join the Vantage Discord for support. If you missed your 1:1, choose a new time: {{reschedule_link}}.",
+        "Start your pre-licensing course with Agent Cloud: Licensing at getlicensed.useagentcloud.com (use partner code VANTAGE) and check the state requirements before scheduling your exam. Join the Vantage Discord for support. If you missed your 1:1, choose a new time: {{reschedule_link}}.",
         "Most agents finish in two to three weeks studying an hour or two a day. When you're ready to test, tell your recruiter and we'll get your exam on the calendar.",
       ],
       bullets: [

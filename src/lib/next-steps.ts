@@ -2,13 +2,16 @@
  * Shared next-step resources handed to applicants after they apply.
  * Keep these in one place so the thank-you pages and emails never drift.
  */
-export const XCEL_COURSE_URL = "https://getlicensed.insuracloud.ai";
+export const XCEL_COURSE_URL = "https://getlicensed.useagentcloud.com";
 
-/** Legacy partner code — no longer used. Kept only so old imports don't break. */
-export const XCEL_PARTNER_CODE = "";
+/** Agent Cloud: Licensing partner code applicants enter at checkout. */
+export const XCEL_PARTNER_CODE = "VANTAGE";
+
+/** Official prelicensing partner name. */
+export const PRELICENSING_PARTNER_NAME = "Agent Cloud: Licensing";
 
 /** State-by-state licensing requirements. */
-export const STATE_REQUIREMENTS_URL = "https://getlicensed.insuracloud.ai/state-requirements";
+export const STATE_REQUIREMENTS_URL = "https://getlicensed.useagentcloud.com";
 
 /** Where applicants formally apply for their state license. */
 export const NIPR_URL = "https://nipr.com";
