@@ -8,7 +8,6 @@
 
 import { SCHEDULE_BULLETS, SCHEDULE_SUMMARY } from "@/lib/schedule";
 import type { EmailVarKey } from "./vars";
-import { SARAH_INTRO, SARAH_TEXT_PROMPT } from "@/lib/sarah-support";
 
 export type EmailAudience = "applicant" | "agent";
 
@@ -1324,11 +1323,7 @@ export const EMAIL_TEMPLATE_LIST: EmailTemplateDef[] = [
   const supportContact = template.category !== "security" &&
     (template.audience === "applicant" || template.name.startsWith("welcome"));
   if (!supportContact) return template;
-  return {
-    ...template,
-    supportContact,
-    body: { ...template.body, lines: [...(template.body.lines ?? []), SARAH_INTRO, SARAH_TEXT_PROMPT] },
-  };
+  return { ...template, supportContact };
 });
 
 export const EMAIL_CATALOG: Record<string, EmailTemplateDef> = Object.fromEntries(

@@ -113,7 +113,6 @@ function UnlicensedComplete() {
         />
 
         {/* Head start: licensing course + community */}
-        <SarahContact publicView firstName={firstName} />
         <div className="mt-4 grid gap-4 md:grid-cols-3">
           <div className="vantage-card flex flex-col gap-3 p-6">
             <div className="font-display text-[20px] leading-tight text-vantage-ivory">
@@ -216,6 +215,8 @@ function UnlicensedComplete() {
             </p>
           </div>
         </div>
+
+        <SarahContact publicView firstName={firstName} />
       </div>
     </PublicShell>
   );

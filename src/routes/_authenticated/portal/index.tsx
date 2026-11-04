@@ -5,7 +5,6 @@ import { useServerFn } from "@tanstack/react-start";
 import { PortalShell } from "@/components/vantage/portal-shell";
 import { getDashboard, getMyOnboarding } from "@/lib/portal.functions";
 import { RecruitingLinkCard } from "@/components/vantage/recruiting-link-card";
-import { PortalSarahContact } from "@/components/vantage/sarah-contact";
 import { ONBOARDING_STEP_ORDER } from "@/lib/onboarding";
 import {
   PageHeader,
@@ -77,7 +76,6 @@ function DashboardPage() {
         ) : (
           <div className="space-y-4">
             <RecruitingLinkCard />
-            <PortalSarahContact />
 
             {onb?.hasOnboarding && (
               <Panel

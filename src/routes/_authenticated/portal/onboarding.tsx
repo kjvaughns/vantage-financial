@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { formatPhone } from "@/lib/phone";
-import { PortalSarahContact } from "@/components/vantage/sarah-contact";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -138,7 +137,6 @@ function OnboardingPage() {
         <PageBody>
           <PageHeader title="Onboarding checklist" description="Welcome to Vantage" />
           <div className="max-w-[820px] space-y-4">
-            <PortalSarahContact />
             <Panel>
               <p className="p-secondary">
                 This is the checklist new Vantage agents complete when they join. Your account doesn't
@@ -175,7 +173,6 @@ function OnboardingPage() {
         <PageHeader title="Your onboarding checklist" description="Welcome to Vantage" />
 
         <div className="max-w-[820px] space-y-4">
-          <PortalSarahContact />
           <Panel>
             <div className="mb-2 flex items-center justify-between">
               <span className="p-label">
