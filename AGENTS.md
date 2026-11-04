@@ -10,6 +10,8 @@
 <!-- LOVABLE:END -->
 
 - Keep the applicant email catalog in `src/lib/email/catalog.ts` as the live delivery source, because the older JSX email templates are not used by the current dispatcher.
+- Keep primary support contact data and text/contact-download generation in the browser-safe support module; catalog-driven email support blocks must honor single-link invitation restrictions.
+- Validate applicant exam fields through the shared browser-safe schema for portal and OAuth MCP writes; MCP exam updates remain caller-scoped and do not implicitly trigger stage changes or emails.
 - Resolve onboarding content buttons through the browser-safe onboarding-target helper and caller-visible content catalogs; selected resources/courses/recordings open their detail pages, including the legacy Closer Course Academy link, without changing completion rules.
 - Reschedule applicant interviews through a confirmation-token page and Cal.com booking UID, because creating a second booking would leave the original calendar event active.
 - Keep AgentLink contracting URLs upline-owned and assign exactly one active link per agent; never restore a universal contracting URL.

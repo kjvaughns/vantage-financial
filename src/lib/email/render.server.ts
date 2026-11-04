@@ -148,6 +148,8 @@ export async function renderEmail(
     footerNote: footerNote(def),
     prefsUrl: def.prefKey && !def.hideSupplementalLinks ? (ctx.preferences_link ?? undefined) : undefined,
     copyFor: options.copyFor ?? undefined,
+    supportContact: def.supportContact,
+    supportLinks: !def.hideSupplementalLinks,
     hideSocial: def.category === "security" || def.hideSupplementalLinks,
     discordUrl: def.hideSupplementalLinks
       ? undefined

@@ -14,7 +14,7 @@ export default defineTool({
   handler: async ({ search, limit }, ctx) => {
     const sb = supabaseForUser(ctx);
     let q = sb.from("profiles")
-      .select("id, full_name, email, phone, licensed, state, status, is_active, manager_id, parent_user_id, created_at")
+      .select("id, full_name, email, phone, licensed, state, resident_state, npn, status, is_active, manager_id, parent_user_id, created_at")
       .order("created_at", { ascending: false }).limit(limit);
     if (search) {
       const s = search.replace(/[,()%]/g, "");

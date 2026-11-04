@@ -1,5 +1,6 @@
 import * as React from 'react'
-import { Section, Text } from '@react-email/components'
+import { Section, Text, Link } from '@react-email/components'
+import { SARAH } from '@/lib/sarah-support'
 
 import { GoldButton, INK, MUTED, Shell, bullet, paragraph } from './_shell'
 
@@ -21,6 +22,8 @@ export interface GenericEmailProps {
   copyFor?: string
   hideSocial?: boolean
   discordUrl?: string
+  supportContact?: boolean
+  supportLinks?: boolean
 }
 
 const detailRow: React.CSSProperties = {
@@ -71,6 +74,8 @@ export function GenericEmail({
   copyFor,
   hideSocial,
   discordUrl,
+  supportContact,
+  supportLinks,
 }: GenericEmailProps) {
   return (
     <Shell
@@ -108,6 +113,11 @@ export function GenericEmail({
         <GoldButton href={secondaryCtaUrl} label={secondaryCtaLabel} />
       ) : null}
       {note ? <Text style={noteStyle}>{note}</Text> : null}
+      {supportContact ? <Section style={detailBox}>
+        <Text style={detailRow}><strong>{SARAH.name}</strong><br />{SARAH.title}</Text>
+        <Text style={detailRow}>{supportLinks ? <Link href={SARAH.sms}>Text Sarah: {SARAH.phone}</Link> : `Text Sarah: ${SARAH.phone}`}</Text>
+        <Text style={detailRow}>{supportLinks ? <Link href={`mailto:${SARAH.email}`}>{SARAH.email}</Link> : SARAH.email}</Text>
+      </Section> : null}
     </Shell>
   )
 }

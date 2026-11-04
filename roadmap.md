@@ -1,5 +1,10 @@
 # Roadmap
 
+- [x] Add Sarah contact card and personalized text/contact download actions to applicant and agent dashboards
+- [x] Introduce Sarah in applicant and welcome emails while preserving single-link onboarding invitations
+- [x] Add editable exam format and pipeline licensing badges; expose exam updates and agent license details to OAuth MCP
+- [x] Verify support actions, licensing validation, and MCP manifest (7 tests passed; signed-in support actions and unchanged exam detail save/read-back verified; external assistant connection not tested)
+
 - [x] Fix onboarding buttons to open selected playbook, course, and recording; destination tests pass and signed-in admin preview opens the actual playbook and Closer Course (active trainee checklist not tested)
 
 - [x] Add persistent manual applicant uplines and scoped organization moves

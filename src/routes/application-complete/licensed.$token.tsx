@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { VslRequired } from "@/components/vantage/vsl-required";
+import { SarahContact } from "@/components/vantage/sarah-contact";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
@@ -22,6 +23,8 @@ export const Route = createFileRoute("/application-complete/licensed/$token")({
       { property: "og:title", content: "Book your Vantage licensed interview" },
       { property: "og:description", content: "Pick a time that works with your assigned Vantage recruiter." },
       { name: "robots", content: "noindex" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   loader: async ({ params }) => {
@@ -92,6 +95,7 @@ function LicensedComplete() {
     <PublicShell>
       <div className="mx-auto max-w-[900px] px-6 pt-14 pb-24 text-center md:px-8">
         <VslRequired token={token} />
+        <SarahContact publicView firstName={firstName} />
         <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-vantage-gold text-[26px] text-vantage-card shadow-[0_0_40px_rgba(201,168,76,0.5)]">
           ✓
         </div>

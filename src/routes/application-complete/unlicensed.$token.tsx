@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { VslRequired } from "@/components/vantage/vsl-required";
+import { SarahContact } from "@/components/vantage/sarah-contact";
 import { CalBookingCard } from "@/components/vantage/cal-booking-card";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
@@ -29,6 +30,8 @@ export const Route = createFileRoute("/application-complete/unlicensed/$token")(
         content: "Book your 1:1 interview and get a head start on licensing.",
       },
       { name: "robots", content: "noindex" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   loader: async ({ params }) => {
@@ -110,6 +113,7 @@ function UnlicensedComplete() {
         />
 
         {/* Head start: licensing course + community */}
+        <SarahContact publicView firstName={firstName} />
         <div className="mt-4 grid gap-4 md:grid-cols-3">
           <div className="vantage-card flex flex-col gap-3 p-6">
             <div className="font-display text-[20px] leading-tight text-vantage-ivory">

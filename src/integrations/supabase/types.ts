@@ -367,6 +367,7 @@ export type Database = {
           email: string
           evaluation_completed_at: string | null
           exam_date: string | null
+          exam_format: string | null
           exam_notes: string | null
           exam_passed_at: string | null
           exam_provider: string | null
@@ -466,6 +467,7 @@ export type Database = {
           email: string
           evaluation_completed_at?: string | null
           exam_date?: string | null
+          exam_format?: string | null
           exam_notes?: string | null
           exam_passed_at?: string | null
           exam_provider?: string | null
@@ -565,6 +567,7 @@ export type Database = {
           email?: string
           evaluation_completed_at?: string | null
           exam_date?: string | null
+          exam_format?: string | null
           exam_notes?: string | null
           exam_passed_at?: string | null
           exam_provider?: string | null

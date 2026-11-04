@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { PortalShell } from "@/components/vantage/portal-shell";
 import { getDashboard, getMyOnboarding } from "@/lib/portal.functions";
 import { RecruitingLinkCard } from "@/components/vantage/recruiting-link-card";
+import { PortalSarahContact } from "@/components/vantage/sarah-contact";
 import { ONBOARDING_STEP_ORDER } from "@/lib/onboarding";
 import {
   PageHeader,
@@ -20,7 +21,7 @@ import {
 } from "@/components/portal/ui";
 
 export const Route = createFileRoute("/_authenticated/portal/")({
-  head: () => ({ meta: [{ title: "Dashboard — Vantage Portal" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Dashboard — Vantage Portal" }, { name: "description", content: "Your Vantage recruiting activity, onboarding progress and assistant support." }, { property: "og:title", content: "Dashboard — Vantage Portal" }, { property: "og:description", content: "Your Vantage recruiting activity and team support." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] }),
   component: DashboardPage,
 });
 
@@ -76,6 +77,7 @@ function DashboardPage() {
         ) : (
           <div className="space-y-4">
             <RecruitingLinkCard />
+            <PortalSarahContact />
 
             {onb?.hasOnboarding && (
               <Panel

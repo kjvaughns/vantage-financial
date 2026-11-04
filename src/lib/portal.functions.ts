@@ -6,6 +6,7 @@ import { queueEmail, firstNameFrom } from "@/lib/emails/send";
 import { ONBOARDING_STEP_ORDER } from "@/lib/onboarding";
 import { RECRUITING_STATUSES } from "@/lib/recruiting";
 import { effectiveApplicantScope } from "@/lib/applicant-scope";
+import { examFields } from "@/lib/applicant-exam";
 
 const APP_URL = () =>
   (process.env.VANTAGE_APP_URL || "https://vantage-financial.net").replace(/\/$/, "");
@@ -548,7 +549,7 @@ export const listApplicants = createServerFn({ method: "POST" })
     let query = supabase
       .from("applicants")
       .select(
-        "id, first_name, last_name, email, phone, instagram_handle, state, city, priority, status, current_stage_id, assigned_recruiter_id, referred_by_profile_id, original_recruiter_id, referred_by_name_snapshot, licensing_status, evaluation_completed_at, calendly_scheduled_at, overview_scheduled_at, overview_completed_at, licensed, hired_at, discord_confirmed, last_contacted_at, last_follow_up_at, onboarding_steps, created_at, updated_at, stage_entered_at, assigned_agentlink_link_id, applicant_type, agency_track",
+        "id, first_name, last_name, email, phone, instagram_handle, state, city, priority, status, current_stage_id, assigned_recruiter_id, referred_by_profile_id, original_recruiter_id, referred_by_name_snapshot, licensing_status, evaluation_completed_at, calendly_scheduled_at, overview_scheduled_at, overview_completed_at, licensed, hired_at, discord_confirmed, last_contacted_at, last_follow_up_at, onboarding_steps, created_at, updated_at, stage_entered_at, assigned_agentlink_link_id, applicant_type, agency_track, exam_date, exam_format, exam_provider, exam_result, npn, resident_state",
       )
       .is("archived_at", null)
       .limit(data.limit);
@@ -1113,8 +1114,7 @@ export const updateApplicant = createServerFn({ method: "POST" })
         phone: z.string().trim().max(40).nullable().optional(),
         city: z.string().trim().max(120).nullable().optional(),
         state: z.string().trim().max(60).nullable().optional(),
-        resident_state: z.string().trim().max(60).nullable().optional(),
-        npn: z.string().trim().max(40).nullable().optional(),
+        ...examFields,
         licensing_status: z.string().trim().max(60).nullable().optional(),
         recruiting_status: z.enum(RECRUITING_STATUSES).optional(),
         assigned_recruiter_id: z.string().uuid().nullable().optional(),
@@ -2574,14 +2574,18 @@ export const setApplicantExam = createServerFn({ method: "POST" })
     z
       .object({
         id: z.string().uuid(),
-        exam_date: z.string().min(10).max(40),
+        exam_date: z.string().datetime({ offset: true }),
+        exam_format: examFields.exam_format,
         exam_provider: z.string().trim().max(120).optional().or(z.literal("")),
         exam_notes: z.string().trim().max(1000).optional().or(z.literal("")),
       })
       .parse(d),
   )
   .handler(async ({ context, data }) => {
-    const { userId } = context;
+    const { userId, supabase } = context;
+    const access = await supabase.from("applicants").select("id").eq("id", data.id).maybeSingle();
+    if (access.error) throw new Error(access.error.message);
+    if (!access.data) throw new Error("Applicant not found or you don't have access.");
     const engine = await import("@/lib/recruiting/stage-engine.server");
     const iso = new Date(data.exam_date).toISOString();
     const res = await engine.applyStage({
@@ -2591,9 +2595,10 @@ export const setApplicantExam = createServerFn({ method: "POST" })
       reason: "exam_scheduled",
       patch: {
         exam_date: iso,
+        ...(data.exam_format !== undefined ? { exam_format: data.exam_format } : {}),
         exam_provider: data.exam_provider || null,
         exam_notes: data.exam_notes || null,
-        exam_result: null,
+        exam_result: "pending",
       },
       sendKey: `exam:${data.id}:${iso}`,
     });
@@ -2620,6 +2625,9 @@ export const markExamResult = createServerFn({ method: "POST" })
     const { userId, supabase } = context;
     const engine = await import("@/lib/recruiting/stage-engine.server");
     const now = new Date().toISOString();
+    const access = await supabase.from("applicants").select("id").eq("id", data.id).maybeSingle();
+    if (access.error) throw new Error(access.error.message);
+    if (!access.data) throw new Error("Applicant not found or you don't have access.");
     if (data.result === "failed") {
       await supabase
         .from("applicants")

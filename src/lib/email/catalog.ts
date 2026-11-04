@@ -8,6 +8,7 @@
 
 import { SCHEDULE_BULLETS, SCHEDULE_SUMMARY } from "@/lib/schedule";
 import type { EmailVarKey } from "./vars";
+import { SARAH_INTRO, SARAH_TEXT_PROMPT } from "@/lib/sarah-support";
 
 export type EmailAudience = "applicant" | "agent";
 
@@ -62,6 +63,7 @@ export interface EmailTemplateDef {
   manualOnly?: boolean;
   /** Hide shared footer links when the email must have one focused action. */
   hideSupplementalLinks?: boolean;
+  supportContact?: boolean;
   subject: string;
   body: EmailBody;
 }
@@ -1318,7 +1320,16 @@ export const EMAIL_TEMPLATE_LIST: EmailTemplateDef[] = [
   ...agentTemplates,
   ...campaignTemplates,
   ...sequenceTemplates,
-];
+].map((template) => {
+  const supportContact = template.category !== "security" &&
+    (template.audience === "applicant" || template.name.startsWith("welcome"));
+  if (!supportContact) return template;
+  return {
+    ...template,
+    supportContact,
+    body: { ...template.body, lines: [...(template.body.lines ?? []), SARAH_INTRO, SARAH_TEXT_PROMPT] },
+  };
+});
 
 export const EMAIL_CATALOG: Record<string, EmailTemplateDef> = Object.fromEntries(
   EMAIL_TEMPLATE_LIST.map((t) => [t.name, t]),

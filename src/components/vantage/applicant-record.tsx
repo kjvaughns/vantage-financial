@@ -1291,6 +1291,8 @@ function StateExamCard({ applicant, onDone }: { applicant: any; onDone: () => vo
   const followUp = useServerFn(startApplicantFollowUp);
   const [date, setDate] = useState(isoToLocalInput(applicant.exam_date));
   const [provider, setProvider] = useState(applicant.exam_provider ?? "");
+  const [examFormat, setExamFormat] = useState(applicant.exam_format ?? "");
+  const saveDetails = useServerFn(updateApplicant);
   const [busy, setBusy] = useState(false);
 
   async function run(fn: () => Promise<unknown>, message: string) {
@@ -1315,15 +1317,24 @@ function StateExamCard({ applicant, onDone }: { applicant: any; onDone: () => vo
         <Field label="Exam date & time">
           <Input type="datetime-local" value={date} onChange={(e) => setDate(e.target.value)} />
         </Field>
-        <Field label="Provider / location">
+        <Field label="Exam format">
+          <Select value={examFormat} onChange={(e) => setExamFormat(e.target.value)}>
+            <option value="">Not specified</option><option value="online">Online</option><option value="in_person">In person</option>
+          </Select>
+        </Field>
+        <Field label="Exam testing provider">
           <Input
             value={provider}
-            placeholder="PSI, Pearson VUE, online…"
+            placeholder="Pearson VUE, Prometric…"
             onChange={(e) => setProvider(e.target.value)}
           />
         </Field>
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
+        <Button size="sm" variant="secondary" disabled={busy} onClick={() => run(
+          () => saveDetails({ data: { id: applicant.id, exam_format: examFormat || null, exam_provider: provider || null } }),
+          "Exam details saved",
+        )}>Save exam details</Button>
         <Button
           size="sm"
           disabled={busy || !date}
@@ -1335,6 +1346,7 @@ function StateExamCard({ applicant, onDone }: { applicant: any; onDone: () => vo
                     id: applicant.id,
                     exam_date: localInputToIso(date) ?? date,
                     exam_provider: provider,
+                    exam_format: examFormat || null,
                   },
                 }),
               "Exam scheduled — reminders are on",
@@ -1379,11 +1391,22 @@ function StateExamCard({ applicant, onDone }: { applicant: any; onDone: () => vo
       </div>
       {applicant.exam_result && (
         <div className="mt-3">
-          <Badge tone={applicant.exam_result === "passed" ? "green" : "red"}>
-            {applicant.exam_result === "passed" ? "Passed" : "Not passed"}
+          <Badge tone={applicant.exam_result === "passed" ? "green" : applicant.exam_result === "failed" ? "red" : "amber"}>
+            {applicant.exam_result === "passed" ? "Passed" : applicant.exam_result === "failed" ? "Not passed" : "Pending"}
           </Badge>
         </div>
       )}
+      <div className="mt-3">
+        <Field label="Exam result">
+          <Select value={applicant.exam_result ?? "pending"} disabled={busy} onChange={(e) => {
+            const result = e.target.value;
+            if (result === "passed" || result === "failed") run(() => mark({ data: { id: applicant.id, result } }), "Exam result saved");
+            else run(() => saveDetails({ data: { id: applicant.id, exam_result: "pending" } }), "Result reset to pending");
+          }}>
+            <option value="pending">Pending</option><option value="passed">Passed</option><option value="failed">Failed</option>
+          </Select>
+        </Field>
+      </div>
     </Panel>
   );
 }

@@ -3,6 +3,7 @@ import listApplicants from "./tools/list-applicants";
 import getApplicant from "./tools/get-applicant";
 import createApplicant from "./tools/create-applicant";
 import updateApplicant from "./tools/update-applicant";
+import updateApplicantExam from "./tools/update-applicant-exam";
 import changeStage from "./tools/change-stage";
 import addNote from "./tools/add-note";
 import confirmCourse from "./tools/confirm-course";
@@ -24,7 +25,7 @@ export default defineMcp({
     acceptedAudiences: "authenticated",
   }),
   tools: [
-    listApplicants, getApplicant, createApplicant, updateApplicant, changeStage,
+    listApplicants, getApplicant, createApplicant, updateApplicant, updateApplicantExam, changeStage,
     addNote, confirmCourse, listAgents, pipelineSummary, recentActivity, trainingStatus,
   ],
 });

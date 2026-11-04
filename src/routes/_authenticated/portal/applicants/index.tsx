@@ -6,6 +6,7 @@ import { z } from "zod";
 import { ChevronRight, Plus } from "lucide-react";
 import { PortalShell } from "@/components/vantage/portal-shell";
 import { ApplicantRecord } from "@/components/vantage/applicant-record";
+import { ExamBadges } from "@/components/vantage/exam-badges";
 import { listApplicants, listReferrerOptions, updateApplicantStage } from "@/lib/portal.functions";
 import { AssignContractingLinkModal } from "@/components/vantage/assign-contracting-link-modal";
 import { AddApplicantModal } from "@/components/vantage/add-applicant-modal";
@@ -471,6 +472,7 @@ function ListView({
                   {a.discord_confirmed && <Badge tone="green" dot>Discord</Badge>}
                 </div>
 
+                <ExamBadges applicant={a} />
                 {view === "pre_licensing" &&
                   (() => {
                     const days = a.last_follow_up_at ? daysSince(a.last_follow_up_at) : null;
@@ -621,6 +623,7 @@ function ListView({
                         {a.calendly_scheduled_at && <Badge>Scheduled</Badge>}
                         {a.discord_confirmed && <Badge tone="green" dot>Discord</Badge>}
                       </div>
+                      <ExamBadges applicant={a} />
                     </TD>
                     <TD>
                       <div className="p-muted">
@@ -760,6 +763,7 @@ function PipelineView({
                     {a.state ? `, ${a.state}` : ""}
                   </div>
                   <div className="p-muted mt-1 truncate">{a.email}</div>
+                  <ExamBadges applicant={a} />
                 </button>
               ))}
               <button
