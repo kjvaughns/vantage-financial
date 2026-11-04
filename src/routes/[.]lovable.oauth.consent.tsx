@@ -10,6 +10,12 @@ type OAuthApi = {
 };
 const oauth = () => (supabase.auth as unknown as { oauth: OAuthApi }).oauth;
 
+// The managed auth API validates the request Origin against the OAuth Site URL and
+// rejects every other origin ("unauthorized request origin"), so the consent page
+// must always run on the published custom-domain origin even if the link was opened
+// on a preview or other app origin.
+const CANONICAL_ORIGIN = "https://vantage-financial.net";
+
 export const Route = createFileRoute("/.lovable/oauth/consent")({
   ssr: false,
   head: () => ({ meta: [{ title: "Authorize access — Vantage Financial" }, { name: "robots", content: "noindex" }] }),
@@ -17,6 +23,10 @@ export const Route = createFileRoute("/.lovable/oauth/consent")({
     authorization_id: typeof s.authorization_id === "string" ? s.authorization_id : "",
   }),
   beforeLoad: async ({ search, location }) => {
+    const current = new URL(location.href, CANONICAL_ORIGIN);
+    if (current.origin !== CANONICAL_ORIGIN) {
+      throw redirect({ href: CANONICAL_ORIGIN + current.pathname + current.search });
+    }
     if (!search.authorization_id) throw new Error("Missing authorization_id");
     const { data } = await supabase.auth.getSession();
     const next = location.pathname + location.searchStr;
@@ -31,14 +41,22 @@ export const Route = createFileRoute("/.lovable/oauth/consent")({
     return data;
   },
   component: Consent,
-  errorComponent: ({ error }) => (
-    <PublicShell>
-      <main className="mx-auto max-w-md px-6 py-24 text-center">
-        <h1 className="text-2xl">Couldn't load this request</h1>
-        <p className="mt-3 opacity-70">{error instanceof Error ? error.message : String(error)}</p>
-      </main>
-    </PublicShell>
-  ),
+  errorComponent: ({ error }) => {
+    const message = error instanceof Error ? error.message : String(error);
+    const originBlocked = /unauthorized request origin/i.test(message);
+    return (
+      <PublicShell>
+        <main className="mx-auto max-w-md px-6 py-24 text-center">
+          <h1 className="text-2xl">Couldn't load this request</h1>
+          <p className="mt-3 opacity-70">
+            {originBlocked
+              ? "This authorization link must be opened on the published Vantage site. Please reopen the connection link from https://vantage-financial.net."
+              : message}
+          </p>
+        </main>
+      </PublicShell>
+    );
+  },
 });
 
 function Consent() {
