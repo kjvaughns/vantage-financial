@@ -2624,6 +2624,32 @@ export type Database = {
           },
         ]
       }
+      training_reviewers: {
+        Row: {
+          created_at: string
+          granted_by: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          granted_by?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          granted_by?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_reviewers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       training_schedule_items: {
         Row: {
           created_at: string
@@ -2832,6 +2858,7 @@ export type Database = {
         Returns: boolean
       }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      is_training_reviewer: { Args: { _uid: string }; Returns: boolean }
       lookup_applicant_duplicate: {
         Args: { _email: string; _last_name: string; _phone: string }
         Returns: Json
