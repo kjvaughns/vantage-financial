@@ -17,7 +17,7 @@ export const STATE_REQUIREMENTS_URL = "https://getlicensed.useagentcloud.com/sta
 export const NIPR_URL = "https://nipr.com";
 
 /** Public NIPR lookup for agents who don't know their NPN. */
-export const NPN_LOOKUP_URL = "https://nipr.com/licensing/license-look-up";
+export const NPN_LOOKUP_URL = "https://nipr.com/licensing-center/look-up-a-national-producer-number";
 
 export const DISCORD_INVITE_URL = "https://discord.gg/sFgEEPRSmw";
 
