@@ -2,7 +2,7 @@
  * Shared next-step resources handed to applicants after they apply.
  * Keep these in one place so the thank-you pages and emails never drift.
  */
-export const XCEL_COURSE_URL = "https://getlicensed.useagentcloud.com";
+export const XCEL_COURSE_URL = "https://getlicensed.useagentcloud.com/start?code=VANTAGE";
 
 /** Agent Cloud: Licensing partner code applicants enter at checkout. */
 export const XCEL_PARTNER_CODE = "VANTAGE";

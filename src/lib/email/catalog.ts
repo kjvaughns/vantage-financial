@@ -142,7 +142,7 @@ const applicantTemplates: EmailTemplateDef[] = [
       details: [{ label: "Booked date", value: "{{interview_date}}" }, { label: "Booked time", value: "{{interview_time}}" }],
       bullets: [
         "Watch the opportunity video before your 1:1",
-        "Start your pre-licensing course with Agent Cloud: Licensing at getlicensed.useagentcloud.com — use partner code VANTAGE",
+        "Start your pre-licensing course with Agent Cloud: Licensing at https://getlicensed.useagentcloud.com/start?code=VANTAGE — use partner code VANTAGE",
         "Check the state requirements before you schedule your exam",
         "Join the Vantage Discord so you're plugged in",
       ],
@@ -345,7 +345,7 @@ const applicantTemplates: EmailTemplateDef[] = [
       ],
       bullets: [
         "Licensed: share your NPN with your recruiter and start AgentLink contracting from your portal when invited",
-        "Unlicensed: start your course with Agent Cloud: Licensing (getlicensed.useagentcloud.com, partner code VANTAGE) and review state requirements",
+        "Unlicensed: start your course with Agent Cloud: Licensing (https://getlicensed.useagentcloud.com/start?code=VANTAGE, partner code VANTAGE) and review state requirements",
         "Join the Vantage Discord and follow the Start Here instructions for your status",
       ],
       details: [
@@ -1026,7 +1026,7 @@ const stageTemplates: EmailTemplateDef[] = [
       intro: GREET,
       lines: [
         "Your course is the only thing standing between you and getting paid, so treat it like a job.",
-        "Start your pre-licensing course with Agent Cloud: Licensing at getlicensed.useagentcloud.com (use partner code VANTAGE) and check the state requirements before scheduling your exam. Join the Vantage Discord for support. If you missed your 1:1, choose a new time: {{reschedule_link}}.",
+        "Start your pre-licensing course with Agent Cloud: Licensing at https://getlicensed.useagentcloud.com/start?code=VANTAGE (use partner code VANTAGE) and check the state requirements before scheduling your exam. Join the Vantage Discord for support. If you missed your 1:1, choose a new time: {{reschedule_link}}.",
         "Most agents finish in two to three weeks studying an hour or two a day. When you're ready to test, tell your recruiter and we'll get your exam on the calendar.",
       ],
       bullets: [
