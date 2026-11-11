@@ -38,6 +38,7 @@ import {
   notify,
 } from "@/components/portal/ui";
 import { MediaSourceField, TranscriptPanel } from "./media-fields";
+import { VantageMedia } from "@/components/media/VantageMedia";
 import { ReferenceLinksEditor, type RefLink } from "./reference-links";
 import {
   adminListCourses,
@@ -625,6 +626,12 @@ function LessonDrawer({
               accept={f.kind === "audio" ? "audio/*" : "video/*"}
             />
             <Field label="Duration"><Input value={f.duration} onChange={(e) => set({ duration: e.target.value })} placeholder="12:30" /></Field>
+            {f.video_url.trim() && (
+              <div className="space-y-1.5">
+                <span className="p-label">Preview — what agents will see</span>
+                <VantageMedia url={f.video_url} kind={f.kind === "audio" ? "audio" : "video"} title={f.title} hideTranscript />
+              </div>
+            )}
           </>
         )}
 
@@ -632,6 +639,14 @@ function LessonDrawer({
           <Field label="Lesson content" hint="Plain text or simple markdown.">
             <Textarea rows={10} value={f.body} onChange={(e) => set({ body: e.target.value })} />
           </Field>
+        )}
+        {f.kind === "text" && f.body.trim() && (
+          <div className="space-y-1.5">
+            <span className="p-label">Preview — what agents will see</span>
+            <div className="rounded-[10px] border p-3" style={{ borderColor: "var(--p-border)", background: "var(--p-raised)" }}>
+              <p className="p-secondary whitespace-pre-wrap leading-relaxed">{f.body}</p>
+            </div>
+          </div>
         )}
 
         {(f.kind === "resource" || f.kind === "link") && (

@@ -274,6 +274,26 @@ function RecordingDrawer({
       : blank,
   );
   const [busy, setBusy] = useState(false);
+  const qc = useQueryClient();
+  const presenterFn = useServerFn(upsertPresenter);
+  const [newPresenter, setNewPresenter] = useState<string | null>(null);
+  const [addingPresenter, setAddingPresenter] = useState(false);
+  async function createPresenter() {
+    const name = (newPresenter ?? "").trim();
+    if (!name) return;
+    setAddingPresenter(true);
+    try {
+      const res = await presenterFn({ data: { name } });
+      await qc.invalidateQueries({ queryKey: ["academy", "admin", "recordings"] });
+      setF((p) => ({ ...p, presenter_id: res.id }));
+      setNewPresenter(null);
+      notify.success(`${name} added as a presenter.`);
+    } catch {
+      notify.error("Couldn't add that presenter.");
+    } finally {
+      setAddingPresenter(false);
+    }
+  }
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setF((p) => ({ ...p, [k]: v }));
 
   async function save(status?: "draft" | "published") {
@@ -314,12 +334,35 @@ function RecordingDrawer({
         </Field>
         <FormGrid>
           <Field label="Presenter" required hint={<button type="button" className="p-focus underline" onClick={onManagePresenters}>Manage presenters</button>}>
-            <Select value={f.presenter_id} onChange={(e) => set("presenter_id", e.target.value)}>
-              <option value="">Select a presenter…</option>
-              {presenters.map((p) => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </Select>
+            {newPresenter === null ? (
+              <Select
+                value={f.presenter_id}
+                onChange={(e) => (e.target.value === "__new__" ? setNewPresenter("") : set("presenter_id", e.target.value))}
+              >
+                <option value="">Select a presenter…</option>
+                {presenters.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+                {f.presenter_id && !presenters.some((p) => p.id === f.presenter_id) && (
+                  <option value={f.presenter_id}>New presenter</option>
+                )}
+                <option value="__new__">+ Add a new presenter…</option>
+              </Select>
+            ) : (
+              <div className="flex gap-2">
+                <Input
+                  autoFocus
+                  value={newPresenter}
+                  onChange={(e) => setNewPresenter(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") { e.preventDefault(); void createPresenter(); }
+                  }}
+                  placeholder="Presenter's name"
+                />
+                <Button variant="primary" size="sm" loading={addingPresenter} onClick={createPresenter}>Add</Button>
+                <Button variant="ghost" size="sm" onClick={() => setNewPresenter(null)}>Cancel</Button>
+              </div>
+            )}
           </Field>
           <Field label="Presenter title shown" hint="Overrides the presenter's default role.">
             <Input value={f.presenter_role} onChange={(e) => set("presenter_role", e.target.value)} placeholder="Regional Manager" />
