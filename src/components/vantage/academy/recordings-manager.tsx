@@ -72,14 +72,14 @@ const blank: Form = {
   status: "draft",
 };
 
-export function RecordingsManager() {
+export function RecordingsManager({ initialNew = false }: { initialNew?: boolean } = {}) {
   const qc = useQueryClient();
   const listFn = useServerFn(adminListRecordings);
   const statusFn = useServerFn(adminSetRecordingStatus);
   const dupFn = useServerFn(adminDuplicateRecording);
   const delFn = useServerFn(adminDeleteRecording);
   const q = useQuery({ queryKey: ["academy", "admin", "recordings"], queryFn: () => listFn() });
-  const [edit, setEdit] = useState<null | { id?: string }>(null);
+  const [edit, setEdit] = useState<null | { id?: string }>(initialNew ? {} : null);
   const [presentersOpen, setPresentersOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState<"all" | "published" | "draft">("all");

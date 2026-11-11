@@ -194,3 +194,16 @@ export function resolveDocument(rawUrl?: string | null): ResolvedDocument {
 export function isPreviewableDocument(rawUrl?: string | null): boolean {
   return !!resolveDocument(rawUrl).embedUrl;
 }
+
+/** Rule: saving a media item auto-starts transcription when the link is
+ *  transcribable and differs from what is already queued/done. Failed jobs
+ *  for the same link are not retried automatically (use Re-transcribe). */
+export function shouldAutoTranscribe(
+  rawUrl: string | null | undefined,
+  existing: { source_url?: string | null; status?: string | null } | null | undefined,
+): boolean {
+  const url = (rawUrl ?? "").trim();
+  if (!url || transcriptionBlocker(url)) return false;
+  if (!existing || existing.source_url !== url) return true;
+  return existing.status === "not_started" || !existing.status;
+}

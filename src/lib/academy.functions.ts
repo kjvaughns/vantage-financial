@@ -211,6 +211,10 @@ export const adminUpsertLesson = createServerFn({ method: "POST" })
     if (data.id) {
       const { error } = await s.from("course_lessons").update(patch).eq("id", data.id);
       if (error) throw new Error(error.message);
+      if (isMedia) {
+        const { autoQueueTranscription } = await import("@/lib/academy/auto-transcribe.server");
+        await autoQueueTranscription(s, "lesson", data.id, data.video_url);
+      }
       return { id: data.id };
     }
     const { count } = await s
@@ -223,6 +227,10 @@ export const adminUpsertLesson = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (error) throw new Error(error.message);
+    if (isMedia) {
+      const { autoQueueTranscription } = await import("@/lib/academy/auto-transcribe.server");
+      await autoQueueTranscription(s, "lesson", created.id, data.video_url);
+    }
     return { id: created.id as string };
   });
 

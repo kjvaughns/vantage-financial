@@ -62,7 +62,7 @@ function AcademyHome() {
 
 
   const manageBtn = canManage ? (
-    <Link to="/portal/academy/admin"><Button variant="secondary" size="sm">Manage Academy</Button></Link>
+    <Link to="/portal/academy/admin"><Button variant="primary" size="sm">+ Add to Academy</Button></Link>
   ) : undefined;
 
   const back = (

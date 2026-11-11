@@ -131,7 +131,7 @@ function SortableList({ ids, onReorder, children }: { ids: string[]; onReorder: 
 /* Courses list + builder                                                     */
 /* -------------------------------------------------------------------------- */
 
-export function CoursesManager() {
+export function CoursesManager({ initialNew = false }: { initialNew?: boolean } = {}) {
   const qc = useQueryClient();
   const listFn = useServerFn(adminListCourses);
   const delFn = useServerFn(adminDeleteCourse);
@@ -140,7 +140,7 @@ export function CoursesManager() {
   const tplFn = useServerFn(adminSaveCourseAsTemplate);
   const coursesQ = useQuery({ queryKey: ["academy", "courses"], queryFn: () => listFn() });
   const [selected, setSelected] = useState<string | null>(null);
-  const [metaOpen, setMetaOpen] = useState<null | { id?: string }>(null);
+  const [metaOpen, setMetaOpen] = useState<null | { id?: string }>(initialNew ? {} : null);
   const courses = (coursesQ.data?.courses ?? []) as any[];
 
   async function act(fn: () => Promise<unknown>, ok: string) {

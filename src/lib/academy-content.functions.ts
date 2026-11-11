@@ -162,10 +162,14 @@ export const adminUpsertRecording = createServerFn({ method: "POST" })
     if (data.id) {
       const { error } = await s.from("recordings").update(patch).eq("id", data.id);
       if (error) throw new Error(error.message);
+      const { autoQueueTranscription } = await import("@/lib/academy/auto-transcribe.server");
+      await autoQueueTranscription(s, "recording", data.id, data.video_url);
       return { id: data.id };
     }
     const { data: created, error } = await s.from("recordings").insert(patch).select("id").single();
     if (error) throw new Error(error.message);
+    const { autoQueueTranscription } = await import("@/lib/academy/auto-transcribe.server");
+    await autoQueueTranscription(s, "recording", created.id, data.video_url);
     return { id: created.id as string };
   });
 
@@ -312,10 +316,18 @@ export const adminUpsertLibraryItem = createServerFn({ method: "POST" })
     if (data.id) {
       const { error } = await s.from("library_resources").update(patch).eq("id", data.id);
       if (error) throw new Error(error.message);
+      if (patch.media_type) {
+        const { autoQueueTranscription } = await import("@/lib/academy/auto-transcribe.server");
+        await autoQueueTranscription(s, "library", data.id, data.url);
+      }
       return { id: data.id };
     }
     const { data: created, error } = await s.from("library_resources").insert(patch).select("id").single();
     if (error) throw new Error(error.message);
+    if (patch.media_type) {
+      const { autoQueueTranscription } = await import("@/lib/academy/auto-transcribe.server");
+      await autoQueueTranscription(s, "library", created.id, data.url);
+    }
     return { id: created.id as string };
   });
 

@@ -156,6 +156,7 @@ export function TranscriptPanel({
   const [busy, setBusy] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
+  const [advanced, setAdvanced] = useState(false);
   const blocker = sourceUrl ? transcriptionBlocker(sourceUrl) : "Add a media link first.";
   const refresh = () => qc.invalidateQueries({ queryKey: key });
 
@@ -189,9 +190,16 @@ export function TranscriptPanel({
       <div className="space-y-3">
         {blocker && status === "not_started" && <p className="p-muted leading-snug">{blocker}</p>}
 
+        {status === "not_started" && !blocker && (
+          <p className="p-muted leading-snug">Transcription starts automatically when you save.</p>
+        )}
+        {(status === "queued" || status === "processing") && (
+          <p className="p-muted leading-snug">Transcribing in the background — notes appear here automatically.</p>
+        )}
         <div className="flex flex-wrap gap-2">
+          {(status === "failed" || advanced) && (
           <Button
-            variant="primary"
+            variant={status === "failed" ? "primary" : "secondary"}
             size="sm"
             disabled={!!blocker}
             loading={busy === "request"}
@@ -203,8 +211,14 @@ export function TranscriptPanel({
               )
             }
           >
-            <Sparkles size={13} /> {status === "completed" ? "Re-transcribe" : "Transcribe"}
+            <Sparkles size={13} /> {status === "failed" ? "Retry" : "Re-transcribe"}
           </Button>
+          )}
+          {!advanced && status !== "failed" && !blocker && (
+            <Button variant="ghost" size="sm" onClick={() => setAdvanced(true)}>
+              Advanced
+            </Button>
+          )}
           {(status === "queued" || status === "processing") && (
             <Button
               variant="secondary"
