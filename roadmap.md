@@ -1,5 +1,8 @@
 # Roadmap
 
+- [ ] Fix admin contracting-link updates and verify Jordan's account save/read-back
+- [ ] Correct manual agent invitations to use one applicant-linked invitation with recruiter attribution
+
 - [x] Add Sarah contact card and personalized text/contact download actions to applicant and agent dashboards
 - [x] Introduce Sarah in applicant and welcome emails while preserving single-link onboarding invitations
 - [x] Add editable exam format and pipeline licensing badges; expose exam updates and agent license details to OAuth MCP

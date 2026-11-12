@@ -35,11 +35,12 @@ function UsersPage() {
   const roleMut = useMutation({
     mutationFn: (v: { user_id: string; role: RoleName; grant: boolean }) => setRole({ data: v }),
     onSuccess: invalidate,
+    onError: (error) => notify.error("Could not update that role.", error.message),
   });
   const profileMut = useMutation({
     mutationFn: (v: Record<string, unknown> & { id: string }) => updateProfile({ data: v }),
     onSuccess: invalidate,
-    onError: () => notify.error("Could not update that user.", "Please try again."),
+    onError: (error) => notify.error("Could not update that user.", error.message),
   });
 
   const allUsers = data?.users ?? [];

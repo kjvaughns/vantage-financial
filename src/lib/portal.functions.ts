@@ -1555,7 +1555,9 @@ export const adminUpdateProfile = createServerFn({ method: "POST" })
       const { data: profile } = await supabase.from("profiles").select("parent_user_id, manager_id").eq("id", id).maybeSingle();
       const recruiterId = data.parent_user_id !== undefined ? data.parent_user_id : profile?.parent_user_id ?? profile?.manager_id;
       if (!recruiterId) throw new Error("Set this agent's recruiting hierarchy before assigning a contracting link.");
-      const { data: expectedOwner, error: ownerError } = await supabase.rpc("resolve_applicant_upline", { _recruiter: recruiterId });
+      // This resolver is service-only; the caller was verified as admin above.
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: expectedOwner, error: ownerError } = await supabaseAdmin.rpc("resolve_applicant_upline", { _recruiter: recruiterId });
       if (ownerError) throw new Error(ownerError.message);
       if (!link?.is_active || !expectedOwner || link.owner_id !== expectedOwner) {
         throw new Error("The AgentLink link must be active and owned by this agent's upline.");
@@ -2409,23 +2411,8 @@ export const addAgent = createServerFn({ method: "POST" })
       actor_id: userId,
     } as never);
 
-    // Mint the invitation up front so the welcome email carries a real link.
-    try {
-      await supabase.rpc("create_invitation", {
-        payload: {
-          email: created.email,
-          first_name: created.first_name ?? "",
-          last_name: created.last_name ?? "",
-          role: "agent",
-          applicant_id: created.id,
-        },
-      });
-    } catch (e) {
-      // Non-fatal: the applicant exists; the email helper falls back to /login.
-      // eslint-disable-next-line no-console
-      console.warn("[addAgent] create_invitation failed:", e);
-    }
-
+    // The welcome helper creates exactly one invitation after checking caller
+    // access, preserving the applicant's recruiter as the invited agent's parent.
     await enqueueWelcomeOnboarding(supabase, created as OnboardingApplicant);
 
     return { id: created.id as string };
