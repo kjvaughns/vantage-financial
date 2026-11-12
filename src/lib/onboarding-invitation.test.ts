@@ -30,6 +30,25 @@ describe("onboarding invitation access", () => {
     expect(service).not.toHaveBeenCalled();
   });
 
+  it("reuses one applicant-linked invitation instead of creating a second invitation", async () => {
+    const caller = callerFor({ id: "applicant-1" });
+    const rpc = vi.fn().mockResolvedValue({
+      data: { ok: true, id: "invitation-1", token: "existing-token", reused: true }, error: null,
+    });
+    const service = vi.fn(async () => ({ rpc }) as unknown as SupabaseClient<Database>);
+    const result = await ensureOnboardingInvitation(caller.client, "applicant-1", service);
+    expect(result).toEqual({ ok: true, id: "invitation-1", token: "existing-token", reused: true });
+    expect(rpc).toHaveBeenCalledTimes(1);
+    expect(rpc).toHaveBeenCalledWith("ensure_onboarding_invitation", { _applicant_id: "applicant-1" });
+  });
+
+  it("surfaces invitation errors rather than reporting a sent invitation", async () => {
+    const rpc = vi.fn().mockResolvedValue({ data: null, error: { message: "Invitation unavailable" } });
+    const service = vi.fn(async () => ({ rpc }) as unknown as SupabaseClient<Database>);
+    await expect(ensureOnboardingInvitation(callerFor({ id: "applicant-1" }).client, "applicant-1", service))
+      .rejects.toThrow("Invitation unavailable");
+  });
+
   it("does not bypass failed caller access checks", async () => {
     const service = vi.fn();
     await expect(ensureOnboardingInvitation(callerFor(null, { message: "Access check failed" }).client, "outside", service))

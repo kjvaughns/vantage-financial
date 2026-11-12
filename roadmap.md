@@ -1,7 +1,7 @@
 # Roadmap
 
-- [ ] Fix admin contracting-link updates and verify Jordan's account save/read-back
-- [ ] Correct manual agent invitations to use one applicant-linked invitation with recruiter attribution
+- [x] Fix admin contracting-link updates; Jordan's save verified and original assignment restored
+- [x] Correct manual agent invitations to use one applicant-linked invitation with recruiter attribution; 11 tests passed and Jordan's Add Agent form opens (no new recipient emailed)
 
 - [x] Add Sarah contact card and personalized text/contact download actions to applicant and agent dashboards
 - [x] Introduce Sarah in applicant and welcome emails while preserving single-link onboarding invitations
