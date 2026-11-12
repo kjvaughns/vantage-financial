@@ -1,5 +1,8 @@
 # Roadmap
 
+- [x] Rename Jordan Thompson to Placid Ajoku and synchronize default name-based referral links on future profile changes
+- [x] Verify saved name/link with database regression checks and signed-in Users list; new applicant and agent-invitation links resolve to Placid
+
 - [x] Fix admin contracting-link updates; Jordan's save verified and original assignment restored
 - [x] Correct manual agent invitations to use one applicant-linked invitation with recruiter attribution; 11 tests passed and Jordan's Add Agent form opens (no new recipient emailed)
 

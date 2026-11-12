@@ -46,7 +46,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/portal/settings")({
   head: () => ({
-    meta: [{ title: "Settings — Vantage Portal" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Settings — Vantage Portal" }, { name: "description", content: "Manage your Vantage Financial profile, recruiting links and account preferences." }, { property: "og:title", content: "Settings — Vantage Portal" }, { property: "og:description", content: "Manage your Vantage Financial profile, recruiting links and account preferences." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }],
   }),
   component: PortalSettingsPage,
 });
@@ -146,7 +146,7 @@ function ProfileSection() {
       });
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["me"] });
+      qc.invalidateQueries();
       notify.success("Profile saved.");
     },
     onError: () => notify.error("Could not save your profile.", "Please try again."),

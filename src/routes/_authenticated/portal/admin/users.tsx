@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { PortalShell } from "@/components/vantage/portal-shell";
 import { adminListUsers, adminSetUserRole, adminUpdateProfile, saveAgentLink, deleteAgentLink } from "@/lib/portal.functions";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   PageHeader, PageBody, Toolbar, SearchField, TableWrap, Table, THead, TH, TR, TD,
   Badge, Select, Input, TableSkeleton, ErrorState, EmptyState, notify, Panel,
@@ -39,7 +39,7 @@ function UsersPage() {
   });
   const profileMut = useMutation({
     mutationFn: (v: Record<string, unknown> & { id: string }) => updateProfile({ data: v }),
-    onSuccess: invalidate,
+    onSuccess: () => qc.invalidateQueries(),
     onError: (error) => notify.error("Could not update that user.", error.message),
   });
 
@@ -551,6 +551,7 @@ function SlugCell({
   onSave: (slug: string) => void;
 }) {
   const [value, setValue] = useState(slug);
+  useEffect(() => setValue(slug), [slug]);
   const dirty = value.trim() !== slug;
   return (
     <div className="flex items-center gap-2">
