@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Check, Copy, Eye, EyeOff, Search, Send } from "lucide-react";
+import { Copy, Eye, EyeOff, Minus, Plus, Search, Send } from "lucide-react";
 import { PortalShell } from "@/components/vantage/portal-shell";
 import { PageHeader, PageBody, Panel, Badge, Field, Input, ErrorState, btnClass } from "@/components/portal/ui";
 import { getMyDialer, saveDialerRequest } from "@/lib/dialer/dialer.functions";
@@ -14,159 +14,182 @@ export const Route = createFileRoute("/_authenticated/portal/dialer")({
   component: DialerPage,
 });
 
-type Action = "add_lead" | "remove_lead" | "add_state" | "remove_state";
-const ACTIONS: { id: Action; label: string }[] = [
-  { id: "add_lead", label: "Add lead type" },
-  { id: "remove_lead", label: "Remove lead type" },
-  { id: "add_state", label: "Add states" },
-  { id: "remove_state", label: "Remove states" },
-];
-
 function DialerPage() {
   const qc = useQueryClient();
   const getFn = useServerFn(getMyDialer);
   const saveFn = useServerFn(saveDialerRequest);
   const q = useQuery({ queryKey: ["dialer", "me"], queryFn: () => getFn() });
   const [name, setName] = useState("");
-  const [action, setAction] = useState<Action>("add_lead");
-  const [picked, setPicked] = useState<string[]>([]);
+  const [addL, setAddL] = useState<string[]>([]);
+  const [remL, setRemL] = useState<string[]>([]);
+  const [addS, setAddS] = useState<string[]>([]);
+  const [remS, setRemS] = useState<string[]>([]);
+  const [showAllStates, setShowAllStates] = useState(false);
   const [search, setSearch] = useState("");
   const [saving, setSaving] = useState(false);
   const [showPw, setShowPw] = useState(false);
 
   useEffect(() => {
-    if (!q.data) return;
-    setName(q.data.request?.agent_name ?? q.data.defaultName);
+    if (q.data) setName(q.data.request?.agent_name ?? q.data.defaultName);
   }, [q.data]);
-  useEffect(() => { setPicked([]); setSearch(""); }, [action]);
 
   const req = q.data?.request;
   const leads = req?.lead_types ?? [];
   const states = req?.states ?? [];
-  const isLead = action === "add_lead" || action === "remove_lead";
-  const options: string[] =
-    action === "add_lead" ? LEAD_TYPES.filter((t) => !leads.includes(t))
-    : action === "remove_lead" ? leads
-    : action === "add_state" ? US_STATES.filter((s) => !states.includes(s))
-    : states;
-  const shown = isLead ? options : options.filter((s) => s.includes(search.trim()));
-  const toggle = (v: string) => setPicked((p) => (p.includes(v) ? p.filter((x) => x !== v) : [...p, v]));
+  const tog = (set: (f: (p: string[]) => string[]) => void) => (v: string) => set((p) => (p.includes(v) ? p.filter((x) => x !== v) : [...p, v]));
+  const nextLeads = [...leads.filter((x) => !remL.includes(x)), ...addL];
+  const nextStates = [...states.filter((x) => !remS.includes(x)), ...addS];
+  const changes = addL.length + remL.length + addS.length + remS.length;
+  const blocker = !changes ? "" : name.trim().length < 3 ? "Enter your first and last name."
+    : !nextLeads.length ? "Keep or add at least one lead type." : !nextStates.length ? "Keep or add at least one state." : "";
+  const availStates = US_STATES.filter((s) => !states.includes(s) && s.includes(search.trim()));
 
-  const nextLeads = action === "add_lead" ? [...leads, ...picked] : action === "remove_lead" ? leads.filter((x) => !picked.includes(x)) : leads;
-  const nextStates = action === "add_state" ? [...states, ...picked] : action === "remove_state" ? states.filter((x) => !picked.includes(x)) : states;
-  const blocker = !picked.length ? "" : name.trim().length < 3 ? "Enter your first and last name."
-    : !nextLeads.length ? (req ? "You need to keep at least one lead type." : "Also request at least one lead type.")
-    : !nextStates.length ? (req ? "You need to keep at least one state." : "Also request at least one state.") : "";
-
+  const reset = () => { setAddL([]); setRemL([]); setAddS([]); setRemS([]); setShowAllStates(false); setSearch(""); };
   const submit = async () => {
     setSaving(true);
     try {
       await saveFn({ data: { agent_name: name, lead_types: nextLeads, states: nextStates } });
-      toast.success("Request sent");
-      setPicked([]);
+      toast.success("Request sent to dialer support");
+      reset();
       qc.invalidateQueries({ queryKey: ["dialer"] });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not send request");
     } finally { setSaving(false); }
   };
   const copy = (v: string) => { navigator.clipboard.writeText(v); toast.success("Copied"); };
-  const tile = (on: boolean) => ({ borderColor: on ? "var(--p-gold)" : "var(--p-border)", background: on ? "var(--p-gold)" : "transparent", color: on ? "var(--p-bg, #000)" : undefined });
+  const initials = (req?.agent_name ?? name).split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
 
   return (
     <PortalShell>
-      <PageHeader title="Dialer Support" description="Request lead type or state changes. Dialer support reviews new requests every morning." />
+      <PageHeader title="Dialer Support" description="Manage your dialer lead types and states. Dialer support reviews requests every morning." />
       <PageBody>
         {q.isError ? <ErrorState title="Couldn't load your dialer info" description={(q.error as Error).message} /> : (
-        <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
-          <Panel title="New request">
-            <div className="space-y-4">
-              {!req && (
-                <Field label="First and last name" required>
-                  <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Jane Smith" />
-                </Field>
-              )}
-              <div>
-                <span className="p-label mb-2 block">What do you need?</span>
-                <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
-                  {ACTIONS.map((a) => (
-                    <button key={a.id} type="button" aria-pressed={action === a.id} onClick={() => setAction(a.id)}
-                      className="p-focus rounded-[8px] border px-2 py-1.5 text-[12.5px] font-semibold transition-colors"
-                      style={{ borderColor: action === a.id ? "var(--p-gold)" : "var(--p-border)", color: action === a.id ? "var(--p-gold)" : undefined, background: action === a.id ? "color-mix(in oklab, var(--p-gold) 12%, transparent)" : "var(--p-raised)" }}>
-                      {a.label}
-                    </button>
-                  ))}
-                </div>
+        <div className="grid gap-4 lg:grid-cols-[340px_1fr]">
+          <Panel>
+            <div className="flex items-center gap-3">
+              <div className="grid h-11 w-11 place-items-center rounded-full text-[15px] font-bold" style={{ background: "color-mix(in oklab, var(--p-gold) 18%, transparent)", color: "var(--p-gold)" }}>{initials || "?"}</div>
+              <div className="min-w-0 flex-1">
+                <div className="p-label">Your account</div>
+                <div className="truncate text-[15px] font-semibold">{req?.agent_name ?? (name || "—")}</div>
               </div>
-              <div className="rounded-[10px] border p-2" style={{ borderColor: "var(--p-border)", background: "var(--p-raised)" }}>
-                {!isLead && options.length > 8 && (
-                  <div className="relative mb-2">
-                    <Search className="p-secondary pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2" />
-                    <Input value={search} onChange={(e) => setSearch(e.target.value.toUpperCase())} placeholder="Search states (e.g. TX)" className="h-8 pl-8 text-[13px]" />
-                  </div>
-                )}
-                {shown.length === 0 ? (
-                  <p className="p-secondary p-1 text-[13px]">
-                    {options.length ? "No matching states." : action === "add_lead" ? "You already have every lead type." : action === "add_state" ? "You already have every state." : `You don't have any ${isLead ? "lead types" : "states"} yet.`}
-                  </p>
-                ) : isLead ? (
-                  <div className="grid gap-1.5 sm:grid-cols-3">
-                    {shown.map((t) => { const on = picked.includes(t); return (
-                      <button key={t} type="button" aria-pressed={on} onClick={() => toggle(t)}
-                        className="p-focus flex items-center gap-2 rounded-[8px] border px-2.5 py-1.5 text-left transition-colors"
-                        style={{ borderColor: on ? "var(--p-gold)" : "var(--p-border)", background: on ? "color-mix(in oklab, var(--p-gold) 12%, transparent)" : "transparent" }}>
-                        <span className="grid h-5 w-5 shrink-0 place-items-center rounded-[6px] border" style={{ borderColor: on ? "var(--p-gold)" : "var(--p-border)", background: on ? "var(--p-gold)" : "transparent" }}>
-                          {on && <Check className="h-3.5 w-3.5" style={{ color: "var(--p-bg, #000)" }} strokeWidth={3} />}
-                        </span>
-                        <span><span className="block text-[13.5px] font-semibold" style={{ color: on ? "var(--p-gold)" : undefined }}>{t}</span>
-                          <span className="p-secondary block text-[12px]">{LEAD_TYPE_LABELS[t as keyof typeof LEAD_TYPE_LABELS]}</span></span>
-                      </button>); })}
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-7 gap-1 sm:grid-cols-10 lg:grid-cols-13">
-                    {shown.map((s) => { const on = picked.includes(s); return (
-                      <button key={s} type="button" aria-pressed={on} onClick={() => toggle(s)}
-                        className="p-focus h-7 rounded-[6px] border text-[11.5px] font-semibold transition-colors" style={tile(on)}>{s}</button>); })}
-                  </div>
-                )}
-              </div>
-              {blocker && <p className="text-[13px]" style={{ color: "var(--p-red, #e5484d)" }}>{blocker}</p>}
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="p-secondary text-[13px]">{picked.length ? `${ACTIONS.find((a) => a.id === action)!.label}: ${picked.join(", ")}` : "Tap items above to select them."}</span>
-                <button type="button" className={btnClass("primary", "sm")} disabled={saving || q.isLoading || !picked.length || !!blocker} onClick={submit}>
-                  <Send className="h-4 w-4" /> {saving ? "Sending…" : "Request"}
-                </button>
-              </div>
+              {!req ? <Badge tone="neutral">No account</Badge> : req.status === "inactive" ? <Badge tone="neutral" dot>Deactivated</Badge> : req.dialer_username ? <Badge tone="green" dot>Active</Badge> : <Badge tone="amber" dot>Pending</Badge>}
             </div>
-          </Panel>
-          <Panel title="Your account">
-            {!req ? <p className="p-secondary">No dialer account yet. Request a lead type and states, and your login shows here once dialer support sets it up.</p> : (
-              <div className="space-y-3 text-[13.5px]">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-semibold">{req.agent_name}</span>
-                  {req.status === "inactive" ? <Badge tone="neutral" dot>Deactivated</Badge> : req.dialer_username ? <Badge tone="green" dot>Active</Badge> : <Badge tone="amber" dot>Requested</Badge>}
-                </div>
-                {req.status === "inactive" ? <p className="p-secondary">Your dialer access is turned off. Reach out to your upline if this is a mistake.</p>
-                  : req.dialer_username ? (<>
+            <div className="mt-4 rounded-[10px] border p-3" style={{ borderColor: "var(--p-border)", background: "var(--p-raised)" }}>
+              {req?.status === "inactive" ? <p className="p-secondary text-[13px]">Your dialer access is turned off. Reach out to your upline if this is a mistake.</p>
+                : req?.dialer_username ? (
+                  <div className="space-y-2.5 text-[13.5px]">
                     <Cred label="Username" value={req.dialer_username} onCopy={copy} />
                     {q.data?.password && (
                       <div>
-                        <div className="p-label mb-1">Password</div>
-                        <div className="flex items-center gap-2">
+                        <div className="p-label mb-0.5">Password</div>
+                        <div className="flex items-center gap-1">
                           <code className="flex-1 truncate">{showPw ? q.data.password : "••••••••"}</code>
                           <button className={btnClass("ghost", "sm")} onClick={() => setShowPw((v) => !v)} aria-label="Show password">{showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button>
                           <button className={btnClass("ghost", "sm")} onClick={() => copy(q.data!.password!)} aria-label="Copy password"><Copy className="h-4 w-4" /></button>
                         </div>
                       </div>
                     )}
-                  </>) : <p className="p-secondary">Your login appears here automatically once dialer support sets it up.</p>}
-                <Chips label="Lead types" items={leads} />
-                <Chips label="States" items={states} />
+                  </div>
+                ) : <p className="p-secondary text-[13px]">{req ? "Your login shows here as soon as dialer support sets it up." : "Send your first request and your login shows here once it's ready."}</p>}
+            </div>
+            <div className="mt-4 space-y-3">
+              <Chips label="Active lead types" items={leads} />
+              <Chips label={`Active states${states.length ? ` (${states.length})` : ""}`} items={states} />
+            </div>
+          </Panel>
+
+          <Panel title="Make a request">
+            <div className="space-y-5">
+              {!req && (
+                <Field label="First and last name" required>
+                  <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Jane Smith" />
+                </Field>
+              )}
+              <Section title="Lead types" hint="Tap one you have to remove it, or one you don't to add it.">
+                <div className="flex flex-wrap gap-1.5">
+                  {LEAD_TYPES.map((t) => {
+                    const has = leads.includes(t);
+                    const state = has ? (remL.includes(t) ? "remove" : "have") : addL.includes(t) ? "add" : "none";
+                    return <Pill key={t} state={state} onClick={() => (has ? tog(setRemL)(t) : tog(setAddL)(t))}>{t} <span className="opacity-70 font-normal">· {LEAD_TYPE_LABELS[t as keyof typeof LEAD_TYPE_LABELS]}</span></Pill>;
+                  })}
+                </div>
+              </Section>
+              <Section title="States" hint="Tap a state you have to remove it.">
+                <div className="flex flex-wrap gap-1.5">
+                  {states.length === 0 && <span className="p-secondary text-[13px]">No states yet.</span>}
+                  {states.map((s) => <Pill key={s} state={remS.includes(s) ? "remove" : "have"} onClick={() => tog(setRemS)(s)}>{s}</Pill>)}
+                  {addS.map((s) => <Pill key={s} state="add" onClick={() => tog(setAddS)(s)}>{s}</Pill>)}
+                  {states.length < US_STATES.length && (
+                    <button type="button" onClick={() => setShowAllStates((v) => !v)} className="p-focus inline-flex items-center gap-1 rounded-full border border-dashed px-3 py-1 text-[12.5px] font-semibold" style={{ borderColor: "var(--p-gold)", color: "var(--p-gold)" }}>
+                      <Plus className="h-3.5 w-3.5" /> {showAllStates ? "Done" : "Add states"}
+                    </button>
+                  )}
+                </div>
+                {showAllStates && (
+                  <div className="mt-2 rounded-[10px] border p-2" style={{ borderColor: "var(--p-border)", background: "var(--p-raised)" }}>
+                    <div className="relative mb-2">
+                      <Search className="p-secondary pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2" />
+                      <Input value={search} onChange={(e) => setSearch(e.target.value.toUpperCase())} placeholder="Search (e.g. TX)" className="h-8 pl-8 text-[13px]" />
+                    </div>
+                    <div className="grid grid-cols-7 gap-1 sm:grid-cols-10 lg:grid-cols-13">
+                      {availStates.map((s) => { const on = addS.includes(s); return (
+                        <button key={s} type="button" aria-pressed={on} onClick={() => tog(setAddS)(s)}
+                          className="p-focus h-7 rounded-[6px] border text-[11.5px] font-semibold transition-colors"
+                          style={{ borderColor: on ? "var(--p-gold)" : "var(--p-border)", background: on ? "var(--p-gold)" : "transparent", color: on ? "var(--p-bg, #000)" : undefined }}>{s}</button>); })}
+                    </div>
+                  </div>
+                )}
+              </Section>
+              <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4" style={{ borderColor: "var(--p-border)" }}>
+                <div className="text-[13px]">
+                  {blocker ? <span style={{ color: "var(--p-red, #e5484d)" }}>{blocker}</span>
+                    : changes ? <Summary add={[...addL, ...addS]} remove={[...remL, ...remS]} />
+                    : <span className="p-secondary">No changes selected.</span>}
+                </div>
+                <div className="flex gap-2">
+                  {changes > 0 && <button type="button" className={btnClass("ghost", "sm")} onClick={reset}>Clear</button>}
+                  <button type="button" className={btnClass("primary", "sm")} disabled={saving || q.isLoading || !changes || !!blocker} onClick={submit}>
+                    <Send className="h-4 w-4" /> {saving ? "Sending…" : "Request"}
+                  </button>
+                </div>
               </div>
-            )}
+            </div>
           </Panel>
         </div>)}
       </PageBody>
     </PortalShell>
+  );
+}
+
+function Section({ title, hint, children }: { title: string; hint: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <div className="mb-2 flex items-baseline justify-between gap-2"><span className="p-label">{title}</span><span className="p-secondary text-[12px]">{hint}</span></div>
+      {children}
+    </div>
+  );
+}
+
+function Pill({ state, onClick, children }: { state: "have" | "remove" | "add" | "none"; onClick: () => void; children: React.ReactNode }) {
+  const st = {
+    have: { borderColor: "var(--p-gold)", color: "var(--p-gold)", background: "color-mix(in oklab, var(--p-gold) 10%, transparent)" },
+    remove: { borderColor: "var(--p-red, #e5484d)", color: "var(--p-red, #e5484d)", background: "transparent", textDecoration: "line-through" },
+    add: { borderColor: "var(--p-gold)", color: "var(--p-bg, #000)", background: "var(--p-gold)" },
+    none: { borderColor: "var(--p-border)", background: "transparent" },
+  }[state];
+  return (
+    <button type="button" onClick={onClick} className="p-focus inline-flex items-center gap-1 rounded-full border px-3 py-1 text-[12.5px] font-semibold transition-colors" style={st}>
+      {state === "add" && <Plus className="h-3.5 w-3.5" />}{state === "remove" && <Minus className="h-3.5 w-3.5" />}{children}
+    </button>
+  );
+}
+
+function Summary({ add, remove }: { add: string[]; remove: string[] }) {
+  return (
+    <span className="flex flex-wrap gap-x-3">
+      {add.length > 0 && <span><span style={{ color: "var(--p-gold)" }} className="font-semibold">Add:</span> {add.join(", ")}</span>}
+      {remove.length > 0 && <span><span style={{ color: "var(--p-red, #e5484d)" }} className="font-semibold">Remove:</span> {remove.join(", ")}</span>}
+    </span>
   );
 }
 
