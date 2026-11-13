@@ -1,4 +1,18 @@
-import { DIALER_SHEET_ID } from "./shared";
+import { DIALER_SHEET_ID, normalizeRequestStatus } from "./shared";
+
+async function notifyRequestStatus(admin: any, r: any, st: "in_progress" | "done") {
+  try {
+    const { data: prof } = await admin.from("profiles").select("email, first_name").eq("id", r.user_id).maybeSingle();
+    if (!prof?.email) return;
+    const { sendEmail } = await import("@/lib/email/dispatch.server");
+    await sendEmail({
+      template: st === "done" ? "dialer-request-completed" : "dialer-request-in-progress",
+      to: prof.email, toName: r.agent_name, profileId: r.user_id,
+      sendKey: `${r.user_id}:${st}:${Date.now()}`, ignorePrefs: true,
+      context: { first_name: prof.first_name ?? r.agent_name.split(" ")[0], dialer_lead_types: (r.lead_types ?? []).join(", "), dialer_states: (r.states ?? []).join(", ") } as any,
+    });
+  } catch (e) { console.warn("[dialer] status email failed", e); }
+}
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_sheets/v4";
 
@@ -19,10 +33,10 @@ async function call(path: string, init?: RequestInit) {
   return res.json();
 }
 
-export type SheetRow = { row: number; name: string; leadTypes: string; states: string; username: string; password: string };
+export type SheetRow = { row: number; name: string; leadTypes: string; states: string; username: string; password: string; requestStatus: string };
 
 export async function readSheet(): Promise<SheetRow[]> {
-  const json = await call(`/values/Sheet1!A2:E2000`);
+  const json = await call(`/values/Sheet1!A2:F2000`);
   const values: string[][] = json.values ?? [];
   return values.map((v, i) => ({
     row: i + 2,
@@ -31,14 +45,15 @@ export async function readSheet(): Promise<SheetRow[]> {
     states: v[2] ?? "",
     username: (v[3] ?? "").trim(),
     password: v[4] ?? "",
+    requestStatus: (v[5] ?? "").trim(),
   }));
 }
 
 export async function readRow(row: number): Promise<SheetRow | null> {
-  const json = await call(`/values/Sheet1!A${row}:E${row}`);
+  const json = await call(`/values/Sheet1!A${row}:F${row}`);
   const v: string[] = json.values?.[0] ?? [];
   if (!v.length) return null;
-  return { row, name: (v[0] ?? "").trim(), leadTypes: v[1] ?? "", states: v[2] ?? "", username: (v[3] ?? "").trim(), password: v[4] ?? "" };
+  return { row, name: (v[0] ?? "").trim(), leadTypes: v[1] ?? "", states: v[2] ?? "", username: (v[3] ?? "").trim(), password: v[4] ?? "", requestStatus: (v[5] ?? "").trim() };
 }
 
 export async function writeRequestRow(row: number, name: string, leadTypes: string, states: string) {
@@ -46,12 +61,18 @@ export async function writeRequestRow(row: number, name: string, leadTypes: stri
     method: "PUT",
     body: JSON.stringify({ values: [[name, leadTypes, states]] }),
   });
+  await writeRequestStatus(row, "Request");
+}
+
+/** Column F "New Request" — the status Justin moves Requested → In Progress → Done. */
+export async function writeRequestStatus(row: number, status: string) {
+  await call(`/values/Sheet1!F${row}?valueInputOption=USER_ENTERED`, { method: "PUT", body: JSON.stringify({ values: [[status]] }) });
 }
 
 export async function appendRequestRow(name: string, leadTypes: string, states: string): Promise<number> {
-  const json = await call(`/values/Sheet1!A:C:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`, {
+  const json = await call(`/values/Sheet1!A:F:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`, {
     method: "POST",
-    body: JSON.stringify({ values: [[name, leadTypes, states]] }),
+    body: JSON.stringify({ values: [[name, leadTypes, states, "", "", "Request"]] }),
   });
   const range: string = json.updates?.updatedRange ?? "";
   const m = range.match(/!A(\d+)/);
@@ -71,7 +92,7 @@ export function locateRow(rows: SheetRow[], storedRow: number | null, name: stri
 export async function syncFromSheet(admin: any) {
   const [rows, { data: reqs, error }] = await Promise.all([
     readSheet(),
-    admin.from("dialer_requests").select("id, agent_name, sheet_row, dialer_username, has_password, status"),
+    admin.from("dialer_requests").select("id, user_id, agent_name, sheet_row, dialer_username, has_password, status, request_status, lead_types, states"),
   ]);
   if (error) throw error;
   let updated = 0;
@@ -81,9 +102,13 @@ export async function syncFromSheet(admin: any) {
     const hasPw = !!hit?.password;
     const status = r.status === "inactive" ? "inactive" : username ? "active" : "requested";
     const sheetRow = hit?.row ?? r.sheet_row;
-    if (username !== r.dialer_username || hasPw !== r.has_password || status !== r.status || sheetRow !== r.sheet_row) {
+    const reqStatus = hit ? normalizeRequestStatus(hit.requestStatus) : r.request_status;
+    if (reqStatus !== r.request_status && (reqStatus === "in_progress" || reqStatus === "done")) {
+      await notifyRequestStatus(admin, r, reqStatus);
+    }
+    if (username !== r.dialer_username || hasPw !== r.has_password || status !== r.status || sheetRow !== r.sheet_row || reqStatus !== r.request_status) {
       await admin.from("dialer_requests").update({
-        dialer_username: username, has_password: hasPw, status, sheet_row: sheetRow,
+        dialer_username: username, has_password: hasPw, status, sheet_row: sheetRow, request_status: reqStatus,
         last_synced_at: new Date().toISOString(),
       }).eq("id", r.id);
       updated++;

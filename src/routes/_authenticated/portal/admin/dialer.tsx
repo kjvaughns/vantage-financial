@@ -71,7 +71,8 @@ function AdminDialer() {
                   <TD className="max-w-[220px] truncate">{r.request?.states.join(", ") || "—"}</TD>
                   <TD>{login ? <code className="text-[12.5px]">{login}</code> : r.in_sheet ? <span className="p-secondary">In sheet, no login</span> : <span className="p-secondary">—</span>}</TD>
                   <TD>{r.sheet_password ? <Secret value={r.sheet_password} /> : <span className="p-secondary">—</span>}</TD>
-                  <TD>{s === "active" ? <Badge tone="green">Active</Badge> : s === "requested" ? <Badge tone="amber">Requested</Badge> : s === "inactive" ? <Badge>Deactivated</Badge> : <span className="p-secondary">No access</span>}</TD>
+                  <TD>{s === "active" ? <Badge tone="green">Active</Badge> : s === "requested" ? <Badge tone="amber">Requested</Badge> : s === "inactive" ? <Badge>Deactivated</Badge> : <span className="p-secondary">No access</span>}
+                    {(r.request as any)?.request_status === "requested" ? <> <Badge tone="amber">Request</Badge></> : (r.request as any)?.request_status === "in_progress" ? <> <Badge tone="amber">In progress</Badge></> : null}</TD>
                   <TD align="right" className="whitespace-nowrap">
                     <button className={btnClass("ghost", "sm")} onClick={() => setEditing(r)}>Edit</button>{" "}
                     {s === "active" || s === "requested"

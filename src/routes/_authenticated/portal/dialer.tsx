@@ -87,6 +87,7 @@ function DialerPage() {
                 <div className="truncate text-[15px] font-semibold">{req?.agent_name ?? (name || "—")}</div>
               </div>
               {!req ? <Badge tone="neutral">No account</Badge> : req.status === "inactive" ? <Badge tone="neutral" dot>Deactivated</Badge> : req.dialer_username ? <Badge tone="green" dot>Active</Badge> : <Badge tone="amber" dot>Pending</Badge>}
+              {(req as any)?.request_status === "requested" ? <Badge tone="amber">Request sent</Badge> : (req as any)?.request_status === "in_progress" ? <Badge tone="amber" dot>In progress</Badge> : null}
             </div>
             <div className="mt-4 rounded-[10px] border p-3" style={{ borderColor: "var(--p-border)", background: "var(--p-raised)" }}>
               {req?.status === "inactive" ? <p className="p-secondary text-[13px]">Your dialer access is turned off. Reach out to your upline if this is a mistake.</p>

@@ -1150,6 +1150,7 @@ export type Database = {
           last_change: string
           last_synced_at: string | null
           lead_types: string[]
+          request_status: string | null
           sheet_row: number | null
           states: string[]
           status: string
@@ -1168,6 +1169,7 @@ export type Database = {
           last_change?: string
           last_synced_at?: string | null
           lead_types?: string[]
+          request_status?: string | null
           sheet_row?: number | null
           states?: string[]
           status?: string
@@ -1186,6 +1188,7 @@ export type Database = {
           last_change?: string
           last_synced_at?: string | null
           lead_types?: string[]
+          request_status?: string | null
           sheet_row?: number | null
           states?: string[]
           status?: string

@@ -1,0 +1,1 @@
+ALTER TABLE public.dialer_requests ADD COLUMN IF NOT EXISTS request_status text;

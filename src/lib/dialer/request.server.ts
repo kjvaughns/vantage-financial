@@ -28,7 +28,7 @@ export async function submitDialerRequest(supabase: any, userId: string, data: {
       : { baseline_lead_types: existing.lead_types ?? [], baseline_states: existing.states ?? [] };
     const payload = { ...baseline,
       user_id: userId, agent_name: data.agent_name, lead_types: leadTypes, states, sheet_row: row,
-      last_change: existing ? "update" : "new", changed_at: now, updated_at: now,
+      last_change: existing ? "update" : "new", request_status: "requested", changed_at: now, updated_at: now,
       dialer_username: hit?.username || existing?.dialer_username || null,
       has_password: hit ? !!hit.password : existing?.has_password ?? false,
       status: existing?.status === "inactive" ? "inactive" : (hit?.username || existing?.dialer_username) ? "active" : "requested",

@@ -58,3 +58,13 @@ export function previousCentralDay(now: Date): { start: Date; end: Date; label: 
   const label = new Date(Date.UTC(y, m, d - 1)).toISOString().slice(0, 10);
   return { start, end, label };
 }
+
+/** Sheet column F values → stored request status. Blank keeps no open request. */
+export type RequestStatus = "requested" | "in_progress" | "done";
+export function normalizeRequestStatus(cell: string | null | undefined): RequestStatus | null {
+  const v = (cell ?? "").trim().toLowerCase().replace(/[\s_-]+/g, " ");
+  if (!v) return null;
+  if (v.startsWith("in progress") || v === "working" || v === "progress") return "in_progress";
+  if (v === "done" || v.startsWith("complete")) return "done";
+  return "requested";
+}
