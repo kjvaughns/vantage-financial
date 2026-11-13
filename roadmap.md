@@ -30,3 +30,5 @@
 - [x] Store and display path-specific agency answers
 - [x] Add path-specific summaries to recruiter and Discord alerts and call notes
 - [x] Verify both paths and the portal presentation- [x] Training Hub redesign + AI Call Coach (Gold Standard scripts imported)
+
+- [x] Dialer Support: agent request page, two-way Google Sheet sync, admin list, daily 8 AM Central digest to dialer support (sheet sync verified; a real agent submission and email send were not tested)

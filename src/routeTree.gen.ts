@@ -37,6 +37,7 @@ import { Route as AuthenticatedPortalAdminRouteRouteImport } from './routes/_aut
 import { Route as AuthenticatedPortalApplicantsRouteRouteImport } from './routes/_authenticated/portal/applicants/route'
 import { Route as AuthenticatedPortalCalendarRouteImport } from './routes/_authenticated/portal/calendar'
 import { Route as AuthenticatedPortalCrmRouteRouteImport } from './routes/_authenticated/portal/crm/route'
+import { Route as AuthenticatedPortalDialerRouteImport } from './routes/_authenticated/portal/dialer'
 import { Route as AuthenticatedPortalLeaderboardRouteImport } from './routes/_authenticated/portal/leaderboard'
 import { Route as AuthenticatedPortalOnboardingRouteImport } from './routes/_authenticated/portal/onboarding'
 import { Route as AuthenticatedPortalOrganizationRouteImport } from './routes/_authenticated/portal/organization'
@@ -51,6 +52,7 @@ import { Route as AuthenticatedPortalAcademyIndexRouteImport } from './routes/_a
 import { Route as AuthenticatedPortalAcademyAdminRouteImport } from './routes/_authenticated/portal/academy/admin'
 import { Route as AuthenticatedPortalAdminIndexRouteImport } from './routes/_authenticated/portal/admin/index'
 import { Route as AuthenticatedPortalAdminAuditRouteImport } from './routes/_authenticated/portal/admin/audit'
+import { Route as AuthenticatedPortalAdminDialerRouteImport } from './routes/_authenticated/portal/admin/dialer'
 import { Route as AuthenticatedPortalAdminEmailsRouteImport } from './routes/_authenticated/portal/admin/emails'
 import { Route as AuthenticatedPortalAdminGoldStandardRouteImport } from './routes/_authenticated/portal/admin/gold-standard'
 import { Route as AuthenticatedPortalAdminOnboardingRouteImport } from './routes/_authenticated/portal/admin/onboarding'
@@ -69,6 +71,7 @@ import { Route as AuthenticatedPortalResourcesIndexRouteImport } from './routes/
 import { Route as AuthenticatedPortalResourcesAdminRouteImport } from './routes/_authenticated/portal/resources/admin'
 import { Route as AuthenticatedPortalResourcesLibraryRouteImport } from './routes/_authenticated/portal/resources/library'
 import { Route as AuthenticatedPortalResourcesPresentationsRouteImport } from './routes/_authenticated/portal/resources/presentations'
+import { Route as ApiPublicHooksDialerRouteImport } from './routes/api/public/hooks/dialer'
 import { Route as ApiPublicHooksEmailDispatchRouteImport } from './routes/api/public/hooks/email-dispatch'
 import { Route as ApiPublicWebhooksCalendlyRouteImport } from './routes/api/public/webhooks/calendly'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
@@ -227,6 +230,12 @@ const AuthenticatedPortalCrmRouteRoute =
     path: '/crm',
     getParentRoute: () => AuthenticatedPortalRouteRoute,
   } as any)
+const AuthenticatedPortalDialerRoute =
+  AuthenticatedPortalDialerRouteImport.update({
+    id: '/dialer',
+    path: '/dialer',
+    getParentRoute: () => AuthenticatedPortalRouteRoute,
+  } as any)
 const AuthenticatedPortalLeaderboardRoute =
   AuthenticatedPortalLeaderboardRouteImport.update({
     id: '/leaderboard',
@@ -309,6 +318,12 @@ const AuthenticatedPortalAdminAuditRoute =
   AuthenticatedPortalAdminAuditRouteImport.update({
     id: '/audit',
     path: '/audit',
+    getParentRoute: () => AuthenticatedPortalAdminRouteRoute,
+  } as any)
+const AuthenticatedPortalAdminDialerRoute =
+  AuthenticatedPortalAdminDialerRouteImport.update({
+    id: '/dialer',
+    path: '/dialer',
     getParentRoute: () => AuthenticatedPortalAdminRouteRoute,
   } as any)
 const AuthenticatedPortalAdminEmailsRoute =
@@ -419,6 +434,11 @@ const AuthenticatedPortalResourcesPresentationsRoute =
     path: '/presentations',
     getParentRoute: () => AuthenticatedPortalResourcesRouteRoute,
   } as any)
+const ApiPublicHooksDialerRoute = ApiPublicHooksDialerRouteImport.update({
+  id: '/api/public/hooks/dialer',
+  path: '/api/public/hooks/dialer',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksEmailDispatchRoute =
   ApiPublicHooksEmailDispatchRouteImport.update({
     id: '/api/public/hooks/email-dispatch',
@@ -500,6 +520,7 @@ export interface FileRoutesByFullPath {
   '/portal/resources': typeof AuthenticatedPortalResourcesRouteRouteWithChildren
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/portal/calendar': typeof AuthenticatedPortalCalendarRoute
+  '/portal/dialer': typeof AuthenticatedPortalDialerRoute
   '/portal/leaderboard': typeof AuthenticatedPortalLeaderboardRoute
   '/portal/onboarding': typeof AuthenticatedPortalOnboardingRoute
   '/portal/organization': typeof AuthenticatedPortalOrganizationRoute
@@ -512,6 +533,7 @@ export interface FileRoutesByFullPath {
   '/portal/': typeof AuthenticatedPortalIndexRoute
   '/portal/academy/admin': typeof AuthenticatedPortalAcademyAdminRoute
   '/portal/admin/audit': typeof AuthenticatedPortalAdminAuditRoute
+  '/portal/admin/dialer': typeof AuthenticatedPortalAdminDialerRoute
   '/portal/admin/emails': typeof AuthenticatedPortalAdminEmailsRoute
   '/portal/admin/gold-standard': typeof AuthenticatedPortalAdminGoldStandardRoute
   '/portal/admin/onboarding': typeof AuthenticatedPortalAdminOnboardingRoute
@@ -526,6 +548,7 @@ export interface FileRoutesByFullPath {
   '/portal/resources/admin': typeof AuthenticatedPortalResourcesAdminRoute
   '/portal/resources/library': typeof AuthenticatedPortalResourcesLibraryRoute
   '/portal/resources/presentations': typeof AuthenticatedPortalResourcesPresentationsRoute
+  '/api/public/hooks/dialer': typeof ApiPublicHooksDialerRoute
   '/api/public/hooks/email-dispatch': typeof ApiPublicHooksEmailDispatchRoute
   '/api/public/webhooks/calendly': typeof ApiPublicWebhooksCalendlyRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -562,6 +585,7 @@ export interface FileRoutesByTo {
   '/application-complete': typeof ApplicationCompleteIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/portal/calendar': typeof AuthenticatedPortalCalendarRoute
+  '/portal/dialer': typeof AuthenticatedPortalDialerRoute
   '/portal/leaderboard': typeof AuthenticatedPortalLeaderboardRoute
   '/portal/onboarding': typeof AuthenticatedPortalOnboardingRoute
   '/portal/organization': typeof AuthenticatedPortalOrganizationRoute
@@ -574,6 +598,7 @@ export interface FileRoutesByTo {
   '/portal': typeof AuthenticatedPortalIndexRoute
   '/portal/academy/admin': typeof AuthenticatedPortalAcademyAdminRoute
   '/portal/admin/audit': typeof AuthenticatedPortalAdminAuditRoute
+  '/portal/admin/dialer': typeof AuthenticatedPortalAdminDialerRoute
   '/portal/admin/emails': typeof AuthenticatedPortalAdminEmailsRoute
   '/portal/admin/gold-standard': typeof AuthenticatedPortalAdminGoldStandardRoute
   '/portal/admin/onboarding': typeof AuthenticatedPortalAdminOnboardingRoute
@@ -588,6 +613,7 @@ export interface FileRoutesByTo {
   '/portal/resources/admin': typeof AuthenticatedPortalResourcesAdminRoute
   '/portal/resources/library': typeof AuthenticatedPortalResourcesLibraryRoute
   '/portal/resources/presentations': typeof AuthenticatedPortalResourcesPresentationsRoute
+  '/api/public/hooks/dialer': typeof ApiPublicHooksDialerRoute
   '/api/public/hooks/email-dispatch': typeof ApiPublicHooksEmailDispatchRoute
   '/api/public/webhooks/calendly': typeof ApiPublicWebhooksCalendlyRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -634,6 +660,7 @@ export interface FileRoutesById {
   '/_authenticated/portal/resources': typeof AuthenticatedPortalResourcesRouteRouteWithChildren
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/_authenticated/portal/calendar': typeof AuthenticatedPortalCalendarRoute
+  '/_authenticated/portal/dialer': typeof AuthenticatedPortalDialerRoute
   '/_authenticated/portal/leaderboard': typeof AuthenticatedPortalLeaderboardRoute
   '/_authenticated/portal/onboarding': typeof AuthenticatedPortalOnboardingRoute
   '/_authenticated/portal/organization': typeof AuthenticatedPortalOrganizationRoute
@@ -646,6 +673,7 @@ export interface FileRoutesById {
   '/_authenticated/portal/': typeof AuthenticatedPortalIndexRoute
   '/_authenticated/portal/academy/admin': typeof AuthenticatedPortalAcademyAdminRoute
   '/_authenticated/portal/admin/audit': typeof AuthenticatedPortalAdminAuditRoute
+  '/_authenticated/portal/admin/dialer': typeof AuthenticatedPortalAdminDialerRoute
   '/_authenticated/portal/admin/emails': typeof AuthenticatedPortalAdminEmailsRoute
   '/_authenticated/portal/admin/gold-standard': typeof AuthenticatedPortalAdminGoldStandardRoute
   '/_authenticated/portal/admin/onboarding': typeof AuthenticatedPortalAdminOnboardingRoute
@@ -660,6 +688,7 @@ export interface FileRoutesById {
   '/_authenticated/portal/resources/admin': typeof AuthenticatedPortalResourcesAdminRoute
   '/_authenticated/portal/resources/library': typeof AuthenticatedPortalResourcesLibraryRoute
   '/_authenticated/portal/resources/presentations': typeof AuthenticatedPortalResourcesPresentationsRoute
+  '/api/public/hooks/dialer': typeof ApiPublicHooksDialerRoute
   '/api/public/hooks/email-dispatch': typeof ApiPublicHooksEmailDispatchRoute
   '/api/public/webhooks/calendly': typeof ApiPublicWebhooksCalendlyRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -706,6 +735,7 @@ export interface FileRouteTypes {
     | '/portal/resources'
     | '/.lovable/oauth/consent'
     | '/portal/calendar'
+    | '/portal/dialer'
     | '/portal/leaderboard'
     | '/portal/onboarding'
     | '/portal/organization'
@@ -718,6 +748,7 @@ export interface FileRouteTypes {
     | '/portal/'
     | '/portal/academy/admin'
     | '/portal/admin/audit'
+    | '/portal/admin/dialer'
     | '/portal/admin/emails'
     | '/portal/admin/gold-standard'
     | '/portal/admin/onboarding'
@@ -732,6 +763,7 @@ export interface FileRouteTypes {
     | '/portal/resources/admin'
     | '/portal/resources/library'
     | '/portal/resources/presentations'
+    | '/api/public/hooks/dialer'
     | '/api/public/hooks/email-dispatch'
     | '/api/public/webhooks/calendly'
     | '/lovable/email/auth/preview'
@@ -768,6 +800,7 @@ export interface FileRouteTypes {
     | '/application-complete'
     | '/.lovable/oauth/consent'
     | '/portal/calendar'
+    | '/portal/dialer'
     | '/portal/leaderboard'
     | '/portal/onboarding'
     | '/portal/organization'
@@ -780,6 +813,7 @@ export interface FileRouteTypes {
     | '/portal'
     | '/portal/academy/admin'
     | '/portal/admin/audit'
+    | '/portal/admin/dialer'
     | '/portal/admin/emails'
     | '/portal/admin/gold-standard'
     | '/portal/admin/onboarding'
@@ -794,6 +828,7 @@ export interface FileRouteTypes {
     | '/portal/resources/admin'
     | '/portal/resources/library'
     | '/portal/resources/presentations'
+    | '/api/public/hooks/dialer'
     | '/api/public/hooks/email-dispatch'
     | '/api/public/webhooks/calendly'
     | '/lovable/email/auth/preview'
@@ -839,6 +874,7 @@ export interface FileRouteTypes {
     | '/_authenticated/portal/resources'
     | '/.lovable/oauth/consent'
     | '/_authenticated/portal/calendar'
+    | '/_authenticated/portal/dialer'
     | '/_authenticated/portal/leaderboard'
     | '/_authenticated/portal/onboarding'
     | '/_authenticated/portal/organization'
@@ -851,6 +887,7 @@ export interface FileRouteTypes {
     | '/_authenticated/portal/'
     | '/_authenticated/portal/academy/admin'
     | '/_authenticated/portal/admin/audit'
+    | '/_authenticated/portal/admin/dialer'
     | '/_authenticated/portal/admin/emails'
     | '/_authenticated/portal/admin/gold-standard'
     | '/_authenticated/portal/admin/onboarding'
@@ -865,6 +902,7 @@ export interface FileRouteTypes {
     | '/_authenticated/portal/resources/admin'
     | '/_authenticated/portal/resources/library'
     | '/_authenticated/portal/resources/presentations'
+    | '/api/public/hooks/dialer'
     | '/api/public/hooks/email-dispatch'
     | '/api/public/webhooks/calendly'
     | '/lovable/email/auth/preview'
@@ -900,6 +938,7 @@ export interface RootRouteChildren {
   PortalInviteTokenRoute: typeof PortalInviteTokenRoute
   RescheduleTokenRoute: typeof RescheduleTokenRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
+  ApiPublicHooksDialerRoute: typeof ApiPublicHooksDialerRoute
   ApiPublicHooksEmailDispatchRoute: typeof ApiPublicHooksEmailDispatchRoute
   ApiPublicWebhooksCalendlyRoute: typeof ApiPublicWebhooksCalendlyRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -1105,6 +1144,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPortalCrmRouteRouteImport
       parentRoute: typeof AuthenticatedPortalRouteRoute
     }
+    '/_authenticated/portal/dialer': {
+      id: '/_authenticated/portal/dialer'
+      path: '/dialer'
+      fullPath: '/portal/dialer'
+      preLoaderRoute: typeof AuthenticatedPortalDialerRouteImport
+      parentRoute: typeof AuthenticatedPortalRouteRoute
+    }
     '/_authenticated/portal/leaderboard': {
       id: '/_authenticated/portal/leaderboard'
       path: '/leaderboard'
@@ -1201,6 +1247,13 @@ declare module '@tanstack/react-router' {
       path: '/audit'
       fullPath: '/portal/admin/audit'
       preLoaderRoute: typeof AuthenticatedPortalAdminAuditRouteImport
+      parentRoute: typeof AuthenticatedPortalAdminRouteRoute
+    }
+    '/_authenticated/portal/admin/dialer': {
+      id: '/_authenticated/portal/admin/dialer'
+      path: '/dialer'
+      fullPath: '/portal/admin/dialer'
+      preLoaderRoute: typeof AuthenticatedPortalAdminDialerRouteImport
       parentRoute: typeof AuthenticatedPortalAdminRouteRoute
     }
     '/_authenticated/portal/admin/emails': {
@@ -1329,6 +1382,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPortalResourcesPresentationsRouteImport
       parentRoute: typeof AuthenticatedPortalResourcesRouteRoute
     }
+    '/api/public/hooks/dialer': {
+      id: '/api/public/hooks/dialer'
+      path: '/api/public/hooks/dialer'
+      fullPath: '/api/public/hooks/dialer'
+      preLoaderRoute: typeof ApiPublicHooksDialerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/email-dispatch': {
       id: '/api/public/hooks/email-dispatch'
       path: '/api/public/hooks/email-dispatch'
@@ -1437,6 +1497,7 @@ const AuthenticatedPortalAdminUsersRouteWithChildren =
 
 interface AuthenticatedPortalAdminRouteRouteChildren {
   AuthenticatedPortalAdminAuditRoute: typeof AuthenticatedPortalAdminAuditRoute
+  AuthenticatedPortalAdminDialerRoute: typeof AuthenticatedPortalAdminDialerRoute
   AuthenticatedPortalAdminEmailsRoute: typeof AuthenticatedPortalAdminEmailsRoute
   AuthenticatedPortalAdminGoldStandardRoute: typeof AuthenticatedPortalAdminGoldStandardRoute
   AuthenticatedPortalAdminOnboardingRoute: typeof AuthenticatedPortalAdminOnboardingRoute
@@ -1450,6 +1511,7 @@ interface AuthenticatedPortalAdminRouteRouteChildren {
 const AuthenticatedPortalAdminRouteRouteChildren: AuthenticatedPortalAdminRouteRouteChildren =
   {
     AuthenticatedPortalAdminAuditRoute: AuthenticatedPortalAdminAuditRoute,
+    AuthenticatedPortalAdminDialerRoute: AuthenticatedPortalAdminDialerRoute,
     AuthenticatedPortalAdminEmailsRoute: AuthenticatedPortalAdminEmailsRoute,
     AuthenticatedPortalAdminGoldStandardRoute:
       AuthenticatedPortalAdminGoldStandardRoute,
@@ -1536,6 +1598,7 @@ interface AuthenticatedPortalRouteRouteChildren {
   AuthenticatedPortalCrmRouteRoute: typeof AuthenticatedPortalCrmRouteRouteWithChildren
   AuthenticatedPortalResourcesRouteRoute: typeof AuthenticatedPortalResourcesRouteRouteWithChildren
   AuthenticatedPortalCalendarRoute: typeof AuthenticatedPortalCalendarRoute
+  AuthenticatedPortalDialerRoute: typeof AuthenticatedPortalDialerRoute
   AuthenticatedPortalLeaderboardRoute: typeof AuthenticatedPortalLeaderboardRoute
   AuthenticatedPortalOnboardingRoute: typeof AuthenticatedPortalOnboardingRoute
   AuthenticatedPortalOrganizationRoute: typeof AuthenticatedPortalOrganizationRoute
@@ -1562,6 +1625,7 @@ const AuthenticatedPortalRouteRouteChildren: AuthenticatedPortalRouteRouteChildr
     AuthenticatedPortalResourcesRouteRoute:
       AuthenticatedPortalResourcesRouteRouteWithChildren,
     AuthenticatedPortalCalendarRoute: AuthenticatedPortalCalendarRoute,
+    AuthenticatedPortalDialerRoute: AuthenticatedPortalDialerRoute,
     AuthenticatedPortalLeaderboardRoute: AuthenticatedPortalLeaderboardRoute,
     AuthenticatedPortalOnboardingRoute: AuthenticatedPortalOnboardingRoute,
     AuthenticatedPortalOrganizationRoute: AuthenticatedPortalOrganizationRoute,
@@ -1641,6 +1705,7 @@ const rootRouteChildren: RootRouteChildren = {
   PortalInviteTokenRoute: PortalInviteTokenRoute,
   RescheduleTokenRoute: RescheduleTokenRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
+  ApiPublicHooksDialerRoute: ApiPublicHooksDialerRoute,
   ApiPublicHooksEmailDispatchRoute: ApiPublicHooksEmailDispatchRoute,
   ApiPublicWebhooksCalendlyRoute: ApiPublicWebhooksCalendlyRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,

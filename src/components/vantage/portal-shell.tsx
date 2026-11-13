@@ -25,6 +25,7 @@ import {
   ShieldCheck,
   ScrollText,
   Mail,
+  Phone,
   PanelLeftClose,
   PanelLeftOpen,
   Sun,
@@ -42,6 +43,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
       { to: "/portal", label: "Dashboard", icon: LayoutDashboard },
       { to: "/portal/applicants", label: "Applicants", icon: Users },
       { to: "/portal/calendar", label: "Calendar", icon: CalendarDays },
+      { to: "/portal/dialer", label: "Dialer Support", icon: Phone },
     ],
   },
   {

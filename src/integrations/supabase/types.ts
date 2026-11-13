@@ -1137,6 +1137,57 @@ export type Database = {
         }
         Relationships: []
       }
+      dialer_requests: {
+        Row: {
+          agent_name: string
+          changed_at: string
+          created_at: string
+          dialer_username: string | null
+          has_password: boolean
+          id: string
+          last_change: string
+          last_synced_at: string | null
+          lead_types: string[]
+          sheet_row: number | null
+          states: string[]
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          agent_name: string
+          changed_at?: string
+          created_at?: string
+          dialer_username?: string | null
+          has_password?: boolean
+          id?: string
+          last_change?: string
+          last_synced_at?: string | null
+          lead_types?: string[]
+          sheet_row?: number | null
+          states?: string[]
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          agent_name?: string
+          changed_at?: string
+          created_at?: string
+          dialer_username?: string | null
+          has_password?: boolean
+          id?: string
+          last_change?: string
+          last_synced_at?: string | null
+          lead_types?: string[]
+          sheet_row?: number | null
+          states?: string[]
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       email_campaign_subscriptions: {
         Row: {
           campaign_slug: string

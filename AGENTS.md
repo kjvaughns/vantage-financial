@@ -31,3 +31,4 @@
 - Grant company-wide Training Admin access through the training_reviewers table (is_training_reviewer), never via the admin role, so trainers see all trainees without broader CRM/admin powers.
 - Admin AgentLink assignments must authorize the caller before service-only upline resolution; manual Add Agent must use the caller-checked onboarding invitation helper once, preserving recruiter attribution and avoiding orphan duplicate invitations.
 - Synchronize default name-based recruiting slugs in a database trigger after profile permission guards; retain explicitly customized slugs and invalidate portal query caches after profile saves so all name/link views refresh.
+- Dialer support uses the linked Google Sheet as the source of truth for logins. Portal writes go through server functions in src/lib/dialer, and dialer passwords are read live from the sheet and never stored in the database, so credentials don't get copied into the app.
