@@ -167,3 +167,38 @@ export const setDialerAccess = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true, linked: !!hit?.username };
   });
+
+/** Admin: edit an agent's dialer details; login is written to the sheet (password never stored here). */
+export const adminSaveDialer = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({
+    user_id: z.string().uuid(),
+    agent_name: z.string().trim().min(3).max(120),
+    lead_types: z.array(z.string()).max(3),
+    states: z.array(z.string()).max(51),
+    username: z.string().trim().max(120),
+    password: z.string().max(200).optional(),
+  }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context as any;
+    await assertAdmin(supabase, userId);
+    const leadTypes = normalizeLeadTypes(data.lead_types);
+    const states = normalizeStates(data.states);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const admin = supabaseAdmin as any;
+    const { data: existing } = await admin.from("dialer_requests").select("*").eq("user_id", data.user_id).maybeSingle();
+    const { readSheet, locateRow, writeFullRow, appendFullRow } = await import("./sheets.server");
+    const hit = locateRow(await readSheet(), existing?.sheet_row ?? null, existing?.agent_name ?? data.agent_name);
+    const password = data.password !== undefined && data.password !== "" ? data.password : hit?.password ?? "";
+    const values: [string, string, string, string, string] = [data.agent_name, toSheetList(leadTypes), toSheetList(states), data.username, password];
+    const row = hit ? (await writeFullRow(hit.row, values), hit.row) : await appendFullRow(values);
+    const now = new Date().toISOString();
+    const { error } = await admin.from("dialer_requests").upsert({
+      user_id: data.user_id, agent_name: data.agent_name, lead_types: leadTypes, states, sheet_row: row,
+      dialer_username: data.username || null, has_password: !!password,
+      status: existing?.status === "inactive" ? "inactive" : data.username ? "active" : "requested",
+      last_change: existing?.last_change ?? "admin", changed_at: existing?.changed_at ?? now, updated_at: now, last_synced_at: now,
+    }, { onConflict: "user_id" });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });

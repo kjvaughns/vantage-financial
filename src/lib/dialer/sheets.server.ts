@@ -91,3 +91,17 @@ export async function syncFromSheet(admin: any) {
   }
   return { updated, total: reqs?.length ?? 0 };
 }
+
+/** Admin: write the full row including login columns. */
+export async function writeFullRow(row: number, v: [string, string, string, string, string]) {
+  await call(`/values/Sheet1!A${row}:E${row}?valueInputOption=RAW`, { method: "PUT", body: JSON.stringify({ values: [v] }) });
+}
+
+export async function appendFullRow(v: [string, string, string, string, string]): Promise<number> {
+  const json = await call(`/values/Sheet1!A:E:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`, {
+    method: "POST", body: JSON.stringify({ values: [v] }),
+  });
+  const m = String(json.updates?.updatedRange ?? "").match(/!A(\d+)/);
+  if (!m) throw new Error("Could not determine new sheet row");
+  return Number(m[1]);
+}
