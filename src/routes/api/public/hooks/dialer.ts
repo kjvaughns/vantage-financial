@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { DIALER_SHEET_URL, DIALER_SUPPORT_EMAIL, previousCentralDay } from "@/lib/dialer/shared";
+import { DIALER_DIGEST_CC_EMAIL, DIALER_SHEET_URL, DIALER_SUPPORT_EMAIL, previousCentralDay } from "@/lib/dialer/shared";
 
 /**
  * Dialer support jobs, called by pg_cron with the publishable key in `apikey`
@@ -32,11 +32,16 @@ async function runDigest(admin: any) {
     <table style="border-collapse:collapse;width:100%;font-size:14px">
       <tr style="text-align:left"><th style="padding:8px">Agent</th><th style="padding:8px">Type</th><th style="padding:8px">Lead types</th><th style="padding:8px">States</th></tr>
       ${rows}</table>
-    <p style="margin-top:16px"><a href="${DIALER_SHEET_URL}" style="color:#9a7a2c">Open the dialer sheet</a> to add logins — they appear in the portal automatically.</p></div>`;
+    <p style="margin:20px 0 8px"><a href="${DIALER_SHEET_URL}" style="display:inline-block;background:#C9A84C;color:#000;text-decoration:none;font-weight:bold;padding:10px 18px;border-radius:6px">Open the dialer sheet</a></p>
+    <p style="font-size:13px;color:#555">Add logins in the sheet — they appear in the portal automatically.<br><a href="${DIALER_SHEET_URL}" style="color:#9a7a2c">${DIALER_SHEET_URL}</a></p></div>`;
   const { sendRawEmail } = await import("@/lib/email-templates/send-email");
   const res = await sendRawEmail(DIALER_SUPPORT_EMAIL, `Dialer requests for ${label} (${data.length})`, html, {
     idempotencyKey: `dialer-digest-${label}`,
   });
+  // Copy to KJ as a separate send (one recipient per send).
+  await sendRawEmail(DIALER_DIGEST_CC_EMAIL, `[Copy] Dialer requests for ${label} (${data.length})`, html, {
+    idempotencyKey: `dialer-digest-cc-${label}`,
+  }).catch((e) => console.error("[dialer-digest] copy failed", e));
   return { sent: res.sent, count: data.length };
 }
 

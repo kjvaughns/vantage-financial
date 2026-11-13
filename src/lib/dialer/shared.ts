@@ -1,6 +1,7 @@
 /** Browser-safe dialer support helpers shared by portal, server and tests. */
 export const DIALER_SHEET_ID = "1DX298qEvVA15lHDkxSlQv-zaToomkektdinz6KWPy20";
-export const DIALER_SHEET_URL = `https://docs.google.com/spreadsheets/d/${DIALER_SHEET_ID}/edit`;
+export const DIALER_SHEET_URL = `https://docs.google.com/spreadsheets/d/${DIALER_SHEET_ID}/edit?usp=sharing`;
+export const DIALER_DIGEST_CC_EMAIL = "kjvaughns13@gmail.com";
 export const DIALER_SUPPORT_EMAIL = "justin@harborstonefinancialgroup.com";
 
 export const LEAD_TYPES = ["FEX", "VETS", "MP"] as const;
