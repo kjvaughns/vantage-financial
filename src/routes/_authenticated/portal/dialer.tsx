@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Copy, Eye, EyeOff, Minus, Plus, Search, Send } from "lucide-react";
+import { Copy, ExternalLink, Eye, EyeOff, Minus, Plus, Search, Send } from "lucide-react";
 import { PortalShell } from "@/components/vantage/portal-shell";
 import { PageHeader, PageBody, Panel, Badge, Field, Input, ErrorState, btnClass } from "@/components/portal/ui";
 import { getMyDialer, saveDialerRequest } from "@/lib/dialer/dialer.functions";
@@ -92,6 +92,9 @@ function DialerPage() {
                   </div>
                 ) : <p className="p-secondary text-[13px]">{req ? "Your login shows here as soon as dialer support sets it up." : "Send your first request and your login shows here once it's ready."}</p>}
             </div>
+            <a href="https://brightclips.readymode.com/" target="_blank" rel="noopener noreferrer" className={btnClass("primary") + " mt-3 w-full justify-center"}>
+              <ExternalLink className="h-4 w-4" /> Open dialer
+            </a>
             <div className="mt-4 space-y-3">
               <Chips label="Active lead types" items={leads} />
               <Chips label={`Active states${states.length ? ` (${states.length})` : ""}`} items={states} />
