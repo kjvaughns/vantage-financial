@@ -59,8 +59,8 @@ function AdminDialer() {
         </div>
         {q.isLoading ? <TableSkeleton /> : q.isError ? <ErrorState title="Couldn't load agents" description={(q.error as Error).message} /> :
           !rows.length ? <EmptyState title="No agents match" /> : (
-          <TableWrap><Table minWidth={900}>
-            <THead><TH>Agent</TH><TH>Lead types</TH><TH>States</TH><TH>Dialer login</TH><TH>Status</TH><TH align="right">Actions</TH></THead>
+          <TableWrap><Table minWidth={1000}>
+            <THead><TH>Agent</TH><TH>Lead types</TH><TH>States</TH><TH>Username</TH><TH>Password</TH><TH>Status</TH><TH align="right">Actions</TH></THead>
             <tbody>{rows.map((r) => {
               const s = statusOf(r);
               const login = r.request?.dialer_username || r.sheet_username;
@@ -70,6 +70,7 @@ function AdminDialer() {
                   <TD>{r.request?.lead_types.join(", ") || "—"}</TD>
                   <TD className="max-w-[220px] truncate">{r.request?.states.join(", ") || "—"}</TD>
                   <TD>{login ? <code className="text-[12.5px]">{login}</code> : r.in_sheet ? <span className="p-secondary">In sheet, no login</span> : <span className="p-secondary">—</span>}</TD>
+                  <TD>{r.sheet_password ? <Secret value={r.sheet_password} /> : <span className="p-secondary">—</span>}</TD>
                   <TD>{s === "active" ? <Badge tone="green">Active</Badge> : s === "requested" ? <Badge tone="amber">Requested</Badge> : s === "inactive" ? <Badge>Deactivated</Badge> : <span className="p-secondary">No access</span>}</TD>
                   <TD align="right" className="whitespace-nowrap">
                     <button className={btnClass("ghost", "sm")} onClick={() => setEditing(r)}>Edit</button>{" "}
@@ -92,7 +93,7 @@ function EditDialer({ row, onClose, onSaved }: { row: DialerAgentRow; onClose: (
   const [leads, setLeads] = useState<string[]>(row.request?.lead_types ?? []);
   const [states, setStates] = useState<string[]>(row.request?.states ?? []);
   const [username, setUsername] = useState(row.request?.dialer_username ?? row.sheet_username ?? "");
-  const [password, setPassword] = useState("");
+  const [password, setPassword] = useState(row.sheet_password ?? "");
   const [saving, setSaving] = useState(false);
   const toggle = (list: string[], v: string) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
   const save = async () => {
@@ -135,5 +136,16 @@ function EditDialer({ row, onClose, onSaved }: { row: DialerAgentRow; onClose: (
         </div>
       </div>
     </Modal>
+  );
+}
+
+function Secret({ value }: { value: string }) {
+  const [show, setShow] = useState(false);
+  return (
+    <span className="inline-flex items-center gap-1">
+      <code className="text-[12.5px]">{show ? value : "••••••"}</code>
+      <button type="button" className={btnClass("ghost", "sm")} onClick={() => setShow((v) => !v)} aria-label={show ? "Hide password" : "Show password"}>{show ? "Hide" : "Show"}</button>
+      <button type="button" className={btnClass("ghost", "sm")} onClick={() => { navigator.clipboard.writeText(value); toast.success("Password copied"); }} aria-label="Copy password">Copy</button>
+    </span>
   );
 }

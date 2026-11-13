@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Copy, ExternalLink, Eye, EyeOff, Minus, Plus, Search, Send } from "lucide-react";
 import { PortalShell } from "@/components/vantage/portal-shell";
 import { PageHeader, PageBody, Panel, Badge, Field, Input, ErrorState, btnClass } from "@/components/portal/ui";
-import { getMyDialer, saveDialerRequest } from "@/lib/dialer/dialer.functions";
+import { getMyDialer, listDialerTargets, saveDialerRequest } from "@/lib/dialer/dialer.functions";
 import { LEAD_TYPES, LEAD_TYPE_LABELS, US_STATES } from "@/lib/dialer/shared";
 
 export const Route = createFileRoute("/_authenticated/portal/dialer")({
@@ -18,7 +18,10 @@ function DialerPage() {
   const qc = useQueryClient();
   const getFn = useServerFn(getMyDialer);
   const saveFn = useServerFn(saveDialerRequest);
-  const q = useQuery({ queryKey: ["dialer", "me"], queryFn: () => getFn() });
+  const targetsFn = useServerFn(listDialerTargets);
+  const [forUser, setForUser] = useState<string>("");
+  const q = useQuery({ queryKey: ["dialer", "me", forUser], queryFn: () => getFn({ data: { user_id: forUser || null } }) });
+  const tq = useQuery({ queryKey: ["dialer", "targets"], queryFn: () => targetsFn(), enabled: !!q.data?.isSuperAdmin });
   const [name, setName] = useState("");
   const [addL, setAddL] = useState<string[]>([]);
   const [remL, setRemL] = useState<string[]>([]);
@@ -29,6 +32,7 @@ function DialerPage() {
   const [saving, setSaving] = useState(false);
   const [showPw, setShowPw] = useState(false);
 
+  useEffect(() => { reset(); }, [forUser]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (q.data) setName(q.data.request?.agent_name ?? q.data.defaultName);
   }, [q.data]);
@@ -48,7 +52,7 @@ function DialerPage() {
   const submit = async () => {
     setSaving(true);
     try {
-      await saveFn({ data: { agent_name: name, lead_types: nextLeads, states: nextStates } });
+      await saveFn({ data: { agent_name: name, lead_types: nextLeads, states: nextStates, user_id: forUser || null } });
       toast.success("Request sent to dialer support");
       reset();
       qc.invalidateQueries({ queryKey: ["dialer"] });
@@ -63,6 +67,16 @@ function DialerPage() {
     <PortalShell>
       <PageHeader title="Dialer Support" description="Manage your dialer lead types and states. Dialer support reviews requests every morning." />
       <PageBody>
+        {q.data?.isSuperAdmin && (
+          <div className="mb-4 flex flex-wrap items-center gap-2 rounded-[10px] border px-3 py-2" style={{ borderColor: "var(--p-gold)", background: "color-mix(in oklab, var(--p-gold) 8%, transparent)" }}>
+            <span className="p-label">Acting for</span>
+            <select value={forUser} onChange={(e) => setForUser(e.target.value)} className="p-focus h-8 min-w-[220px] rounded-[8px] border px-2 text-[13px]" style={{ borderColor: "var(--p-border)", background: "var(--p-raised)", color: "inherit" }}>
+              <option value="">Myself</option>
+              {(tq.data ?? []).map((a: { id: string; name: string }) => <option key={a.id} value={a.id}>{a.name}</option>)}
+            </select>
+            {forUser && <span className="p-secondary text-[12.5px]">Requests are sent on this agent's behalf and they get the confirmation email.</span>}
+          </div>
+        )}
         {q.isError ? <ErrorState title="Couldn't load your dialer info" description={(q.error as Error).message} /> : (
         <div className="grid gap-4 lg:grid-cols-[340px_1fr]">
           <Panel>

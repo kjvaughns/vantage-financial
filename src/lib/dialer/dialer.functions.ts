@@ -8,10 +8,41 @@ export type DialerRequest = {
   status: string; dialer_username: string | null; has_password: boolean; changed_at: string; created_at: string;
 };
 
-export const getMyDialer = createServerFn({ method: "GET" })
+async function isSuperAdmin(supabase: any, userId: string): Promise<boolean> {
+  const { data, error } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+  if (error) throw new Error(error.message);
+  return (data ?? []).some((r: { role: string }) => r.role === "super_admin");
+}
+
+/** Super admins may act for another agent; everyone else always acts for themselves. */
+async function resolveTarget(context: any, forUser?: string | null) {
+  const { supabase, userId } = context;
+  const superAdmin = await isSuperAdmin(supabase, userId);
+  if (forUser && forUser !== userId) {
+    if (!superAdmin) throw new Error("Forbidden");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    return { db: supabaseAdmin as any, target: forUser, superAdmin, onBehalf: true };
+  }
+  return { db: supabase, target: userId as string, superAdmin, onBehalf: false };
+}
+
+/** Super admin: active agents to pick from on the Dialer Support page. */
+export const listDialerTargets = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context as any;
+    if (!(await isSuperAdmin(supabase, userId))) return [] as { id: string; name: string }[];
+    const { data, error } = await supabase.from("profiles").select("id, first_name, last_name, full_name, email").eq("is_active", true);
+    if (error) throw new Error(error.message);
+    return (data ?? []).map((p: any) => ({ id: p.id as string, name: (p.full_name || [p.first_name, p.last_name].filter(Boolean).join(" ") || p.email || "Unnamed").trim() as string }))
+      .sort((a: any, b: any) => a.name.localeCompare(b.name));
+  });
+
+export const getMyDialer = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ user_id: z.string().uuid().nullish() }).optional().parse(d))
+  .handler(async ({ data: input, context }) => {
+    const { db: supabase, target: userId, superAdmin } = await resolveTarget(context, input?.user_id);
     const [{ data: req, error }, { data: prof }] = await Promise.all([
       supabase.from("dialer_requests").select("*").eq("user_id", userId).maybeSingle(),
       supabase.from("profiles").select("first_name, last_name").eq("id", userId).maybeSingle(),
@@ -41,7 +72,7 @@ export const getMyDialer = createServerFn({ method: "GET" })
       }
     }
     const defaultName = [prof?.first_name, prof?.last_name].filter(Boolean).join(" ");
-    return { request, password, defaultName };
+    return { request, password, defaultName, isSuperAdmin: superAdmin };
   });
 
 export const saveDialerRequest = createServerFn({ method: "POST" })
@@ -51,10 +82,11 @@ export const saveDialerRequest = createServerFn({ method: "POST" })
       agent_name: z.string().trim().min(3).max(120),
       lead_types: z.array(z.string()).max(3),
       states: z.array(z.string()).max(51),
+      user_id: z.string().uuid().nullish(),
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    const { supabase, userId } = context as any;
+    const { db: supabase, target: userId } = await resolveTarget(context, data.user_id);
     const leadTypes = normalizeLeadTypes(data.lead_types);
     const states = normalizeStates(data.states);
     if (!leadTypes.length) throw new Error("Pick at least one lead type.");
@@ -114,7 +146,7 @@ async function assertAdmin(supabase: any, userId: string) {
 
 export type DialerAgentRow = {
   user_id: string; name: string; email: string | null;
-  request: DialerRequest | null; sheet_username: string | null; in_sheet: boolean;
+  request: DialerRequest | null; sheet_username: string | null; sheet_password: string | null; in_sheet: boolean;
 };
 
 /** Every active portal agent, merged with their dialer record and live sheet row. */
@@ -137,7 +169,7 @@ export const listDialerAgents = createServerFn({ method: "GET" })
       const name = (p.full_name || [p.first_name, p.last_name].filter(Boolean).join(" ") || p.email || "Unnamed").trim();
       const req = (byUser.get(p.id) as DialerRequest & { sheet_row: number | null }) ?? null;
       const hit = locateRow(rows, req?.sheet_row ?? null, req?.agent_name ?? name);
-      return { user_id: p.id, name, email: p.email, request: req, sheet_username: hit?.username || null, in_sheet: !!hit };
+      return { user_id: p.id, name, email: p.email, request: req, sheet_username: hit?.username || null, sheet_password: hit?.password || null, in_sheet: !!hit };
     });
     return out.sort((a, b) => a.name.localeCompare(b.name));
   });
