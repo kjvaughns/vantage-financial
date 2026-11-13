@@ -576,6 +576,25 @@ const applicantTemplates: EmailTemplateDef[] = [
 
 const agentTemplates: EmailTemplateDef[] = [
   def({
+    name: "dialer-request-received",
+    label: "Dialer request received",
+    audience: "agent",
+    category: "training",
+    trigger: "An agent submits a dialer support request",
+    subject: "Dialer request received",
+    body: {
+      title: "Request received",
+      intro: GREET,
+      lines: ["We got your dialer support request. Dialer support reviews new requests every morning, and your account updates in the portal once it's done."],
+      details: [
+        { label: "Lead types", value: "{{dialer_lead_types}}" },
+        { label: "States", value: "{{dialer_states}}" },
+      ],
+      ctaLabel: "Open Dialer Support",
+      ctaUrl: "https://vantage-financial.net/portal/dialer",
+    },
+  }),
+  def({
     name: "training-homework-approved",
     label: "Training homework approved",
     audience: "agent",

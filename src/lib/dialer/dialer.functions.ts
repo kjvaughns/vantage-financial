@@ -81,6 +81,17 @@ export const saveDialerRequest = createServerFn({ method: "POST" })
     };
     const { error } = await (supabaseAdmin as any).from("dialer_requests").upsert(payload, { onConflict: "user_id" });
     if (error) throw new Error(error.message);
+    try {
+      const { data: prof } = await supabase.from("profiles").select("email, first_name").eq("id", userId).maybeSingle();
+      if (prof?.email) {
+        const { sendEmail } = await import("@/lib/email/dispatch.server");
+        await sendEmail({
+          template: "dialer-request-received", to: prof.email, toName: data.agent_name, profileId: userId,
+          sendKey: `${userId}:${now}`, ignorePrefs: true,
+          context: { first_name: prof.first_name ?? data.agent_name.split(" ")[0], dialer_lead_types: leadTypes.join(", "), dialer_states: states.join(", ") } as any,
+        });
+      }
+    } catch (e) { console.warn("[dialer] confirmation email failed", e); }
     return { ok: true };
   });
 
