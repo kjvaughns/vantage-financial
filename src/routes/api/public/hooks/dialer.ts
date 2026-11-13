@@ -17,6 +17,7 @@ async function runDigest(admin: any) {
   const { data, error } = await admin.from("dialer_requests")
     .select("agent_name, lead_types, states, last_change, changed_at")
     .gte("changed_at", start.toISOString()).lt("changed_at", end.toISOString())
+    .neq("last_change", "admin").neq("status", "inactive")
     .order("changed_at");
   if (error) throw error;
   if (!data?.length) return { sent: false, count: 0 };

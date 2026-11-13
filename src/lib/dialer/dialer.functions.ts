@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { normalizeLeadTypes, normalizeStates, toSheetList } from "./shared";
+import { fromSheetList, normalizeLeadTypes, normalizeStates, toSheetList } from "./shared";
 
 export type DialerRequest = {
   id: string; user_id: string; agent_name: string; lead_types: string[]; states: string[];
@@ -26,7 +26,7 @@ export const getMyDialer = createServerFn({ method: "GET" })
         if (hit) {
           password = hit.password || null;
           const username = hit.username || null;
-          const status = username ? "active" : "requested";
+          const status = request.status === "inactive" ? "inactive" : username ? "active" : "requested";
           if (username !== request.dialer_username || status !== request.status || hit.row !== request.sheet_row) {
             const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
             await (supabaseAdmin as any).from("dialer_requests").update({
@@ -77,7 +77,7 @@ export const saveDialerRequest = createServerFn({ method: "POST" })
       last_change: existing ? "update" : "new", changed_at: now, updated_at: now,
       dialer_username: hit?.username || existing?.dialer_username || null,
       has_password: hit ? !!hit.password : existing?.has_password ?? false,
-      status: (hit?.username || existing?.dialer_username) ? "active" : "requested",
+      status: existing?.status === "inactive" ? "inactive" : (hit?.username || existing?.dialer_username) ? "active" : "requested",
     };
     const { error } = await (supabaseAdmin as any).from("dialer_requests").upsert(payload, { onConflict: "user_id" });
     if (error) throw new Error(error.message);
@@ -93,4 +93,77 @@ export const listDialerRequests = createServerFn({ method: "GET" })
     const { data, error } = await supabase.from("dialer_requests").select("*").order("changed_at", { ascending: false });
     if (error) throw new Error(error.message);
     return (data ?? []) as DialerRequest[];
+  });
+
+async function assertAdmin(supabase: any, userId: string) {
+  const { data: isAdmin, error } = await supabase.rpc("is_admin", { _user_id: userId });
+  if (error) throw new Error(error.message);
+  if (!isAdmin) throw new Error("Forbidden");
+}
+
+export type DialerAgentRow = {
+  user_id: string; name: string; email: string | null;
+  request: DialerRequest | null; sheet_username: string | null; in_sheet: boolean;
+};
+
+/** Every active portal agent, merged with their dialer record and live sheet row. */
+export const listDialerAgents = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context as any;
+    await assertAdmin(supabase, userId);
+    const [{ data: profs, error: pe }, { data: reqs, error: re }] = await Promise.all([
+      supabase.from("profiles").select("id, first_name, last_name, full_name, email").eq("is_active", true),
+      supabase.from("dialer_requests").select("*"),
+    ]);
+    if (pe) throw new Error(pe.message);
+    if (re) throw new Error(re.message);
+    let rows: Awaited<ReturnType<typeof import("./sheets.server")["readSheet"]>> = [];
+    try { rows = await (await import("./sheets.server")).readSheet(); } catch (e) { console.error("[dialer] sheet read failed", e); }
+    const { locateRow } = await import("./sheets.server");
+    const byUser = new Map((reqs ?? []).map((r: any) => [r.user_id, r]));
+    const out: DialerAgentRow[] = (profs ?? []).map((p: any) => {
+      const name = (p.full_name || [p.first_name, p.last_name].filter(Boolean).join(" ") || p.email || "Unnamed").trim();
+      const req = (byUser.get(p.id) as DialerRequest & { sheet_row: number | null }) ?? null;
+      const hit = locateRow(rows, req?.sheet_row ?? null, req?.agent_name ?? name);
+      return { user_id: p.id, name, email: p.email, request: req, sheet_username: hit?.username || null, in_sheet: !!hit };
+    });
+    return out.sort((a, b) => a.name.localeCompare(b.name));
+  });
+
+/** Admin: turn dialer access on (linking an existing sheet login if present) or off. */
+export const setDialerAccess = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ user_id: z.string().uuid(), active: z.boolean() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context as any;
+    await assertAdmin(supabase, userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const admin = supabaseAdmin as any;
+    const now = new Date().toISOString();
+    const { data: existing } = await admin.from("dialer_requests").select("*").eq("user_id", data.user_id).maybeSingle();
+    if (!data.active) {
+      if (!existing) return { ok: true };
+      const { error } = await admin.from("dialer_requests").update({ status: "inactive", updated_at: now }).eq("id", existing.id);
+      if (error) throw new Error(error.message);
+      return { ok: true };
+    }
+    const { data: prof } = await supabase.from("profiles").select("first_name, last_name, full_name").eq("id", data.user_id).maybeSingle();
+    const name = existing?.agent_name || (prof?.full_name || [prof?.first_name, prof?.last_name].filter(Boolean).join(" ")).trim();
+    if (!name) throw new Error("This agent has no name on their profile.");
+    const { readSheet, locateRow } = await import("./sheets.server");
+    const hit = locateRow(await readSheet(), existing?.sheet_row ?? null, name);
+    const payload = {
+      user_id: data.user_id, agent_name: name,
+      lead_types: existing?.lead_types ?? normalizeLeadTypes(fromSheetList(hit?.leadTypes)),
+      states: existing?.states ?? normalizeStates(fromSheetList(hit?.states)),
+      sheet_row: hit?.row ?? existing?.sheet_row ?? null,
+      dialer_username: hit?.username || null, has_password: !!hit?.password,
+      status: hit?.username ? "active" : "requested",
+      last_change: existing ? existing.last_change : "admin", changed_at: existing?.changed_at ?? now, updated_at: now,
+      last_synced_at: now,
+    };
+    const { error } = await admin.from("dialer_requests").upsert(payload, { onConflict: "user_id" });
+    if (error) throw new Error(error.message);
+    return { ok: true, linked: !!hit?.username };
   });

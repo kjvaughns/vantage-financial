@@ -79,7 +79,7 @@ export async function syncFromSheet(admin: any) {
     const hit = locateRow(rows, r.sheet_row, r.agent_name);
     const username = hit?.username || null;
     const hasPw = !!hit?.password;
-    const status = username ? "active" : "requested";
+    const status = r.status === "inactive" ? "inactive" : username ? "active" : "requested";
     const sheetRow = hit?.row ?? r.sheet_row;
     if (username !== r.dialer_username || hasPw !== r.has_password || status !== r.status || sheetRow !== r.sheet_row) {
       await admin.from("dialer_requests").update({

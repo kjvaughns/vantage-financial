@@ -136,7 +136,10 @@ function DialerPage() {
           </Panel>
           <Panel title="Your login">
             {!req ? <p className="p-secondary">Submit a request and your login will show here once dialer support sets it up.</p> :
-              req.dialer_username ? (
+              req.status === "inactive" ? (
+                <div className="space-y-2"><Badge tone="neutral" dot>Deactivated</Badge>
+                  <p className="p-secondary">Your dialer access is turned off. Reach out to your upline if this is a mistake.</p></div>
+              ) : req.dialer_username ? (
                 <div className="space-y-3 text-[13.5px]">
                   <Badge tone="green" dot>Active</Badge>
                   <Cred label="Username" value={req.dialer_username} onCopy={copy} />
