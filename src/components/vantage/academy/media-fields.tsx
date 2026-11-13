@@ -77,7 +77,7 @@ export function MediaSourceField({
 
   return (
     <div className="space-y-2">
-      <Field label={label} hint={hint ?? "Paste a Google Drive, Vimeo, Loom, YouTube or direct file link — or upload a file."}>
+      <Field label={label} hint={hint ?? "Paste a Google Drive, Vimeo, Loom, Zoom recording, YouTube or direct file link — or upload a file."}>
         <Input value={value} onChange={(e) => onChange(e.target.value)} placeholder="https://…" />
       </Field>
       <div className="flex flex-wrap items-center gap-2">

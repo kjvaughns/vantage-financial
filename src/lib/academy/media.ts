@@ -3,12 +3,13 @@
  *   - an embeddable URL for playback
  *   - a fetchable URL for transcription (when one exists) */
 
-export type MediaKind = "drive" | "youtube" | "vimeo" | "loom" | "direct" | "unknown";
+export type MediaKind = "drive" | "youtube" | "vimeo" | "loom" | "zoom" | "direct" | "unknown";
 
 export const SUPPORTED_SOURCES = [
   "Google Drive share link (anyone with the link)",
   "Vimeo link",
   "Loom link",
+  "Zoom recording share link",
   "YouTube (public or unlisted) link",
   "Direct video URL (.mp4, .mov, .webm)",
   "Direct audio URL (.mp3, .m4a, .wav)",
@@ -42,6 +43,11 @@ export function vimeoId(url: string): string | null {
 export function loomId(url: string): string | null {
   const m = url.match(/loom\.com\/(?:share|embed)\/([a-zA-Z0-9]{10,})/);
   return m ? m[1] : null;
+}
+
+/** Zoom cloud-recording share links, e.g. https://us06web.zoom.us/rec/share/... */
+export function isZoomRecording(url: string): boolean {
+  return /(^|\.)zoom\.us\/rec\/(share|play)\//.test(url);
 }
 
 export type ResolvedMedia = {
@@ -89,6 +95,11 @@ export function resolveMedia(rawUrl?: string | null): ResolvedMedia {
   if (loom) {
     return { kind: "loom", embedUrl: `https://www.loom.com/embed/${loom}`, playbackUrl: null, fetchUrl: null };
   }
+  if (isZoomRecording(url)) {
+    // Zoom's recording play page renders fine in an iframe; passcode-protected
+    // recordings prompt inside the frame.
+    return { kind: "zoom", embedUrl: url, playbackUrl: null, fetchUrl: null };
+  }
   if (DIRECT_RE.test(url) || /\/storage\/v1\/object\//.test(url)) {
     return { kind: "direct", embedUrl: null, playbackUrl: url, fetchUrl: url };
   }
@@ -101,8 +112,10 @@ export function transcriptionBlocker(rawUrl?: string | null): string | null {
   if (!rawUrl?.trim()) return "Add a media link or upload a file first.";
   if (m.fetchUrl) return null;
   if (m.kind === "youtube") return "YouTube links can't be transcribed. Upload the file to Google Drive (or Vantage Academy) and paste that link instead.";
-  if (m.kind === "vimeo" || m.kind === "loom")
-    return `${m.kind === "vimeo" ? "Vimeo" : "Loom"} links can't be transcribed directly. Upload the original file to Google Drive (or Vantage Academy) and paste that link to transcribe.`;
+  if (m.kind === "vimeo" || m.kind === "loom" || m.kind === "zoom") {
+    const label = m.kind === "vimeo" ? "Vimeo" : m.kind === "loom" ? "Loom" : "Zoom recording";
+    return `${label} links can't be transcribed directly. Upload the original file to Google Drive (or Vantage Academy) and paste that link to transcribe.`;
+  }
   return "This link isn't a downloadable media file. Use a Google Drive share link, an uploaded file, or a direct .mp4 / .mp3 URL.";
 }
 
