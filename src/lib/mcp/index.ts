@@ -11,6 +11,7 @@ import listAgents from "./tools/list-agents";
 import pipelineSummary from "./tools/pipeline-summary";
 import recentActivity from "./tools/recent-activity";
 import trainingStatus from "./tools/training-status";
+import dialerRequest from "./tools/dialer-request";
 
 const projectRef = import.meta.env["VITE_SUPABASE_PROJECT_ID"] ?? "project-ref-unset";
 
@@ -19,13 +20,13 @@ export default defineMcp({
   title: "Vantage Financial",
   version: "0.1.0",
   instructions:
-    "Vantage Financial recruiting CRM. Search, read, create and update applicants, change pipeline stages, add notes, see agents and pipeline counts, and poll recent activity for new events. Acts with the signed-in user's permissions.",
+    "Vantage Financial recruiting CRM. Search, read, create and update applicants, change pipeline stages, add notes, see agents and pipeline counts, and poll recent activity for new events, and (super admins) submit dialer support requests for agents. Acts with the signed-in user's permissions.",
   auth: auth.oauth.issuer({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated",
   }),
   tools: [
     listApplicants, getApplicant, createApplicant, updateApplicant, updateApplicantExam, changeStage,
-    addNote, confirmCourse, listAgents, pipelineSummary, recentActivity, trainingStatus,
+    addNote, confirmCourse, listAgents, pipelineSummary, recentActivity, trainingStatus, dialerRequest,
   ],
 });

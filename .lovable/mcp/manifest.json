@@ -531,6 +531,72 @@
           "additionalProperties": false
         },
         "outputSchema": null
+      },
+      {
+        "name": "submit_dialer_request",
+        "title": "Submit dialer support request",
+        "description": "Super admin only: add or remove dialer lead types (FEX, VETS, MP) and states for any active agent. Writes to the dialer sheet and emails the agent a confirmation. Use list_agents to find the agent's id.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "agent_id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "description": "The agent's user id."
+            },
+            "add_lead_types": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "FEX",
+                  "VETS",
+                  "MP"
+                ]
+              }
+            },
+            "remove_lead_types": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "FEX",
+                  "VETS",
+                  "MP"
+                ]
+              }
+            },
+            "add_states": {
+              "description": "Two-letter state codes, e.g. TX.",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 2
+              }
+            },
+            "remove_states": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 2
+              }
+            }
+          },
+          "required": [
+            "agent_id"
+          ],
+          "additionalProperties": false
+        },
+        "outputSchema": null
       }
     ]
   }
