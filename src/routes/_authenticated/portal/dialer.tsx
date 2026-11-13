@@ -3,9 +3,9 @@ import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Copy, Eye, EyeOff, X } from "lucide-react";
+import { Check, Copy, Eye, EyeOff, Plus, Search, X } from "lucide-react";
 import { PortalShell } from "@/components/vantage/portal-shell";
-import { PageHeader, PageBody, Panel, Badge, Field, Input, Checkbox, ErrorState, btnClass } from "@/components/portal/ui";
+import { PageHeader, PageBody, Panel, Badge, Field, Input, ErrorState, btnClass } from "@/components/portal/ui";
 import { getMyDialer, saveDialerRequest } from "@/lib/dialer/dialer.functions";
 import { LEAD_TYPES, LEAD_TYPE_LABELS, US_STATES } from "@/lib/dialer/shared";
 
@@ -22,7 +22,8 @@ function DialerPage() {
   const [name, setName] = useState("");
   const [leads, setLeads] = useState<string[]>([]);
   const [states, setStates] = useState<string[]>([]);
-  const [pick, setPick] = useState("");
+  const [pending, setPending] = useState<string[]>([]);
+  const [search, setSearch] = useState("");
   const [saving, setSaving] = useState(false);
   const [showPw, setShowPw] = useState(false);
 
@@ -35,10 +36,11 @@ function DialerPage() {
   }, [q.data]);
 
   const req = q.data?.request;
-  const save = async () => {
+  const available = US_STATES.filter((s) => !states.includes(s) && s.includes(search.trim()));
+  const save = async (nextStates: string[] = states) => {
     setSaving(true);
     try {
-      await saveFn({ data: { agent_name: name, lead_types: leads, states } });
+      await saveFn({ data: { agent_name: name, lead_types: leads, states: nextStates } });
       toast.success(req ? "Dialer request updated" : "Dialer login requested");
       qc.invalidateQueries({ queryKey: ["dialer"] });
     } catch (e) {
@@ -60,17 +62,31 @@ function DialerPage() {
               </Field>
               <div>
                 <span className="p-label mb-2 block">Lead types</span>
-                <div className="flex flex-wrap gap-4">
-                  {LEAD_TYPES.map((t) => (
-                    <Checkbox key={t} checked={leads.includes(t)} label={`${t} · ${LEAD_TYPE_LABELS[t]}`}
-                      onChange={(v) => setLeads((l) => (v ? [...l, t] : l.filter((x) => x !== t)))} />
-                  ))}
+                <div className="grid gap-2 sm:grid-cols-3">
+                  {LEAD_TYPES.map((t) => {
+                    const on = leads.includes(t);
+                    return (
+                      <button key={t} type="button" aria-pressed={on}
+                        onClick={() => setLeads((l) => (on ? l.filter((x) => x !== t) : [...l, t]))}
+                        className="p-focus flex items-center gap-3 rounded-[12px] border px-3 py-2.5 text-left transition-colors"
+                        style={{ borderColor: on ? "var(--p-gold)" : "var(--p-border)", background: on ? "color-mix(in oklab, var(--p-gold) 12%, transparent)" : "var(--p-raised)" }}>
+                        <span className="grid h-5 w-5 shrink-0 place-items-center rounded-[6px] border"
+                          style={{ borderColor: on ? "var(--p-gold)" : "var(--p-border)", background: on ? "var(--p-gold)" : "transparent" }}>
+                          {on && <Check className="h-3.5 w-3.5" style={{ color: "var(--p-bg, #000)" }} strokeWidth={3} />}
+                        </span>
+                        <span>
+                          <span className="block text-[13.5px] font-semibold" style={{ color: on ? "var(--p-gold)" : undefined }}>{t}</span>
+                          <span className="p-secondary block text-[12px]">{LEAD_TYPE_LABELS[t]}</span>
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
               <div>
-                <span className="p-label mb-2 block">States</span>
-                <div className="mb-3 flex flex-wrap gap-2">
-                  {states.length === 0 && <span className="p-secondary">No states added yet.</span>}
+                <span className="p-label mb-2 block">Your states</span>
+                <div className="mb-4 flex flex-wrap gap-2">
+                  {states.length === 0 && <span className="p-secondary">No states yet — tap states below to add them.</span>}
                   {states.map((s) => (
                     <button key={s} type="button" onClick={() => setStates((x) => x.filter((y) => y !== s))}
                       className="p-focus inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[13px] font-semibold"
@@ -79,17 +95,41 @@ function DialerPage() {
                     </button>
                   ))}
                 </div>
-                <div className="flex gap-2">
-                  <select value={pick} onChange={(e) => setPick(e.target.value)}
-                    className="p-focus h-10 rounded-[10px] border bg-transparent px-3 text-[13.5px]" style={{ borderColor: "var(--p-border)", background: "var(--p-raised)" }}>
-                    <option value="">Add a state…</option>
-                    {US_STATES.filter((s) => !states.includes(s)).map((s) => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                  <button type="button" className={btnClass("secondary")} disabled={!pick}
-                    onClick={() => { setStates((x) => [...x, pick]); setPick(""); }}>Add</button>
+                <div className="rounded-[12px] border p-3" style={{ borderColor: "var(--p-border)", background: "var(--p-raised)" }}>
+                  <div className="mb-3 flex items-center gap-2">
+                    <div className="relative flex-1">
+                      <Search className="p-secondary pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2" />
+                      <Input value={search} onChange={(e) => setSearch(e.target.value.toUpperCase())} placeholder="Search states (e.g. TX)" className="pl-8" />
+                    </div>
+                    {pending.length > 0 && <button type="button" className={btnClass("ghost", "sm")} onClick={() => setPending([])}>Clear</button>}
+                  </div>
+                  {available.length === 0 ? <p className="p-secondary text-[13px]">{states.length === US_STATES.length ? "You already have every state." : "No matching states."}</p> : (
+                    <div className="grid grid-cols-5 gap-1.5 sm:grid-cols-8 lg:grid-cols-10">
+                      {available.map((s) => {
+                        const on = pending.includes(s);
+                        return (
+                          <button key={s} type="button" aria-pressed={on}
+                            onClick={() => setPending((p) => (on ? p.filter((x) => x !== s) : [...p, s]))}
+                            className="p-focus h-9 rounded-[8px] border text-[12.5px] font-semibold transition-colors"
+                            style={{ borderColor: on ? "var(--p-gold)" : "var(--p-border)", background: on ? "var(--p-gold)" : "transparent", color: on ? "var(--p-bg, #000)" : undefined }}>
+                            {s}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {pending.length > 0 && (
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t pt-3" style={{ borderColor: "var(--p-border)" }}>
+                      <span className="p-secondary text-[13px]">{pending.length} selected: {pending.join(", ")}</span>
+                      <button type="button" className={btnClass("primary", "sm")} disabled={saving || name.trim().length < 3 || !leads.length}
+                        onClick={() => { const next = [...states, ...pending]; setStates(next); setPending([]); void save(next); }}>
+                        <Plus className="h-4 w-4" /> Request {pending.length === 1 ? "state" : "states"}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
-              <button type="button" className={btnClass("primary")} disabled={saving || q.isLoading || name.trim().length < 3 || !leads.length || !states.length} onClick={save}>
+              <button type="button" className={btnClass("primary")} disabled={saving || q.isLoading || name.trim().length < 3 || !leads.length || !states.length} onClick={() => save()}>
                 {saving ? "Saving…" : req ? "Save changes" : "Request dialer login"}
               </button>
             </div>
