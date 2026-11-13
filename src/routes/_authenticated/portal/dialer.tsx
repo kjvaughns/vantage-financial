@@ -56,7 +56,7 @@ function DialerPage() {
         {q.isError ? <ErrorState title="Couldn't load your dialer info" description={(q.error as Error).message} /> : (
         <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
           <Panel title={req ? "Your dialer request" : "Request a dialer login"}>
-            <div className="space-y-5">
+            <div className="space-y-4">
               <Field label="First and last name" required>
                 <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Jane Smith" />
               </Field>
@@ -68,7 +68,7 @@ function DialerPage() {
                     return (
                       <button key={t} type="button" aria-pressed={on}
                         onClick={() => setLeads((l) => (on ? l.filter((x) => x !== t) : [...l, t]))}
-                        className="p-focus flex items-center gap-3 rounded-[12px] border px-3 py-2.5 text-left transition-colors"
+                        className="p-focus flex items-center gap-2 rounded-[10px] border px-2.5 py-1.5 text-left transition-colors"
                         style={{ borderColor: on ? "var(--p-gold)" : "var(--p-border)", background: on ? "color-mix(in oklab, var(--p-gold) 12%, transparent)" : "var(--p-raised)" }}>
                         <span className="grid h-5 w-5 shrink-0 place-items-center rounded-[6px] border"
                           style={{ borderColor: on ? "var(--p-gold)" : "var(--p-border)", background: on ? "var(--p-gold)" : "transparent" }}>
@@ -85,7 +85,7 @@ function DialerPage() {
               </div>
               <div>
                 <span className="p-label mb-2 block">Your states</span>
-                <div className="mb-4 flex flex-wrap gap-2">
+                <div className="mb-2 flex flex-wrap gap-1.5">
                   {states.length === 0 && <span className="p-secondary">No states yet — tap states below to add them.</span>}
                   {states.map((s) => (
                     <button key={s} type="button" onClick={() => setStates((x) => x.filter((y) => y !== s))}
@@ -95,22 +95,22 @@ function DialerPage() {
                     </button>
                   ))}
                 </div>
-                <div className="rounded-[12px] border p-3" style={{ borderColor: "var(--p-border)", background: "var(--p-raised)" }}>
-                  <div className="mb-3 flex items-center gap-2">
+                <div className="rounded-[10px] border p-2" style={{ borderColor: "var(--p-border)", background: "var(--p-raised)" }}>
+                  <div className="mb-2 flex items-center gap-2">
                     <div className="relative flex-1">
                       <Search className="p-secondary pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2" />
-                      <Input value={search} onChange={(e) => setSearch(e.target.value.toUpperCase())} placeholder="Search states (e.g. TX)" className="pl-8" />
+                      <Input value={search} onChange={(e) => setSearch(e.target.value.toUpperCase())} placeholder="Search states (e.g. TX)" className="h-8 pl-8 text-[13px]" />
                     </div>
                     {pending.length > 0 && <button type="button" className={btnClass("ghost", "sm")} onClick={() => setPending([])}>Clear</button>}
                   </div>
                   {available.length === 0 ? <p className="p-secondary text-[13px]">{states.length === US_STATES.length ? "You already have every state." : "No matching states."}</p> : (
-                    <div className="grid grid-cols-5 gap-1.5 sm:grid-cols-8 lg:grid-cols-10">
+                    <div className="grid grid-cols-7 gap-1 sm:grid-cols-10 lg:grid-cols-13">
                       {available.map((s) => {
                         const on = pending.includes(s);
                         return (
                           <button key={s} type="button" aria-pressed={on}
                             onClick={() => setPending((p) => (on ? p.filter((x) => x !== s) : [...p, s]))}
-                            className="p-focus h-9 rounded-[8px] border text-[12.5px] font-semibold transition-colors"
+                            className="p-focus h-7 rounded-[6px] border text-[11.5px] font-semibold transition-colors"
                             style={{ borderColor: on ? "var(--p-gold)" : "var(--p-border)", background: on ? "var(--p-gold)" : "transparent", color: on ? "var(--p-bg, #000)" : undefined }}>
                             {s}
                           </button>
