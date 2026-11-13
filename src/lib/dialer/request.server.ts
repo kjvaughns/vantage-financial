@@ -20,7 +20,13 @@ export async function submitDialerRequest(supabase: any, userId: string, data: {
     }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const now = new Date().toISOString();
-    const payload = {
+    // Baseline = what the agent had before today's (Central) changes, so the digest can show adds/removes.
+    const day = (d: string | Date) => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago" }).format(new Date(d));
+    const sameDay = existing?.changed_at && day(existing.changed_at) === day(now) && existing.baseline_states;
+    const baseline = !existing ? { baseline_lead_types: null, baseline_states: null }
+      : sameDay ? { baseline_lead_types: existing.baseline_lead_types, baseline_states: existing.baseline_states }
+      : { baseline_lead_types: existing.lead_types ?? [], baseline_states: existing.states ?? [] };
+    const payload = { ...baseline,
       user_id: userId, agent_name: data.agent_name, lead_types: leadTypes, states, sheet_row: row,
       last_change: existing ? "update" : "new", changed_at: now, updated_at: now,
       dialer_username: hit?.username || existing?.dialer_username || null,

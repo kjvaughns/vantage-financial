@@ -1,0 +1,1 @@
+ALTER TABLE public.dialer_requests ADD COLUMN IF NOT EXISTS baseline_lead_types text[], ADD COLUMN IF NOT EXISTS baseline_states text[];

@@ -1140,6 +1140,8 @@ export type Database = {
       dialer_requests: {
         Row: {
           agent_name: string
+          baseline_lead_types: string[] | null
+          baseline_states: string[] | null
           changed_at: string
           created_at: string
           dialer_username: string | null
@@ -1156,6 +1158,8 @@ export type Database = {
         }
         Insert: {
           agent_name: string
+          baseline_lead_types?: string[] | null
+          baseline_states?: string[] | null
           changed_at?: string
           created_at?: string
           dialer_username?: string | null
@@ -1172,6 +1176,8 @@ export type Database = {
         }
         Update: {
           agent_name?: string
+          baseline_lead_types?: string[] | null
+          baseline_states?: string[] | null
           changed_at?: string
           created_at?: string
           dialer_username?: string | null

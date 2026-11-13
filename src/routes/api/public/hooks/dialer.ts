@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { buildDigestHtml } from "@/lib/dialer/digest";
 import { DIALER_DIGEST_CC_EMAIL, DIALER_SHEET_URL, DIALER_SUPPORT_EMAIL, previousCentralDay } from "@/lib/dialer/shared";
 
 /**
@@ -7,7 +8,6 @@ import { DIALER_DIGEST_CC_EMAIL, DIALER_SHEET_URL, DIALER_SUPPORT_EMAIL, previou
  *   {"job":"sync"}   every 10 min — pull dialer logins from the Google Sheet
  *   {"job":"digest"} daily 8 AM CT — email support yesterday's requests
  */
-const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
 async function runDigest(admin: any) {
   // Scheduled at both 13:00 and 14:00 UTC; only the run that lands at 8 AM Central sends.
@@ -15,25 +15,13 @@ async function runDigest(admin: any) {
   if (hour !== 8) return { sent: false, skipped: "not 8 AM Central" };
   const { start, end, label } = previousCentralDay(new Date());
   const { data, error } = await admin.from("dialer_requests")
-    .select("agent_name, lead_types, states, last_change, changed_at")
+    .select("agent_name, lead_types, states, last_change, changed_at, baseline_lead_types, baseline_states")
     .gte("changed_at", start.toISOString()).lt("changed_at", end.toISOString())
     .neq("last_change", "admin").neq("status", "inactive")
     .order("changed_at");
   if (error) throw error;
   if (!data?.length) return { sent: false, count: 0 };
-  const rows = data.map((r: any) => `<tr>
-    <td style="padding:8px;border-bottom:1px solid #eee">${esc(r.agent_name)}</td>
-    <td style="padding:8px;border-bottom:1px solid #eee">${r.last_change === "new" ? "New" : "Update"}</td>
-    <td style="padding:8px;border-bottom:1px solid #eee">${esc(r.lead_types.join(", "))}</td>
-    <td style="padding:8px;border-bottom:1px solid #eee">${esc(r.states.join(", "))}</td></tr>`).join("");
-  const html = `<div style="font-family:Arial,sans-serif;background:#ffffff;color:#111;padding:20px">
-    <h2 style="margin:0 0 8px">Dialer support requests — ${label}</h2>
-    <p>${data.length} new or updated request${data.length === 1 ? "" : "s"} from Vantage agents yesterday.</p>
-    <table style="border-collapse:collapse;width:100%;font-size:14px">
-      <tr style="text-align:left"><th style="padding:8px">Agent</th><th style="padding:8px">Type</th><th style="padding:8px">Lead types</th><th style="padding:8px">States</th></tr>
-      ${rows}</table>
-    <p style="margin:20px 0 8px"><a href="${DIALER_SHEET_URL}" style="display:inline-block;background:#C9A84C;color:#000;text-decoration:none;font-weight:bold;padding:10px 18px;border-radius:6px">Open the dialer sheet</a></p>
-    <p style="font-size:13px;color:#555">Add logins in the sheet — they appear in the portal automatically.<br><a href="${DIALER_SHEET_URL}" style="color:#9a7a2c">${DIALER_SHEET_URL}</a></p></div>`;
+  const html = buildDigestHtml(label, data);
   const { sendRawEmail } = await import("@/lib/email-templates/send-email");
   const res = await sendRawEmail(DIALER_SUPPORT_EMAIL, `Dialer requests for ${label} (${data.length})`, html, {
     idempotencyKey: `dialer-digest-${label}`,
