@@ -59,8 +59,8 @@ function AdminDialer() {
         </div>
         {q.isLoading ? <TableSkeleton /> : q.isError ? <ErrorState title="Couldn't load agents" description={(q.error as Error).message} /> :
           !rows.length ? <EmptyState title="No agents match" /> : (
-          <TableWrap><Table>
-            <THead><tr><TH>Agent</TH><TH>Lead types</TH><TH>States</TH><TH>Dialer login</TH><TH>Status</TH><TH></TH></tr></THead>
+          <TableWrap><Table minWidth={900}>
+            <THead><TH>Agent</TH><TH>Lead types</TH><TH>States</TH><TH>Dialer login</TH><TH>Status</TH><TH align="right">Actions</TH></THead>
             <tbody>{rows.map((r) => {
               const s = statusOf(r);
               const login = r.request?.dialer_username || r.sheet_username;
@@ -71,7 +71,7 @@ function AdminDialer() {
                   <TD className="max-w-[220px] truncate">{r.request?.states.join(", ") || "—"}</TD>
                   <TD>{login ? <code className="text-[12.5px]">{login}</code> : r.in_sheet ? <span className="p-secondary">In sheet, no login</span> : <span className="p-secondary">—</span>}</TD>
                   <TD>{s === "active" ? <Badge tone="green">Active</Badge> : s === "requested" ? <Badge tone="amber">Requested</Badge> : s === "inactive" ? <Badge>Deactivated</Badge> : <span className="p-secondary">No access</span>}</TD>
-                  <TD className="text-right whitespace-nowrap">
+                  <TD align="right" className="whitespace-nowrap">
                     <button className={btnClass("ghost", "sm")} onClick={() => setEditing(r)}>Edit</button>{" "}
                     {s === "active" || s === "requested"
                       ? <button className={btnClass("secondary", "sm")} disabled={busy === r.user_id} onClick={() => toggle(r, false)}>Deactivate</button>
