@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { PortalShell } from "@/components/vantage/portal-shell";
@@ -25,6 +25,7 @@ const ROLES = ["agent", "leader", "manager", "admin"] as const;
 type RoleName = (typeof ROLES)[number];
 
 function UsersPage() {
+  const pathname = useLocation({ select: (location) => location.pathname });
   const list = useServerFn(adminListUsers);
   const setRole = useServerFn(adminSetUserRole);
   const updateProfile = useServerFn(adminUpdateProfile);
@@ -76,6 +77,8 @@ function UsersPage() {
       onManage={(ownerId) => setManageOwnerId(ownerId)}
     />
   );
+
+  if (pathname !== "/portal/admin/users" && pathname !== "/portal/admin/users/") return <Outlet />;
 
   return (
     <PortalShell>

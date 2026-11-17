@@ -48,9 +48,6 @@ function AgencyApply() {
   const navigate = useNavigate();
   const submit = useServerFn(submitApplication);
   const fetchSlots = useServerFn(getOverviewSlots);
-  const slotsQuery = useQuery({ queryKey: ["overview-slots"], queryFn: () => fetchSlots(), retry: false, staleTime: 300000 });
-  const slots = slotsQuery.data?.slots ?? [];
-
   const [track, setTrack] = useState<Track | null>(initialTrack ?? null);
   const [f, setF] = useState({
     first_name: "", last_name: "", email: "", phone: "", state: "",
@@ -64,6 +61,10 @@ function AgencyApply() {
   const [busy, setBusy] = useState(false);
   const [quiz, setQuiz] = useState<{ answers: Record<string, string>; result: { recommendation: string; headline: string; pain_points: string[] } } | null>(null);
   const [recruiter, setRecruiter] = useState<RecruiterSelection | null>(null);
+  const recruiterId = recruiter && !recruiter.custom && !recruiter.self ? recruiter.id : undefined;
+  const slotsQuery = useQuery({ queryKey: ["overview-slots", recruiterId ?? "primary"], queryFn: () => fetchSlots({ data: { recruiterId } }), retry: false, staleTime: 300000 });
+  const slots = slotsQuery.data?.slots ?? [];
+  useEffect(() => { setF((f) => ({ ...f, slot: "" })); }, [recruiterId]);
   useEffect(() => {
     const r = getReferral();
     setRef(r);
@@ -147,6 +148,7 @@ function AgencyApply() {
           referral_landing_url: ref?.landing_url ?? "",
           invalid_referral_slug: ref?.invalid ? ref.slug : "",
           requested_overview_at: f.slot,
+          interview_calendar_id: slotsQuery.data?.calendarId ?? null,
           agency: {
             track,
             team_size: Number(f.team_size),
@@ -317,7 +319,7 @@ function AgencyApply() {
 
         {slots.length > 0 && (
           <Section n="3" title="Book your strategy call">
-            <InterviewSlotPicker slots={slots} value={f.slot} onChange={(iso) => set("slot", iso)} />
+            <InterviewSlotPicker key={recruiterId ?? "primary"} slots={slots} value={f.slot} onChange={(iso) => set("slot", iso)} />
             <p className="mt-2 text-[12.5px] text-vantage-muted">Booked automatically when you submit. The invite goes to your email.</p>
           </Section>
         )}

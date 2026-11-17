@@ -27,7 +27,7 @@ function ReschedulePage() {
   const getSlots = useServerFn(getOverviewSlots);
   const update = useServerFn(chooseNewInterviewTime);
   const details = useQuery({ queryKey: ["reschedule-applicant", token], queryFn: () => load({ data: { token } }), retry: false });
-  const availability = useQuery({ queryKey: ["reschedule-slots", token], queryFn: () => getSlots(), enabled: details.data?.found === true && !details.data.legacyBooking, retry: false });
+  const availability = useQuery({ queryKey: ["reschedule-slots", token], queryFn: () => getSlots({ data: { token } }), enabled: details.data?.found === true && !details.data.legacyBooking, retry: false });
   const [selected, setSelected] = useState("");
   const [saving, setSaving] = useState(false);
   const [confirmed, setConfirmed] = useState("");

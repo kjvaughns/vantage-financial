@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "@tanstack/react-router";
 
 export const CAL_BOOKING_URL = "https://cal.com/kjvaughns/15min";
 
@@ -39,7 +40,7 @@ export function CalBookingCard({
         <p className="mt-1.5 text-[14px] leading-relaxed text-vantage-muted">
           {booked
             ? `Confirmed for ${label}. The calendar invite is in your email — watch the video above before we talk.`
-            : "Pick a time that works for a quick 1:1 call with KJ Vaughns."}
+            : "Pick a time for your 1:1 interview with your recruiting team's leader."}
         </p>
       </div>
       {booked ? (
@@ -47,14 +48,13 @@ export function CalBookingCard({
           Booked ✓
         </span>
       ) : (
-        <a
-          href={CAL_BOOKING_URL}
-          target="_blank"
-          rel="noreferrer noopener"
+        <Link
+          to="/reschedule/$token"
+          params={{ token }}
           className="vantage-btn-primary flex-none px-6 py-3.5 text-[15px]"
         >
           Book my 1:1 call →
-        </a>
+        </Link>
       )}
     </div>
   );

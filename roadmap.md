@@ -32,3 +32,8 @@
 - [x] Verify both paths and the portal presentation- [x] Training Hub redesign + AI Call Coach (Gold Standard scripts imported)
 
 - [x] Dialer Support: agent request page, two-way Google Sheet sync, admin list, daily 8 AM Central digest to dialer support (sheet sync verified; a real agent submission and email send were not tested)
+
+- [x] Add secure leader Cal.com settings and super-admin profile editing
+- [x] Route referral/team availability, applications and rescheduling to the resolved leader calendar
+- [x] Verify permissions, calendar payloads, signed-in connection test/save/read-back/disconnect, admin profile editing, and mobile layout
+- [ ] Verify a real booking/reschedule on another leader calendar — blocked until that leader connects their Cal.com account; no live applicant booking created during testing

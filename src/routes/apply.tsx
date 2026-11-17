@@ -83,21 +83,14 @@ function ApplyPage() {
   const resolveRecruiter = useServerFn(getRecruiterBySlug);
   const fetchSlots = useServerFn(getOverviewSlots);
 
-  // Live Monday overview availability from Calendly. If this fails or comes back
-  // empty the field is simply skipped — applications are never blocked on it.
-  const slotsQuery = useQuery({
-    queryKey: ["overview-slots"],
-    queryFn: () => fetchSlots(),
-    staleTime: 5 * 60 * 1000,
-    retry: false,
-  });
-  const slots = slotsQuery.data?.slots ?? [];
-
-
   const [form, setForm] = useState<Form>(initial);
   // Final selected recruiter (what gets submitted) + the original referral-link
   // recruiter (kept for attribution audit even if the applicant changes it).
   const [recruiter, setRecruiter] = useState<RecruiterSelection | null>(null);
+  const recruiterId = recruiter && !recruiter.custom && !recruiter.self ? recruiter.id : undefined;
+  const slotsQuery = useQuery({ queryKey: ["overview-slots", recruiterId ?? "primary"], queryFn: () => fetchSlots({ data: { recruiterId } }), retry: false, staleTime: 300000 });
+  const slots = slotsQuery.data?.slots ?? [];
+  useEffect(() => { setForm((f) => ({ ...f, overview_slot: "" })); }, [recruiterId]);
   const [originalReferral, setOriginalReferral] = useState<RecruiterSelection | null>(null);
   const [referralSlug, setReferralSlug] = useState("");
   const [invalidSlug, setInvalidSlug] = useState("");
@@ -197,6 +190,7 @@ function ApplyPage() {
           referral_landing_url: landingUrl,
           invalid_referral_slug: invalidSlug,
           requested_overview_at: form.overview_slot,
+          interview_calendar_id: slotsQuery.data?.calendarId ?? null,
         },
       });
 
@@ -419,7 +413,7 @@ function ApplyPage() {
 
           {!slotsQuery.isLoading && slots.length > 0 && (
             <Field label="Book your 1:1 interview call *">
-              <InterviewSlotPicker
+              <InterviewSlotPicker key={recruiterId ?? "primary"}
                 slots={slots}
                 value={form.overview_slot}
                 onChange={(iso) => set("overview_slot", iso)}

@@ -377,6 +377,7 @@ export type Database = {
           hired_at: string | null
           id: string
           instagram_handle: string | null
+          interview_calendar_id: string | null
           invalid_referral_slug: string | null
           last_contacted_at: string | null
           last_follow_up_at: string | null
@@ -477,6 +478,7 @@ export type Database = {
           hired_at?: string | null
           id?: string
           instagram_handle?: string | null
+          interview_calendar_id?: string | null
           invalid_referral_slug?: string | null
           last_contacted_at?: string | null
           last_follow_up_at?: string | null
@@ -577,6 +579,7 @@ export type Database = {
           hired_at?: string | null
           id?: string
           instagram_handle?: string | null
+          interview_calendar_id?: string | null
           invalid_referral_slug?: string | null
           last_contacted_at?: string | null
           last_follow_up_at?: string | null
@@ -664,6 +667,13 @@ export type Database = {
             columns: ["current_stage_id"]
             isOneToOne: false
             referencedRelation: "pipeline_stages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applicants_interview_calendar_id_fkey"
+            columns: ["interview_calendar_id"]
+            isOneToOne: false
+            referencedRelation: "interview_calendars"
             referencedColumns: ["id"]
           },
           {
@@ -1533,6 +1543,50 @@ export type Database = {
             columns: ["applicant_id"]
             isOneToOne: false
             referencedRelation: "applicants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interview_calendars: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          encrypted_api_key: string
+          event_slug: string
+          event_type_id: number
+          id: string
+          owner_id: string
+          timezone: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          encrypted_api_key: string
+          event_slug: string
+          event_type_id: number
+          id?: string
+          owner_id: string
+          timezone?: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          encrypted_api_key?: string
+          event_slug?: string
+          event_type_id?: number
+          id?: string
+          owner_id?: string
+          timezone?: string
+          username?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interview_calendars_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -2959,6 +3013,17 @@ export type Database = {
       reconcile_auto_onboarding: {
         Args: { _profile_id: string }
         Returns: undefined
+      }
+      replace_interview_calendar: {
+        Args: {
+          _encrypted_key: string
+          _event_id: number
+          _owner: string
+          _slug: string
+          _timezone: string
+          _username: string
+        }
+        Returns: string
       }
       resend_invitation: { Args: { _id: string }; Returns: Json }
       resolve_applicant_upline: {

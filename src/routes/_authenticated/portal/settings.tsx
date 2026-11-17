@@ -39,6 +39,7 @@ import {
   deleteAgentLink,
   assignAgentLink,
 } from "@/lib/portal.functions";
+import { InterviewCalendarSettings } from "@/components/vantage/interview-calendar-settings";
 import { CalendlyInline } from "@/components/vantage/calendly-inline";
 import { RecruitingLinkCard } from "@/components/vantage/recruiting-link-card";
 import { useTheme } from "@/components/vantage/theme";
@@ -463,91 +464,16 @@ function AppearanceSection() {
 const CALENDLY_RE = /^https:\/\/calendly\.com\/[A-Za-z0-9\-_/?&=.%#]+$/;
 
 function RecruitingSection() {
-  const getFn = useServerFn(getMySchedulingSettings);
-  const saveFn = useServerFn(updateMySchedulingSettings);
-  const qc = useQueryClient();
-  const q = useQuery({ queryKey: ["me", "scheduling"], queryFn: () => getFn() });
-  const save = useMutation({
-    mutationFn: (v: { licensed_calendly_url: string }) => saveFn({ data: v }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["me", "scheduling"] }),
-  });
-
-  const [url, setUrl] = useState("");
-  const [preview, setPreview] = useState(false);
-  useEffect(() => {
-    if (q.data) setUrl(q.data.licensed_calendly_url ?? "");
-  }, [q.data]);
-
-  const isValid = url === "" || CALENDLY_RE.test(url);
-  const status = !q.data ? "…" : url === "" ? "Not set" : !isValid ? "Invalid" : "Set";
-  const canEdit = q.data?.can_edit ?? false;
+  const meFn = useServerFn(getMe);
+  const me = useQuery({ queryKey: ["me"], queryFn: () => meFn() });
+  const calendarLeader = me.data?.roles.some((r) => ["leader", "manager", "admin", "super_admin"].includes(r));
 
   return (
     <div className="space-y-4">
       <RecruitingLinkCard />
+      {calendarLeader && <InterviewCalendarSettings />}
       <TeamRecruitingLinksCard />
       <AgentLinkSettingsPanel />
-
-      <Panel title="Licensed scheduling">
-        {q.isLoading ? (
-          <TextSkeleton lines={3} />
-        ) : q.isError ? (
-          <ErrorState description="We couldn't load this setting." onRetry={() => q.refetch()} />
-        ) : !canEdit ? (
-          <p className="p-secondary">
-            Your account isn't permitted to schedule licensed applicants. Ask an administrator to
-            enable this for you.
-          </p>
-        ) : (
-          <>
-            <Field label="Licensed applicant Calendly link">
-              <div className="flex flex-col gap-3 md:flex-row">
-                <Input
-                  className="flex-1"
-                  placeholder="https://calendly.com/your-name/interview"
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                />
-                <Button
-                  variant="primary"
-                  onClick={() => save.mutate({ licensed_calendly_url: url })}
-                  disabled={!isValid || save.isPending}
-                >
-                  {save.isPending ? "Saving…" : "Save"}
-                </Button>
-              </div>
-            </Field>
-            <div className="mt-3 flex flex-wrap items-center gap-3 text-[13px]">
-              <Badge tone={status === "Set" ? "green" : status === "Invalid" ? "red" : "neutral"}>
-                Status: {status}
-              </Badge>
-              {q.data?.licensed_calendly_updated_at && (
-                <span className="p-muted">
-                  Updated {new Date(q.data.licensed_calendly_updated_at).toLocaleString()}
-                </span>
-              )}
-              {url && isValid && (
-                <>
-                  <a href={url} target="_blank" rel="noreferrer noopener" style={{ color: "var(--p-gold)" }} className="hover:underline">
-                    Test link →
-                  </a>
-                  <button onClick={() => setPreview((v) => !v)} style={{ color: "var(--p-gold)" }} className="hover:underline">
-                    {preview ? "Hide preview" : "Preview embed"}
-                  </button>
-                </>
-              )}
-            </div>
-            {!isValid && url !== "" && (
-              <p className="mt-3 text-[13px]" style={{ color: "var(--p-red)" }}>
-                Must be a valid https://calendly.com/... URL.
-              </p>
-            )}
-            {preview && url && isValid && <CalendlyInline url={url} height={640} />}
-          </>
-        )}
-      </Panel>
-
-      <OneOnOneLinkPanel />
     </div>
   );
 }

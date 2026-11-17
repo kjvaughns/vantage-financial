@@ -5,17 +5,20 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { PortalShell } from "@/components/vantage/portal-shell";
 import { PageBody, Panel, Badge, Avatar, Button, CardSkeleton, ErrorState } from "@/components/portal/ui";
-import { adminGetAgentProfile } from "@/lib/portal.functions";
+import { InterviewCalendarSettings } from "@/components/vantage/interview-calendar-settings";
+import { getMe, adminGetAgentProfile } from "@/lib/portal.functions";
 import { onboardingProgress, ONBOARDING_STEP_ORDER, ONBOARDING_STEP_LABELS } from "@/lib/onboarding";
 import { recruitingStatusLabel, recruitingStatusTone } from "@/lib/recruiting";
 
 export const Route = createFileRoute("/_authenticated/portal/admin/users/$userId")({
-  head: () => ({ meta: [{ title: "Agent Profile — Vantage Admin" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Agent Profile — Vantage Admin" }, { name: "description", content: "Manage Vantage agent details, onboarding and team interview scheduling." }, { property: "og:title", content: "Agent Profile — Vantage Admin" }, { property: "og:description", content: "Vantage Financial agent administration and interview scheduling." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] }),
   component: AgentProfilePage,
 });
 
 function AgentProfilePage() {
   const { userId } = Route.useParams();
+  const meFn = useServerFn(getMe);
+  const me = useQuery({ queryKey: ["me"], queryFn: () => meFn() });
   const fn = useServerFn(adminGetAgentProfile);
   const q = useQuery({ queryKey: ["admin", "agent", userId], queryFn: () => fn({ data: { user_id: userId } }) });
 
@@ -72,6 +75,7 @@ function AgentProfilePage() {
           </div>
 
           <div className="space-y-4">
+            {me.data?.roles.includes("super_admin") && roles.some((r: string) => ["leader", "manager", "admin", "super_admin"].includes(r)) && p?.is_active !== false && <InterviewCalendarSettings ownerId={userId} />}
             <Panel title="Details">
               <dl className="grid gap-3 text-[13px] sm:grid-cols-2">
                 <DField label="Roles" value={roles.length ? roles.join(", ") : "—"} />

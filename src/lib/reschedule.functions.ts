@@ -27,24 +27,27 @@ export const chooseNewInterviewTime = createServerFn({ method: "POST" })
     if (a.scheduled_event_start && !a.scheduled_event_id) {
       return { ok: false as const, error: "This interview was booked before online changes were available. Please reply to your interview email so we can move it without creating a second booking." };
     }
+    const { calendarForApplicantToken } = await import("@/lib/interview/calendar.server");
+    const calendar = await calendarForApplicantToken(data.token);
     const start = new Date(data.startIso);
     if (!Number.isFinite(start.getTime()) || start.getTime() < Date.now() + 10 * 60_000 || start.getTime() > Date.now() + 7 * 86400_000) {
       return { ok: false as const, error: "Please choose an available time in the next seven days." };
     }
-    const slots = await fetchCalSlots();
+    const slots = await fetchCalSlots(calendar);
     if (!slots.some((slot) => new Date(slot.startIso).getTime() === start.getTime())) {
       return { ok: false as const, error: "That time is no longer available. Please refresh and choose another." };
     }
 
     const booked = a.scheduled_event_id
-      ? await rescheduleCalBooking(a.scheduled_event_id, start.toISOString(), a.email)
+      ? await rescheduleCalBooking(a.scheduled_event_id, start.toISOString(), a.email, calendar)
       : await createCalBooking({
           startIso: start.toISOString(), name: `${a.first_name} ${a.last_name}`.trim(),
           email: a.email, phone: a.phone, licensed: a.licensed, notes: `Rescheduled applicant · State: ${a.state ?? "not provided"}`,
-        });
+        }, calendar);
     if (!booked.ok) return { ok: false as const, error: booked.error };
     const uid = booked.uid || a.scheduled_event_id;
     const { error: saveError } = await supabaseAdmin.from("applicants").update({
+      interview_calendar_id: calendar.id,
       scheduled_event_id: uid,
       scheduled_event_start: start.toISOString(),
       scheduled_event_url: "rescheduleUrl" in booked && booked.rescheduleUrl ? booked.rescheduleUrl : uid ? `https://cal.com/reschedule/${encodeURIComponent(uid)}` : null,

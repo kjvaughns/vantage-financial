@@ -1,4 +1,6 @@
 import type { OverviewSlot } from "@/lib/calendly.server";
+import { primaryCalendar, type InterviewCalendar } from "@/lib/interview/calendar.server";
+import { bookingPayload } from "@/lib/interview/rules";
 
 const CAL_API = "https://api.cal.com/v2";
 export const CAL_USERNAME = "kjvaughns";
@@ -16,19 +18,20 @@ const labelFmt = new Intl.DateTimeFormat("en-US", {
 });
 
 /** Open 1:1 interview times for the next 7 days. Returns [] on any failure. */
-export async function fetchCalSlots(): Promise<OverviewSlot[]> {
+export async function fetchCalSlots(calendar: InterviewCalendar = primaryCalendar()): Promise<OverviewSlot[]> {
   try {
     const start = new Date(Date.now() + 10 * 60000);
     const end = new Date(Date.now() + 7 * 86400000);
     const qs = new URLSearchParams({
-      username: CAL_USERNAME,
-      eventTypeSlug: CAL_EVENT_SLUG,
+      username: calendar.username,
+      eventTypeSlug: calendar.eventSlug,
       start: start.toISOString(),
       end: end.toISOString(),
       timeZone: "UTC",
     });
     const res = await fetch(`${CAL_API}/slots?${qs}`, {
-      headers: { "cal-api-version": "2024-09-04" },
+      headers: { "cal-api-version": "2024-09-04", ...(calendar.apiKey ? { Authorization: `Bearer ${calendar.apiKey}` } : {}) },
+      signal: AbortSignal.timeout(15000),
     });
     if (!res.ok) {
       console.error("Cal.com slots failed", res.status, await res.text());
@@ -39,7 +42,7 @@ export async function fetchCalSlots(): Promise<OverviewSlot[]> {
     for (const day of Object.values(json.data ?? {})) {
       for (const s of day) {
         const iso = new Date(s.start).toISOString();
-        out.push({ startIso: iso, schedulingUrl: CAL_BOOKING_URL, label: labelFmt.format(new Date(iso)) + " CT", seatsLeft: null });
+        out.push({ startIso: iso, schedulingUrl: `https://cal.com/${calendar.username}/${calendar.eventSlug}`, label: labelFmt.format(new Date(iso)) + " CT", seatsLeft: null });
       }
     }
     return out.sort((a, b) => a.startIso.localeCompare(b.startIso));
@@ -50,11 +53,11 @@ export async function fetchCalSlots(): Promise<OverviewSlot[]> {
 }
 
 /** Book the slot directly — no confirmation step for the applicant. */
-export async function createCalBooking(input: Parameters<typeof bookOnce>[0]) {
-  const first = await bookOnce(input);
+export async function createCalBooking(input: Parameters<typeof bookOnce>[0], calendar: InterviewCalendar = primaryCalendar()) {
+  const first = await bookOnce(input, calendar);
   // Cal.com rejects numbers it can't validate — retry without the phone rather than lose the booking.
   if (!first.ok && input.phone && /phone|number/i.test(first.error)) {
-    return bookOnce({ ...input, phone: null });
+    return bookOnce({ ...input, phone: null }, calendar);
   }
   return first;
 }
@@ -68,8 +71,8 @@ async function bookOnce(input: {
   licensed?: boolean;
   instagram?: string | null;
   timeZone?: string;
-}): Promise<{ ok: true; uid: string | null; rescheduleUrl: string | null } | { ok: false; error: string }> {
-  const key = process.env["CALCOM_API_KEY"];
+}, calendar: InterviewCalendar): Promise<{ ok: true; uid: string | null; rescheduleUrl: string | null } | { ok: false; error: string }> {
+  const key = calendar.apiKey;
   if (!key) return { ok: false, error: "Cal.com is not configured" };
   try {
     const res = await fetch(`${CAL_API}/bookings`, {
@@ -79,30 +82,16 @@ async function bookOnce(input: {
         "cal-api-version": "2024-08-13",
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        start: new Date(input.startIso).toISOString(),
-        username: CAL_USERNAME,
-        eventTypeSlug: CAL_EVENT_SLUG,
-        attendee: {
-          name: input.name,
-          email: input.email,
-          timeZone: input.timeZone || "America/Chicago",
-          ...(input.phone ? { phoneNumber: toE164(input.phone) } : {}),
-        },
-        bookingFieldsResponses: {
-          "Recruit-Status": input.licensed ? "Licensed" : "Unlicensed",
-          ...(input.instagram ? { "Instagram-Handle": input.instagram } : {}),
-          ...(input.notes ? { notes: input.notes } : {}),
-        },
-      }),
+      body: JSON.stringify(bookingPayload({ ...input, phone: input.phone ? toE164(input.phone) : null }, calendar)),
     });
     const text = await res.text();
     if (!res.ok) {
-      console.error("Cal.com booking failed", res.status, text);
-      return { ok: false, error: text.slice(0, 300) };
+      console.error("Cal.com booking failed", res.status);
+      return { ok: false, error: /phone|number/i.test(text) ? "Phone number was not accepted by Cal.com." : "That time could not be booked. Please choose another time or contact your recruiting team." };
     }
     const json = JSON.parse(text) as { data?: { uid?: string; rescheduleUrl?: string } };
-    return { ok: true, uid: json.data?.uid ?? null, rescheduleUrl: json.data?.rescheduleUrl ?? null };
+    if (!json.data?.uid) return { ok: false, error: "Cal.com did not confirm this booking. Please choose another time." };
+    return { ok: true, uid: json.data.uid, rescheduleUrl: json.data?.rescheduleUrl ?? null };
   } catch (err) {
     console.error("createCalBooking failed", err);
     return { ok: false, error: (err as Error).message };
@@ -110,8 +99,8 @@ async function bookOnce(input: {
 }
 
 /** Move an existing booking rather than creating a second calendar event. */
-export async function rescheduleCalBooking(uid: string, startIso: string, email: string): Promise<{ ok: true; uid: string } | { ok: false; error: string }> {
-  const key = process.env["CALCOM_API_KEY"];
+export async function rescheduleCalBooking(uid: string, startIso: string, email: string, calendar: InterviewCalendar = primaryCalendar()): Promise<{ ok: true; uid: string } | { ok: false; error: string }> {
+  const key = calendar.apiKey;
   if (!key) return { ok: false, error: "Booking is temporarily unavailable. Please reply to your interview email." };
   try {
     const res = await fetch(`${CAL_API}/bookings/${encodeURIComponent(uid)}/reschedule`, {

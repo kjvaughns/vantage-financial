@@ -46,6 +46,7 @@ const applicationSchema = z
     invalid_referral_slug: z.string().trim().max(120).optional().or(z.literal("")),
     // Monday overview slot the applicant picked on the form (ISO-8601 UTC).
     requested_overview_at: z.string().trim().max(40).optional().or(z.literal("")),
+    interview_calendar_id: z.string().uuid().nullable().optional(),
     // Agency Owners & Builders track (from /agency/apply).
     agency: z.union([
       z.object({
@@ -87,7 +88,16 @@ export const submitApplication = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => applicationSchema.parse(data))
   .handler(async ({ data }) => {
     const supabase = serverClient();
-    const { agency: rawAgency, ...payload } = data;
+    const { agency: rawAgency, interview_calendar_id: shownCalendar, ...payload } = data;
+    const { calendarForRecruiter } = await import("@/lib/interview/calendar.server");
+    const { matchesCalendar } = await import("@/lib/interview/rules");
+    const calendar = await calendarForRecruiter(data.referred_by_profile_id || null);
+    if (data.requested_overview_at && data.requested_overview_at !== "none") {
+      if (!matchesCalendar(shownCalendar ?? null, calendar.id)) throw new Error("Your recruiting team's calendar changed. Refresh and choose a new time.");
+      const { fetchCalSlots } = await import("@/lib/calcom.server");
+      const slots = await fetchCalSlots(calendar);
+      if (!slots.some((s) => s.startIso === new Date(data.requested_overview_at as string).toISOString())) throw new Error("That time is no longer available. Please choose another time.");
+    }
     const agency = rawAgency ? { ...rawAgency, details: cleanAgencyDetails(rawAgency.track, rawAgency.details) } : undefined;
     const extraLines = agency ? agencyDetailLines(agency.track, agency.details) : [];
     const { data: result, error } = await supabase.rpc("submit_application", {
@@ -100,6 +110,12 @@ export const submitApplication = createServerFn({ method: "POST" })
       success_page_type: "licensed" | "unlicensed";
       recruiter_id: string | null;
     };
+    // Pin the resolved calendar before booking so later hierarchy changes cannot move the interview.
+    if (calendar.id) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { error: calendarError } = await supabaseAdmin.from("applicants").update({ interview_calendar_id: calendar.id }).eq("id", res.id).eq("confirmation_token", res.token);
+      if (calendarError) throw new Error("Your application was received, but the interview calendar could not be saved. Contact your recruiter before booking.");
+    }
     const AGENCY_LABEL = { builder: "Builder", owner: "Owner" } as const;
     if (agency) {
       try {
@@ -154,7 +170,7 @@ export const submitApplication = createServerFn({ method: "POST" })
         ]
           .filter(Boolean)
           .join(" · "),
-      });
+      }, calendar);
       if (b.ok) {
         booked_at = data.requested_overview_at;
         const { error: mErr } = await (supabase as any).rpc("mark_scheduled_by_token", { _token: res.token });
