@@ -8,5 +8,5 @@ export const getOverviewSlots = createServerFn({ method: "GET" })
     const { calendarForRecruiter, calendarForApplicantToken } = await import("@/lib/interview/calendar.server");
     const { fetchCalSlots } = await import("@/lib/calcom.server");
     const calendar = data.token ? await calendarForApplicantToken(data.token) : await calendarForRecruiter(data.recruiterId);
-    return { slots: await fetchCalSlots(calendar), calendarId: calendar.id };
+    return { slots: await fetchCalSlots(calendar), calendarId: calendar.id, format: calendar.format };
   });

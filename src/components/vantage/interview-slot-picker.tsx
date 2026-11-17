@@ -10,7 +10,9 @@ export function InterviewSlotPicker({
   slots,
   value,
   onChange,
+  format,
 }: {
+  format?: "one_on_one" | "group";
   slots: Slot[];
   value: string;
   onChange: (iso: string) => void;
@@ -107,7 +109,7 @@ export function InterviewSlotPicker({
         <div className="mt-4 rounded-[12px] border border-vantage-gold/30 bg-vantage-gold/5 px-4 py-3 text-[13px] text-vantage-ivory">
           <span className="text-vantage-gold">✓</span>{" "}
           {selected.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })} at{" "}
-          {timeFmt(value)} — 1:1 call with Vantage
+          {timeFmt(value)} — {format === "group" ? "group interview with Vantage" : "1:1 call with Vantage"}
           <span className="ml-1 text-vantage-muted">({timeFmt(value, "America/Chicago")} CT)</span>
         </div>
       )}

@@ -319,7 +319,7 @@ function AgencyApply() {
 
         {slots.length > 0 && (
           <Section n="3" title="Book your strategy call">
-            <InterviewSlotPicker key={recruiterId ?? "primary"} slots={slots} value={f.slot} onChange={(iso) => set("slot", iso)} />
+            <InterviewSlotPicker key={recruiterId ?? "primary"} format={slotsQuery.data?.format} slots={slots} value={f.slot} onChange={(iso) => set("slot", iso)} />
             <p className="mt-2 text-[12.5px] text-vantage-muted">Booked automatically when you submit. The invite goes to your email.</p>
           </Section>
         )}

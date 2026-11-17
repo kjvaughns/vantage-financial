@@ -12,11 +12,11 @@ export function InterviewCalendarSettings({ ownerId }: { ownerId?: string }) {
   const qc = useQueryClient();
   const queryKey = ["interview-calendar", ownerId ?? "me"];
   const q = useQuery({ queryKey, queryFn: () => get({ data: { ownerId } }), retry: false });
-  const [form, setForm] = useState({ username: "", eventSlug: "", timezone: "America/Chicago", apiKey: "" });
+  const [form, setForm] = useState<{ username: string; eventSlug: string; timezone: string; apiKey: string; format: "one_on_one" | "group" }>({ username: "", eventSlug: "", timezone: "America/Chicago", apiKey: "", format: "one_on_one" });
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  useEffect(() => { if (q.data) setForm({ username: q.data.username, eventSlug: q.data.eventSlug, timezone: q.data.timezone, apiKey: "" }); }, [q.data]);
+  useEffect(() => { if (q.data) setForm({ username: q.data.username, eventSlug: q.data.eventSlug, timezone: q.data.timezone, apiKey: "", format: q.data.format }); }, [q.data]);
   async function act(action: "test" | "save" | "disconnect") {
     if (action === "disconnect" && !window.confirm("Use the company calendar for new applicants? Existing interviews stay on this calendar.")) return;
     setBusy(action); setMessage(""); setError("");
@@ -37,6 +37,11 @@ export function InterviewCalendarSettings({ ownerId }: { ownerId?: string }) {
         <Field label="Cal.com API key" hint={q.data?.connected ? "Stored securely. Leave blank to keep it." : "Cal.com → Settings → Developer → API Keys"}><Input type="password" autoComplete="new-password" value={form.apiKey} onChange={(e) => { setMessage(""); setForm({ ...form, apiKey: e.target.value }); }} placeholder={q.data?.connected ? "Saved key" : "Enter API key"} /></Field>
         <Field label="Timezone"><Input value={form.timezone} onChange={(e) => setForm({ ...form, timezone: e.target.value })} placeholder="America/Chicago" /></Field>
       </div>
+      <Field label="Interview type" hint="Shown to applicants on the apply page. Save to apply changes.">
+        <div role="radiogroup" className="flex flex-wrap gap-2">
+          {([["one_on_one", "1:1 interview"], ["group", "Group interview"]] as const).map(([v, l]) => <Button key={v} type="button" role="radio" aria-checked={form.format === v} variant={form.format === v ? "primary" : "secondary"} onClick={() => { setMessage(""); setForm({ ...form, format: v }); }}>{l}</Button>)}
+        </div>
+      </Field>
       {error && <p role="alert" className="p-secondary">{error}</p>}
       {message && <p role="status" className="p-secondary inline-flex items-center gap-2"><CheckCircle2 size={15} />{message}</p>}
       <div className="flex flex-wrap gap-2">

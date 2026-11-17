@@ -90,6 +90,7 @@ function ApplyPage() {
   const recruiterId = recruiter && !recruiter.custom && !recruiter.self ? recruiter.id : undefined;
   const slotsQuery = useQuery({ queryKey: ["overview-slots", recruiterId ?? "primary"], queryFn: () => fetchSlots({ data: { recruiterId } }), retry: false, staleTime: 300000 });
   const slots = slotsQuery.data?.slots ?? [];
+  const isGroup = slotsQuery.data?.format === "group";
   useEffect(() => { setForm((f) => ({ ...f, overview_slot: "" })); }, [recruiterId]);
   const [originalReferral, setOriginalReferral] = useState<RecruiterSelection | null>(null);
   const [referralSlug, setReferralSlug] = useState("");
@@ -144,7 +145,7 @@ function ApplyPage() {
     if (!form.state) errs.push("your state");
     if (form.us_citizen === null) errs.push("your citizenship status");
     if (form.licensed === null) errs.push("your licensing status");
-    if (!slotsQuery.isLoading && slots.length > 0 && !form.overview_slot) errs.push("a time for your 1:1 call");
+    if (!slotsQuery.isLoading && slots.length > 0 && !form.overview_slot) errs.push(slotsQuery.data?.format === "group" ? "a group interview session" : "a time for your 1:1 call");
     if (!recruiter) errs.push("who referred you");
 
     if (!form.why_text.trim() || form.why_text.trim().length < 10)
@@ -412,15 +413,16 @@ function ApplyPage() {
           </Field>
 
           {!slotsQuery.isLoading && slots.length > 0 && (
-            <Field label="Book your 1:1 interview call *">
-              <InterviewSlotPicker key={recruiterId ?? "primary"}
+            <Field label={isGroup ? "Reserve your seat in a group interview *" : "Book your 1:1 interview call *"}>
+              <InterviewSlotPicker key={recruiterId ?? "primary"} format={slotsQuery.data?.format}
                 slots={slots}
                 value={form.overview_slot}
                 onChange={(iso) => set("overview_slot", iso)}
               />
               <p className="mt-2 text-[12.5px] leading-relaxed text-vantage-muted">
-                Live availability, shown in your time zone. Your call is booked automatically when
-                you submit — the calendar invite lands in your email.
+                {isGroup
+                  ? "This is a live group interview with other candidates. Pick a session in your time zone — your seat is reserved automatically when you submit and the invite lands in your email."
+                  : "Live availability, shown in your time zone. Your call is booked automatically when you submit — the calendar invite lands in your email."}
               </p>
             </Field>
           )}

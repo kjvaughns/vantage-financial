@@ -1555,6 +1555,7 @@ export type Database = {
           event_slug: string
           event_type_id: number
           id: string
+          interview_format: string
           owner_id: string
           timezone: string
           username: string
@@ -1566,6 +1567,7 @@ export type Database = {
           event_slug: string
           event_type_id: number
           id?: string
+          interview_format?: string
           owner_id: string
           timezone?: string
           username: string
@@ -1577,6 +1579,7 @@ export type Database = {
           event_slug?: string
           event_type_id?: number
           id?: string
+          interview_format?: string
           owner_id?: string
           timezone?: string
           username?: string

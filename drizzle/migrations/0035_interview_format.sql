@@ -1,0 +1,2 @@
+ALTER TABLE public.interview_calendars ADD COLUMN IF NOT EXISTS interview_format text NOT NULL DEFAULT 'one_on_one' CHECK (interview_format IN ('one_on_one','group'));
+UPDATE public.interview_calendars SET interview_format='group' WHERE username='titanridge' AND event_slug='30min';

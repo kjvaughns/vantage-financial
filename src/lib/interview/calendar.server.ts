@@ -1,7 +1,8 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-export type InterviewCalendar = { id: string | null; ownerId: string | null; username: string; eventSlug: string; eventTypeId?: number; timezone: string; apiKey: string; custom: boolean };
+export type InterviewCalendar = { id: string | null; ownerId: string | null; username: string; eventSlug: string; eventTypeId?: number; timezone: string; apiKey: string; custom: boolean; format: InterviewFormat };
+export type InterviewFormat = "one_on_one" | "group";
 export function primaryCalendar(): InterviewCalendar {
-  return { id: null, ownerId: null, username: "kjvaughns", eventSlug: "15min", timezone: "America/Chicago", apiKey: process.env["CALCOM_API_KEY"] || "", custom: false };
+  return { id: null, ownerId: null, username: "kjvaughns", eventSlug: "15min", timezone: "America/Chicago", apiKey: process.env["CALCOM_API_KEY"] || "", custom: false, format: "one_on_one" };
 }
 async function encryptionKey() {
   const secret = process.env["INTERVIEW_CALENDAR_ENCRYPTION_KEY"];
@@ -23,7 +24,7 @@ export async function decryptApiKey(value: string) {
 export async function calendarById(id: string): Promise<InterviewCalendar> {
   const { data, error } = await supabaseAdmin.from("interview_calendars").select("*").eq("id", id).single();
   if (error || !data) throw new Error("This interview calendar is unavailable. Please contact your team.");
-  return { id: data.id, ownerId: data.owner_id, username: data.username, eventSlug: data.event_slug, eventTypeId: data.event_type_id, timezone: data.timezone, apiKey: await decryptApiKey(data.encrypted_api_key), custom: !(data.username === "kjvaughns" && data.event_slug === "15min") };
+  return { id: data.id, ownerId: data.owner_id, username: data.username, eventSlug: data.event_slug, eventTypeId: data.event_type_id, timezone: data.timezone, apiKey: await decryptApiKey(data.encrypted_api_key), custom: !(data.username === "kjvaughns" && data.event_slug === "15min"), format: data.interview_format === "group" ? "group" : "one_on_one" };
 }
 export async function calendarForRecruiter(recruiterId?: string | null): Promise<InterviewCalendar> {
   if (!recruiterId) return primaryCalendar();
