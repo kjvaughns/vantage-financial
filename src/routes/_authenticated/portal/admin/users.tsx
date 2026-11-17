@@ -10,6 +10,9 @@ import {
   Modal, Button, Field, Divider,
 } from "@/components/portal/ui";
 
+const DEACTIVATE_MSG =
+  "Deactivate this account? They will be signed out of the portal, removed from the recruiter list, and stop receiving emails.";
+
 type LinkRow = { id: string; owner_id: string; label: string; url: string; is_active: boolean };
 
 export const Route = createFileRoute("/_authenticated/portal/admin/users")({
@@ -197,7 +200,7 @@ function UsersPage() {
                   <PermToggle
                     label={u.is_active !== false ? "Active" : "Inactive"}
                     checked={u.is_active !== false}
-                    onChange={(v) => profileMut.mutate({ id: u.id, is_active: v })}
+                    onChange={(v) => { if (!v && !window.confirm(DEACTIVATE_MSG)) return; profileMut.mutate({ id: u.id, is_active: v }); }}
                   />
                 </div>
               </Panel>
@@ -307,9 +310,10 @@ function UsersPage() {
                         <input
                           type="checkbox"
                           checked={u.is_active !== false}
-                          onChange={(e) =>
-                            profileMut.mutate({ id: u.id, is_active: e.target.checked })
-                          }
+                          onChange={(e) => {
+                            if (!e.target.checked && !window.confirm(DEACTIVATE_MSG)) return;
+                            profileMut.mutate({ id: u.id, is_active: e.target.checked });
+                          }}
                         />
                         {u.is_active !== false ? "Active" : "Inactive"}
                       </label>

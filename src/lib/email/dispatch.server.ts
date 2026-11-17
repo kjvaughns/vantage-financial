@@ -88,6 +88,19 @@ async function prefAllows(profileId: string, prefKey: PrefKey): Promise<boolean>
   }
 }
 
+/** True when the recipient belongs to a portal account an admin deactivated. */
+async function isDeactivatedRecipient(email: string, profileId?: string | null): Promise<boolean> {
+  try {
+    const db = await admin();
+    let q = db.from("profiles").select("id").eq("is_active", false).limit(1);
+    q = profileId ? q.or(`id.eq.${profileId},email.ilike.${email}`) : q.ilike("email", email);
+    const { data } = await q;
+    return (data ?? []).length > 0;
+  } catch {
+    return false;
+  }
+}
+
 async function claimKey(sendKey?: string | null): Promise<boolean> {
   if (!sendKey) return true;
   try {
@@ -121,6 +134,10 @@ export async function sendEmail(args: SendArgs): Promise<SendResult> {
 
   const to = args.to?.trim().toLowerCase();
   if (!to) return { status: "skipped", reason: "no_recipient" };
+
+  if (await isDeactivatedRecipient(to, args.profileId)) {
+    return { status: "skipped", reason: "account_inactive" };
+  }
 
   if (def.prefKey && args.profileId && !args.ignorePrefs) {
     const allowed = await prefAllows(args.profileId, def.prefKey);

@@ -1563,8 +1563,22 @@ export const adminUpdateProfile = createServerFn({ method: "POST" })
         throw new Error("The AgentLink link must be active and owned by this agent's upline.");
       }
     }
+    if (data.is_active !== undefined) {
+      if (data.is_active === false && id === userId) throw new Error("You can't deactivate your own account.");
+      // Deactivated accounts leave recruiter lists and stop receiving applicants.
+      rest.status = data.is_active ? "active" : "inactive";
+      if (data.is_active === false) rest.can_receive_applicants = false;
+    }
     const { error } = await supabase.from("profiles").update(rest).eq("id", id);
     if (error) throw new Error(error.message);
+    if (data.is_active !== undefined) {
+      // Caller verified as admin above; block or restore portal sign-in.
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { error: banError } = await supabaseAdmin.auth.admin.updateUserById(id, {
+        ban_duration: data.is_active ? "none" : "876000h",
+      });
+      if (banError) throw new Error(banError.message);
+    }
     return { ok: true };
   });
 
