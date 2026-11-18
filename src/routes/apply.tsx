@@ -144,7 +144,7 @@ function ApplyPage() {
     if (!isValidUsPhone(form.phone)) errs.push("phone");
     if (!form.state) errs.push("your state");
     if (form.us_citizen === null) errs.push("your citizenship status");
-    if (form.licensed === null) errs.push("your licensing status");
+    if (form.licensed === null) errs.push("whether you have your life insurance license");
     if (!slotsQuery.isLoading && slots.length > 0 && !form.overview_slot) errs.push(slotsQuery.data?.format === "group" ? "a group interview session" : "a time for your 1:1 call");
     if (!recruiter) errs.push("who referred you");
 
@@ -331,11 +331,11 @@ function ApplyPage() {
               </div>
             )}
           </Field>
-          <Field label="Are you currently licensed? *">
+          <Field label="Do you have your life insurance license? *">
             <div className="grid grid-cols-2 gap-3">
               {(
                 [
-                  { value: true, label: "Yes, I'm licensed" },
+                  { value: true, label: "Yes, I have my license" },
                   { value: false, label: "No, not yet" },
                 ] as const
               ).map((opt) => {

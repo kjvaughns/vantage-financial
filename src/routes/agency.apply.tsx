@@ -100,7 +100,7 @@ function AgencyApply() {
     if (!isValidUsPhone(f.phone)) e.push("phone");
     if (!f.state) e.push("your state");
     if (f.us_citizen === null) e.push("citizenship status");
-    if (f.licensed === null) e.push("licensing status");
+    if (f.licensed === null) e.push("whether you have your life insurance license");
     if (track === "builder") {
       if (f.team_size === "" || Number(f.team_size) < 1) e.push("at least one current downline");
       if (!f.production) e.push("monthly team production");
@@ -242,7 +242,7 @@ function AgencyApply() {
           <div className="mt-4"><StateCombobox value={f.state} onChange={(v) => set("state", v)} /></div>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <div><Label>US citizen or authorized to work? *</Label><Toggle v={f.us_citizen} onChange={(b) => set("us_citizen", b)} /></div>
-            <div><Label>Currently licensed? *</Label><Toggle v={f.licensed} onChange={(b) => set("licensed", b)} /></div>
+            <div><Label>Do you have your life insurance license? *</Label><Toggle v={f.licensed} onChange={(b) => set("licensed", b)} /></div>
           </div>
           {f.us_citizen === false && <p className="mt-2 text-[13px] text-destructive">This opportunity requires US citizenship or work authorization.</p>}
           {track === "builder" && (
